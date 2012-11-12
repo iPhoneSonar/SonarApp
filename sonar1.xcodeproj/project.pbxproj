@@ -1,0 +1,317 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		328473221650536C00A9D62A /* fileOps.m in Sources */ = {isa = PBXBuildFile; fileRef = 328473211650536C00A9D62A /* fileOps.m */; };
+		32D352E4164D8CF600364CF9 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 32D352E3164D8CF600364CF9 /* Default-568h@2x.png */; };
+		32D352E7164D8E4C00364CF9 /* CAStreamBasicDescription.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D352E6164D8E4C00364CF9 /* CAStreamBasicDescription.cpp */; };
+		B4BA4ABE162056B200520207 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B4BA4ABD162056B200520207 /* UIKit.framework */; };
+		B4BA4AC0162056B200520207 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B4BA4ABF162056B200520207 /* Foundation.framework */; };
+		B4BA4AC2162056B200520207 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B4BA4AC1162056B200520207 /* CoreGraphics.framework */; };
+		B4BA4AC8162056B300520207 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = B4BA4AC6162056B300520207 /* InfoPlist.strings */; };
+		B4BA4ACA162056B300520207 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = B4BA4AC9162056B300520207 /* main.m */; };
+		B4BA4ACE162056B300520207 /* trAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = B4BA4ACD162056B300520207 /* trAppDelegate.m */; };
+		B4BA4AD1162056B300520207 /* trViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B4BA4AD0162056B300520207 /* trViewController.m */; };
+		B4BA4AD4162056B300520207 /* trViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = B4BA4AD2162056B300520207 /* trViewController.xib */; };
+		B4BA4ADC1620571500520207 /* audioController.m in Sources */ = {isa = PBXBuildFile; fileRef = B4BA4ADB1620571400520207 /* audioController.m */; };
+		B4BA4AE11620617600520207 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B4BA4AE01620617600520207 /* AudioToolbox.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		328473201650536C00A9D62A /* fileOps.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fileOps.h; sourceTree = "<group>"; };
+		328473211650536C00A9D62A /* fileOps.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = fileOps.m; sourceTree = "<group>"; };
+		32D352E3164D8CF600364CF9 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
+		32D352E6164D8E4C00364CF9 /* CAStreamBasicDescription.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CAStreamBasicDescription.cpp; path = "../../../../../../Volumes/secondHd/audio tools/CoreAudio/PublicUtility/CAStreamBasicDescription.cpp"; sourceTree = "<group>"; };
+		32D352E8164D8E5600364CF9 /* CAStreamBasicDescription.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CAStreamBasicDescription.h; path = "../../../../../../Volumes/secondHd/audio tools/CoreAudio/PublicUtility/CAStreamBasicDescription.h"; sourceTree = "<group>"; };
+		B4BA4AB9162056B200520207 /* sonar1.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = sonar1.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B4BA4ABD162056B200520207 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		B4BA4ABF162056B200520207 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		B4BA4AC1162056B200520207 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		B4BA4AC5162056B300520207 /* sonar1-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "sonar1-Info.plist"; sourceTree = "<group>"; };
+		B4BA4AC7162056B300520207 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		B4BA4AC9162056B300520207 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		B4BA4ACB162056B300520207 /* sonar1-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "sonar1-Prefix.pch"; sourceTree = "<group>"; };
+		B4BA4ACC162056B300520207 /* trAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = trAppDelegate.h; sourceTree = "<group>"; };
+		B4BA4ACD162056B300520207 /* trAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = trAppDelegate.m; sourceTree = "<group>"; };
+		B4BA4ACF162056B300520207 /* trViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = trViewController.h; sourceTree = "<group>"; };
+		B4BA4AD0162056B300520207 /* trViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = trViewController.m; sourceTree = "<group>"; };
+		B4BA4AD3162056B300520207 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/trViewController.xib; sourceTree = "<group>"; };
+		B4BA4ADA1620571400520207 /* audioController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = audioController.h; sourceTree = "<group>"; };
+		B4BA4ADB1620571400520207 /* audioController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = audioController.m; sourceTree = "<group>"; };
+		B4BA4AE01620617600520207 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		B4BA4AB6162056B200520207 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B4BA4AE11620617600520207 /* AudioToolbox.framework in Frameworks */,
+				B4BA4ABE162056B200520207 /* UIKit.framework in Frameworks */,
+				B4BA4AC0162056B200520207 /* Foundation.framework in Frameworks */,
+				B4BA4AC2162056B200520207 /* CoreGraphics.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		B4BA4AAE162056B100520207 = {
+			isa = PBXGroup;
+			children = (
+				32D352E3164D8CF600364CF9 /* Default-568h@2x.png */,
+				B4BA4AC3162056B200520207 /* sonar1 */,
+				B4BA4ABC162056B200520207 /* Frameworks */,
+				B4BA4ABA162056B200520207 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		B4BA4ABA162056B200520207 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				B4BA4AB9162056B200520207 /* sonar1.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		B4BA4ABC162056B200520207 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				B4BA4AE01620617600520207 /* AudioToolbox.framework */,
+				B4BA4ABD162056B200520207 /* UIKit.framework */,
+				B4BA4ABF162056B200520207 /* Foundation.framework */,
+				B4BA4AC1162056B200520207 /* CoreGraphics.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		B4BA4AC3162056B200520207 /* sonar1 */ = {
+			isa = PBXGroup;
+			children = (
+				B4BA4ACC162056B300520207 /* trAppDelegate.h */,
+				B4BA4ACD162056B300520207 /* trAppDelegate.m */,
+				328473201650536C00A9D62A /* fileOps.h */,
+				328473211650536C00A9D62A /* fileOps.m */,
+				B4BA4ADA1620571400520207 /* audioController.h */,
+				B4BA4ADB1620571400520207 /* audioController.m */,
+				B4BA4ACF162056B300520207 /* trViewController.h */,
+				B4BA4AD0162056B300520207 /* trViewController.m */,
+				B4BA4AD2162056B300520207 /* trViewController.xib */,
+				B4BA4AC4162056B200520207 /* Supporting Files */,
+			);
+			path = sonar1;
+			sourceTree = "<group>";
+		};
+		B4BA4AC4162056B200520207 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				32D352E8164D8E5600364CF9 /* CAStreamBasicDescription.h */,
+				32D352E6164D8E4C00364CF9 /* CAStreamBasicDescription.cpp */,
+				B4BA4AC5162056B300520207 /* sonar1-Info.plist */,
+				B4BA4AC6162056B300520207 /* InfoPlist.strings */,
+				B4BA4AC9162056B300520207 /* main.m */,
+				B4BA4ACB162056B300520207 /* sonar1-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		B4BA4AB8162056B200520207 /* sonar1 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B4BA4AD7162056B300520207 /* Build configuration list for PBXNativeTarget "sonar1" */;
+			buildPhases = (
+				B4BA4AB5162056B200520207 /* Sources */,
+				B4BA4AB6162056B200520207 /* Frameworks */,
+				B4BA4AB7162056B200520207 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = sonar1;
+			productName = sonar1;
+			productReference = B4BA4AB9162056B200520207 /* sonar1.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B4BA4AB0162056B100520207 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0420;
+			};
+			buildConfigurationList = B4BA4AB3162056B100520207 /* Build configuration list for PBXProject "sonar1" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = B4BA4AAE162056B100520207;
+			productRefGroup = B4BA4ABA162056B200520207 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				B4BA4AB8162056B200520207 /* sonar1 */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		B4BA4AB7162056B200520207 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B4BA4AC8162056B300520207 /* InfoPlist.strings in Resources */,
+				B4BA4AD4162056B300520207 /* trViewController.xib in Resources */,
+				32D352E4164D8CF600364CF9 /* Default-568h@2x.png in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		B4BA4AB5162056B200520207 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B4BA4ACA162056B300520207 /* main.m in Sources */,
+				B4BA4ACE162056B300520207 /* trAppDelegate.m in Sources */,
+				B4BA4AD1162056B300520207 /* trViewController.m in Sources */,
+				B4BA4ADC1620571500520207 /* audioController.m in Sources */,
+				32D352E7164D8E4C00364CF9 /* CAStreamBasicDescription.cpp in Sources */,
+				328473221650536C00A9D62A /* fileOps.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		B4BA4AC6162056B300520207 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				B4BA4AC7162056B300520207 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		B4BA4AD2162056B300520207 /* trViewController.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				B4BA4AD3162056B300520207 /* en */,
+			);
+			name = trViewController.xib;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		B4BA4AD5162056B300520207 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		B4BA4AD6162056B300520207 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		B4BA4AD8162056B300520207 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "sonar1/sonar1-Prefix.pch";
+				INFOPLIST_FILE = "sonar1/sonar1-Info.plist";
+				OTHER_CFLAGS = (
+					"-x",
+					"objective-c++",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		B4BA4AD9162056B300520207 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "sonar1/sonar1-Prefix.pch";
+				INFOPLIST_FILE = "sonar1/sonar1-Info.plist";
+				OTHER_CFLAGS = (
+					"-DNS_BLOCK_ASSERTIONS=1",
+					"-x",
+					"objective-c++",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		B4BA4AB3162056B100520207 /* Build configuration list for PBXProject "sonar1" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B4BA4AD5162056B300520207 /* Debug */,
+				B4BA4AD6162056B300520207 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B4BA4AD7162056B300520207 /* Build configuration list for PBXNativeTarget "sonar1" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B4BA4AD8162056B300520207 /* Debug */,
+				B4BA4AD9162056B300520207 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = B4BA4AB0162056B100520207 /* Project object */;
+}
