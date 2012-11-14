@@ -98,7 +98,7 @@
     
     float ARecord[NSAMPLE];
     float ASend[NSAMPLE];
-    float AKkf[2*NSAMPLE];
+    float AKkf[KKFSIZE];
     
     
     SendesignalErzeugung(ASend);
@@ -115,6 +115,7 @@
     
     KKF(ARecord, ASend, AKkf);
     MaximumSuche(AKkf);
+    
     [audioController startAUGraph];
     NSLog(@"%@%@", @"play freq=", self.tf1.text);
     fileOps *file = [[fileOps alloc] init];

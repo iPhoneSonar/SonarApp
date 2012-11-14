@@ -276,6 +276,7 @@
 				);
 				PRODUCT_NAME = batapp;
 				PROVISIONING_PROFILE = "";
+				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -294,6 +295,7 @@
 				);
 				PRODUCT_NAME = batapp;
 				PROVISIONING_PROFILE = "";
+				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
