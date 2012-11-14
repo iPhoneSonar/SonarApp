@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		328473221650536C00A9D62A /* fileOps.m in Sources */ = {isa = PBXBuildFile; fileRef = 328473211650536C00A9D62A /* fileOps.m */; };
+		32C218BF16527FC30024E731 /* processing.m in Sources */ = {isa = PBXBuildFile; fileRef = 32C218BE16527FC30024E731 /* processing.m */; };
 		32D352E4164D8CF600364CF9 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 32D352E3164D8CF600364CF9 /* Default-568h@2x.png */; };
 		32D352E7164D8E4C00364CF9 /* CAStreamBasicDescription.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D352E6164D8E4C00364CF9 /* CAStreamBasicDescription.cpp */; };
 		B4BA4ABE162056B200520207 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B4BA4ABD162056B200520207 /* UIKit.framework */; };
@@ -25,6 +26,8 @@
 /* Begin PBXFileReference section */
 		328473201650536C00A9D62A /* fileOps.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fileOps.h; sourceTree = "<group>"; };
 		328473211650536C00A9D62A /* fileOps.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = fileOps.m; sourceTree = "<group>"; };
+		32C218BD16527FC30024E731 /* processing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = processing.h; sourceTree = "<group>"; };
+		32C218BE16527FC30024E731 /* processing.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = processing.m; sourceTree = "<group>"; };
 		32D352E3164D8CF600364CF9 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
 		32D352E6164D8E4C00364CF9 /* CAStreamBasicDescription.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CAStreamBasicDescription.cpp; path = "../../../../../../Volumes/secondHd/audio tools/CoreAudio/PublicUtility/CAStreamBasicDescription.cpp"; sourceTree = "<group>"; };
 		32D352E8164D8E5600364CF9 /* CAStreamBasicDescription.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CAStreamBasicDescription.h; path = "../../../../../../Volumes/secondHd/audio tools/CoreAudio/PublicUtility/CAStreamBasicDescription.h"; sourceTree = "<group>"; };
@@ -94,6 +97,8 @@
 			isa = PBXGroup;
 			children = (
 				B4BA4ACC162056B300520207 /* trAppDelegate.h */,
+				32C218BD16527FC30024E731 /* processing.h */,
+				32C218BE16527FC30024E731 /* processing.m */,
 				B4BA4ACD162056B300520207 /* trAppDelegate.m */,
 				328473201650536C00A9D62A /* fileOps.h */,
 				328473211650536C00A9D62A /* fileOps.m */,
@@ -189,6 +194,7 @@
 				B4BA4ADC1620571500520207 /* audioController.m in Sources */,
 				32D352E7164D8E4C00364CF9 /* CAStreamBasicDescription.cpp in Sources */,
 				328473221650536C00A9D62A /* fileOps.m in Sources */,
+				32C218BF16527FC30024E731 /* processing.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

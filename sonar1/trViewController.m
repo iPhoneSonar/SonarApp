@@ -89,7 +89,26 @@
     int freq = 0;
     freq = [self.tf1.text intValue];
     [audioController setFrequency: freq];
-
+    
+    float ARecord[NSAMPLE];
+    float ASend[NSAMPLE];
+    float AKkf[2*NSAMPLE];
+    
+    
+    SendesignalErzeugung(ASend);
+    //Erzeugung eines simulierten Empfangssignales für KKF
+    for (int i=0;i<NSAMPLE;i++)
+    {
+        ARecord[i]=0;
+    }
+    for (int i=280;i<NSAMPLE;i++)
+    {
+        ARecord[i]=ASend[i-280];
+    }
+    NSLog(@"Test Empfangssignal in trViewController erzeugt");
+    
+    KKF(ARecord, ASend, AKkf);
+    MaximumSuche(AKkf);
     [audioController startAUGraph];
     NSLog(@"%@%@", @"play freq=", self.tf1.text);
     fileOps *file = [[fileOps alloc] init];
