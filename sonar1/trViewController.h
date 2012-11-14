@@ -14,7 +14,10 @@
     
 	audioController *audioController;
     UIButton *btnPlay;
-    UIButton *btnStop;
+    UIButton *btnPlayStop;
+    UIButton *btnRecord;
+    UIButton *btnRecordStop;
+
     UITextField *tf1;
     UITextField *tf2;
 }
@@ -26,11 +29,15 @@
 @property (retain, nonatomic) IBOutlet UITextField *tf2;
 
 @property (retain, nonatomic) IBOutlet UIButton *btnPlay;
+@property (retain, nonatomic) IBOutlet UIButton *btnPlayStop;
 
-@property (retain, nonatomic) IBOutlet UIButton *btnStop;
+@property (retain, nonatomic) IBOutlet UIButton *btnRecord;
+@property (retain, nonatomic) IBOutlet UIButton *btnRecordStop;
 
 - (IBAction)backgroundTouched:(id)sender;
 - (IBAction)play:(id)sender;
-- (IBAction)stop:(id)sender;
+- (IBAction)playStop:(id)sender;
+- (IBAction)record:(id)sender;
+- (IBAction)recordStop:(id)sender;
 
 @end
