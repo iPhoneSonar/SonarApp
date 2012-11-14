@@ -13,7 +13,9 @@
 
 @synthesize audioController;
 @synthesize btnPlay;
-@synthesize btnStop;
+@synthesize btnPlayStop;
+@synthesize btnRecord;
+@synthesize btnRecordStop;
 @synthesize tf1;
 @synthesize tf2;
 
@@ -36,18 +38,22 @@
 	[audioController release];
     
     [btnPlay release];
-    [btnStop release];
+    [btnPlayStop release];
     [tf1 release];
     [tf2 release];
+    [btnRecord release];
+    [btnRecordStop release];
     [super dealloc];
 }
 
 - (void)viewDidUnload
 {
     [self setBtnPlay:nil];
-    [self setBtnStop:nil];
+    [self setBtnPlayStop:nil];
     [self setTf1:nil];
     [self setTf2:nil];
+    [self setBtnRecord:nil];
+    [self setBtnRecordStop:nil];
     [super viewDidUnload];
     // Release any retained subviews of the main view.
     // e.g. self.myOutlet = nil;
@@ -97,7 +103,7 @@
     self.tf2.text = @"play";
 }
 
-- (IBAction)stop:(id)sender {
+- (IBAction)playStop:(id)sender {
     int freq = 0;
     [audioController getFrequency: &freq];
     self.tf1.text = [NSString stringWithFormat: @"%d", freq];
@@ -109,6 +115,11 @@
     self.tf2.text = @"stop";
 }
 
+- (IBAction)record:(id)sender {
+}
+
+- (IBAction)recordStop:(id)sender {
+}
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField
 {

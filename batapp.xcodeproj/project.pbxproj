@@ -28,14 +28,14 @@
 		32D352E3164D8CF600364CF9 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
 		32D352E6164D8E4C00364CF9 /* CAStreamBasicDescription.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CAStreamBasicDescription.cpp; path = "../../../../../../Volumes/secondHd/audio tools/CoreAudio/PublicUtility/CAStreamBasicDescription.cpp"; sourceTree = "<group>"; };
 		32D352E8164D8E5600364CF9 /* CAStreamBasicDescription.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CAStreamBasicDescription.h; path = "../../../../../../Volumes/secondHd/audio tools/CoreAudio/PublicUtility/CAStreamBasicDescription.h"; sourceTree = "<group>"; };
-		B4BA4AB9162056B200520207 /* sonar1.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = sonar1.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B4BA4AB9162056B200520207 /* batapp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = batapp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B4BA4ABD162056B200520207 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		B4BA4ABF162056B200520207 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		B4BA4AC1162056B200520207 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
-		B4BA4AC5162056B300520207 /* sonar1-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "sonar1-Info.plist"; sourceTree = "<group>"; };
+		B4BA4AC5162056B300520207 /* batapp-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "batapp-Info.plist"; sourceTree = "<group>"; };
 		B4BA4AC7162056B300520207 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		B4BA4AC9162056B300520207 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		B4BA4ACB162056B300520207 /* sonar1-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "sonar1-Prefix.pch"; sourceTree = "<group>"; };
+		B4BA4ACB162056B300520207 /* batapp-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "batapp-Prefix.pch"; sourceTree = "<group>"; };
 		B4BA4ACC162056B300520207 /* trAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = trAppDelegate.h; sourceTree = "<group>"; };
 		B4BA4ACD162056B300520207 /* trAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = trAppDelegate.m; sourceTree = "<group>"; };
 		B4BA4ACF162056B300520207 /* trViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = trViewController.h; sourceTree = "<group>"; };
@@ -74,7 +74,7 @@
 		B4BA4ABA162056B200520207 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				B4BA4AB9162056B200520207 /* sonar1.app */,
+				B4BA4AB9162056B200520207 /* batapp.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -112,10 +112,10 @@
 			children = (
 				32D352E8164D8E5600364CF9 /* CAStreamBasicDescription.h */,
 				32D352E6164D8E4C00364CF9 /* CAStreamBasicDescription.cpp */,
-				B4BA4AC5162056B300520207 /* sonar1-Info.plist */,
+				B4BA4AC5162056B300520207 /* batapp-Info.plist */,
 				B4BA4AC6162056B300520207 /* InfoPlist.strings */,
 				B4BA4AC9162056B300520207 /* main.m */,
-				B4BA4ACB162056B300520207 /* sonar1-Prefix.pch */,
+				B4BA4ACB162056B300520207 /* batapp-Prefix.pch */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -123,9 +123,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		B4BA4AB8162056B200520207 /* sonar1 */ = {
+		B4BA4AB8162056B200520207 /* batapp */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = B4BA4AD7162056B300520207 /* Build configuration list for PBXNativeTarget "sonar1" */;
+			buildConfigurationList = B4BA4AD7162056B300520207 /* Build configuration list for PBXNativeTarget "batapp" */;
 			buildPhases = (
 				B4BA4AB5162056B200520207 /* Sources */,
 				B4BA4AB6162056B200520207 /* Frameworks */,
@@ -135,9 +135,9 @@
 			);
 			dependencies = (
 			);
-			name = sonar1;
+			name = batapp;
 			productName = sonar1;
-			productReference = B4BA4AB9162056B200520207 /* sonar1.app */;
+			productReference = B4BA4AB9162056B200520207 /* batapp.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -148,7 +148,7 @@
 			attributes = {
 				LastUpgradeCheck = 0420;
 			};
-			buildConfigurationList = B4BA4AB3162056B100520207 /* Build configuration list for PBXProject "sonar1" */;
+			buildConfigurationList = B4BA4AB3162056B100520207 /* Build configuration list for PBXProject "batapp" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -160,7 +160,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				B4BA4AB8162056B200520207 /* sonar1 */,
+				B4BA4AB8162056B200520207 /* batapp */,
 			);
 		};
 /* End PBXProject section */
@@ -262,13 +262,13 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "sonar1/sonar1-Prefix.pch";
-				INFOPLIST_FILE = "sonar1/sonar1-Info.plist";
+				GCC_PREFIX_HEADER = "sonar1/batapp-Prefix.pch";
+				INFOPLIST_FILE = "sonar1/batapp-Info.plist";
 				OTHER_CFLAGS = (
 					"-x",
 					"objective-c++",
 				);
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = batapp;
 				PROVISIONING_PROFILE = "";
 				WRAPPER_EXTENSION = app;
 			};
@@ -277,15 +277,17 @@
 		B4BA4AD9162056B300520207 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "sonar1/sonar1-Prefix.pch";
-				INFOPLIST_FILE = "sonar1/sonar1-Info.plist";
+				GCC_PREFIX_HEADER = "sonar1/batapp-Prefix.pch";
+				INFOPLIST_FILE = "sonar1/batapp-Info.plist";
 				OTHER_CFLAGS = (
 					"-DNS_BLOCK_ASSERTIONS=1",
 					"-x",
 					"objective-c++",
 				);
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = batapp;
+				PROVISIONING_PROFILE = "";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
@@ -293,7 +295,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		B4BA4AB3162056B100520207 /* Build configuration list for PBXProject "sonar1" */ = {
+		B4BA4AB3162056B100520207 /* Build configuration list for PBXProject "batapp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				B4BA4AD5162056B300520207 /* Debug */,
@@ -302,7 +304,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		B4BA4AD7162056B300520207 /* Build configuration list for PBXNativeTarget "sonar1" */ = {
+		B4BA4AD7162056B300520207 /* Build configuration list for PBXNativeTarget "batapp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				B4BA4AD8162056B300520207 /* Debug */,

@@ -2,6 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "self:sonar1.xcodeproj">
+      location = "self:batapp.xcodeproj">
    </FileRef>
 </Workspace>
