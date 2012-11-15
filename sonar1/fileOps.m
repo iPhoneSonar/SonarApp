@@ -71,4 +71,18 @@
     return fileName;
 }
 
+-(NSString*) FloatArrayToString:(float*)AIn OfArraySize:(int)SizeA;
+{
+    NSString *Sout= [NSString stringWithFormat:@"%.5f", AIn[0]];
+    for (int i=1; i<SizeA;i++)
+    {        
+        Sout=[Sout stringByAppendingString:@"\n"];
+        Sout=[Sout stringByAppendingString:[NSString stringWithFormat:@"%.5f", AIn[i]]];
+    }
+    //NSLog(@"FloatArrayToString: %@",Sout);
+    NSLog(@"Converted FloatArrayToString");
+    return Sout;
+}
+
+
 @end

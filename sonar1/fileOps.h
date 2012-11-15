@@ -25,5 +25,6 @@
 -(void) writeToStringfile:(NSMutableString*)textToWrite;
 -(NSString*) readFormFile;
 -(NSString*) setFileName;
+-(NSString*) FloatArrayToString:(float*)AIn OfArraySize:(int)SizeA;
 
 @end

@@ -116,6 +116,12 @@
     KKF(ARecord, ASend, AKkf);
     MaximumSuche(AKkf);
     
+    //Export Functions for debugging
+    /*
+    fileOps *record = [[fileOps alloc] init];    
+    NSString *Sout= [NSString stringWithFormat:@"%@", [record FloatArrayToString:ASend OfArraySize:NSAMPLE]];
+    /**/
+    
     [audioController startAUGraph];
     NSLog(@"%@%@", @"play freq=", self.tf1.text);
     fileOps *file = [[fileOps alloc] init];
