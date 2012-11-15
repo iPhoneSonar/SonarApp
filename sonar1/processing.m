@@ -46,7 +46,7 @@ void MaximumSuche(float AKkf[KKFSIZE])
     NSLog(@"Maximum bei KKF Punkt: %i",max_t);
 }
 
-void SendesignalErzeugung(float ASend[NSAMPLE])
+void CreateSendSignal(float ASend[NSAMPLE])
 {
     //Erzeugung eines Sendesignales für KKF
     float fm, fmax, fmin;
