@@ -156,14 +156,14 @@
 - (IBAction)record:(id)sender {
     [audioController recordingStart];
     fileOps *file = [[fileOps alloc] init];
-    [file writeToStringfile:[@"recording\n" mutableCopy]];
+    [file WriteString:[@"recording\n" mutableCopy] ToFile:@"log.txt"];
     self.tf2.text = @"recording";
 }
 
 - (IBAction)recordStop:(id)sender {
     [audioController recordingStop];
     fileOps *file = [[fileOps alloc] init];
-    [file writeToStringfile:[@"stop\n" mutableCopy]];
+    [file WriteString:[@"stop\n" mutableCopy] ToFile:@"log.txt"];
     self.tf2.text = @"stop";
 }
 
