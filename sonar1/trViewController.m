@@ -101,8 +101,7 @@ float AKkf[KKFSIZE];
 - (IBAction)play:(id)sender {
     int freq = 0;
     freq = [self.tf1.text intValue];
-    [audioController setFrequency: freq];
-    
+    [audioController setFrequency: freq];    
     [audioController startAUGraph];
     
     //create simulated receive signal
@@ -114,8 +113,9 @@ float AKkf[KKFSIZE];
     {
         ARecord[i]=ASend[i-280];
     }
+    #ifndef NODEBUG
     NSLog(@"Test Empfangssignal in trViewController erzeugt");
-    
+    #endif
     //Signal processing
     KKF(ARecord, ASend, AKkf);
     MaximumSuche(AKkf);    

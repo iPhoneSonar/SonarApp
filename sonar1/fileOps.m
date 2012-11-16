@@ -29,10 +29,11 @@
     filePath = [[NSString alloc] init];
     
     filePath = [self.getDocumentDir stringByAppendingPathComponent:ToFileName];
-    
     if ([fileMgr fileExistsAtPath: filePath] == YES)
     {
+#ifndef NODEBUG
         NSLog(@"file %@ exists", ToFileName);
+#endif
     }
     else
     {
@@ -79,8 +80,9 @@
         Sout=[Sout stringByAppendingString:@"\n"];
         Sout=[Sout stringByAppendingString:[NSString stringWithFormat:@"%.5f", AIn[i]]];
     }
-    //NSLog(@"FloatArrayToString: %@",Sout);
+#ifndef NODEBUG
     NSLog(@"Converted FloatArrayToString");
+#endif
     return [Sout mutableCopy];
 }
 

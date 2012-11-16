@@ -1,6 +1,5 @@
 #import "processing.h"
 
-//void KKF(float* ARecord, float* ASend, float* AKkf)
 void KKF(float ARecord[NSAMPLE], float ASend[NSAMPLE], float AKkf[KKFSIZE])
 {
     int i=0;
@@ -12,7 +11,7 @@ void KKF(float ARecord[NSAMPLE], float ASend[NSAMPLE], float AKkf[KKFSIZE])
         AKkf[i*2+1]=0;
     }
     
-    //Durchfürhung KKF (noch Matlab implementierung, also auf auch "negative" Zeiten werden berechnet, beginn sollte später bei NSAMPLE sein)
+    //Durchfürhung KKF (noch Matlab implementierung, also auf auch "negative" Zeiten werden berechnet, Beginn sollte später bei NSAMPLE sein)
     for (i=0;i<KKFSIZE;i++)
     {
         for (j=0;j<NSAMPLE;j++)
@@ -26,7 +25,9 @@ void KKF(float ARecord[NSAMPLE], float ASend[NSAMPLE], float AKkf[KKFSIZE])
             }
         }
     }
+#ifndef NODEBUG
     NSLog(@"KKF Durchgeführt");
+#endif
 }
 
 void MaximumSuche(float AKkf[KKFSIZE])
@@ -34,7 +35,7 @@ void MaximumSuche(float AKkf[KKFSIZE])
     float max=0;
     int max_t=0;
     
-    //Bestimmung der Entfernung (Beginn muss angepasst werden wenn größe der KKF verändert wird)
+    //Bestimmung der Entfernung (offset eventuell dynamisch aus Hardwarevorgabe berechnen, offset eventuell größer für reale signale)
     for (int i=NSAMPLE+20;i<KKFSIZE;i++)
     {
         if (max<abs( (int)AKkf[i]) )
@@ -43,12 +44,13 @@ void MaximumSuche(float AKkf[KKFSIZE])
             max_t=i;
         }
     }
+#ifndef NODEBUG
     NSLog(@"Maximum bei KKF Punkt: %i",max_t);
+#endif
 }
 
 void CreateSendSignal(float ASend[NSAMPLE])
 {
-    //Erzeugung eines Sendesignales für KKF
     float fm, fmax, fmin;
     fmin=1000;
     fmax=10000;
@@ -58,5 +60,7 @@ void CreateSendSignal(float ASend[NSAMPLE])
         ASend[i]=sin(2*M_PI*fm/44100*i);
         ASend[NSAMPLE-i]=-ASend[i];
     }
+#ifndef NODEBUG
     NSLog(@"Sendesignal erzeugt");
+#endif
 }
