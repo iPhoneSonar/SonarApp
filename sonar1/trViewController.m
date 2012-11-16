@@ -19,6 +19,10 @@
 @synthesize tf1;
 @synthesize tf2;
 
+float ARecord[NSAMPLE];
+float ASend[NSAMPLE];
+float AKkf[KKFSIZE];
+
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
@@ -31,6 +35,9 @@
 {
     [super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
+    
+    CreateSendSignal(ASend);
+    
     [audioController initializeAUGraph];
     [audioController recordingInit];}
 
@@ -96,15 +103,9 @@
     freq = [self.tf1.text intValue];
     [audioController setFrequency: freq];
     
-    float ARecord[NSAMPLE];
-    float ASend[NSAMPLE];
-    float AKkf[KKFSIZE];
+    [audioController startAUGraph];
     
-    
-    CreateSendSignal(ASend);
-    
-    
-    //Erzeugung eines simulierten Empfangssignales für KKF
+    //create simulated receive signal
     for (int i=0;i<NSAMPLE;i++)
     {
         ARecord[i]=0;
@@ -115,9 +116,9 @@
     }
     NSLog(@"Test Empfangssignal in trViewController erzeugt");
     
+    //Signal processing
     KKF(ARecord, ASend, AKkf);
-    MaximumSuche(AKkf);
-    
+    MaximumSuche(AKkf);    
     
     //////////////
     // Export Arrays for Signal debugging
@@ -132,9 +133,8 @@
     //
     // \Export Arrays for Signal debugging
     //////////////
+   
     
-    
-    [audioController startAUGraph];
     NSLog(@"%@%@", @"play freq=", self.tf1.text);
     fileOps *file = [[fileOps alloc] init];
     [file WriteString:[@"play\n" mutableCopy] ToFile:@"log.txt"];

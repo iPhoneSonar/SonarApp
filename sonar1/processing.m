@@ -55,8 +55,8 @@ void CreateSendSignal(float ASend[NSAMPLE])
     for (int i=0;i<NSAMPLE/2;i++)
     {
         fm=((fmax-fmin)/(NSAMPLE/2))*i+fmin;
-        ASend[i]=sin(2*M_PI*fm/FSAMPLE*i);
-        ASend[NSAMPLE-i]=-ASend[i];                 //Achtung, muss noch geändert werden wenn SampleFrequen geändert wird.
+        ASend[i]=sin(2*M_PI*fm/44100*i);
+        ASend[NSAMPLE-i]=-ASend[i];
     }
     NSLog(@"Sendesignal erzeugt");
 }
