@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "B4BA4AB8162056B200520207"
-               BuildableName = "sonar1.app"
+               BuildableName = "batapp.app"
                BlueprintName = "batapp"
                ReferencedContainer = "container:batapp.xcodeproj">
             </BuildableReference>
@@ -33,7 +33,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "B4BA4AB8162056B200520207"
-            BuildableName = "sonar1.app"
+            BuildableName = "batapp.app"
             BlueprintName = "batapp"
             ReferencedContainer = "container:batapp.xcodeproj">
          </BuildableReference>
@@ -52,7 +52,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "B4BA4AB8162056B200520207"
-            BuildableName = "sonar1.app"
+            BuildableName = "batapp.app"
             BlueprintName = "batapp"
             ReferencedContainer = "container:batapp.xcodeproj">
          </BuildableReference>
@@ -70,7 +70,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "B4BA4AB8162056B200520207"
-            BuildableName = "sonar1.app"
+            BuildableName = "batapp.app"
             BlueprintName = "batapp"
             ReferencedContainer = "container:batapp.xcodeproj">
          </BuildableReference>

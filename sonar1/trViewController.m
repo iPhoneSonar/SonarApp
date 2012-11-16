@@ -32,7 +32,7 @@
     [super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
     [audioController initializeAUGraph];
-}
+    [audioController recordingInit];}
 
 - (void)dealloc {
 	[audioController release];
@@ -116,9 +116,17 @@
 }
 
 - (IBAction)record:(id)sender {
+    [audioController recordingStart];
+    fileOps *file = [[fileOps alloc] init];
+    [file writeToStringfile:[@"recording\n" mutableCopy]];
+    self.tf2.text = @"recording";
 }
 
 - (IBAction)recordStop:(id)sender {
+    [audioController recordingStop];
+    fileOps *file = [[fileOps alloc] init];
+    [file writeToStringfile:[@"stop\n" mutableCopy]];
+    self.tf2.text = @"stop";
 }
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField

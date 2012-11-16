@@ -11,6 +11,7 @@
 #import "CAStreamBasicDescription.h"
 
 
+
 @interface audioController : NSObject
 {
     // Audio Graph Members
@@ -25,6 +26,10 @@
     
     //frequency for the sine wave
     int frequency;
+    
+    //recording unit
+    AudioComponentInstance audioUnit;
+    AudioBufferList *recordingBufferList;
 }
 
 @property(nonatomic) AUGraph mGraph;
@@ -32,6 +37,8 @@
 @property(nonatomic) CAStreamBasicDescription outputCASBD;
 @property(nonatomic) double sinPhase;
 @property(nonatomic) int frequency;
+@property(nonatomic) AudioComponentInstance audioUnit;
+@property(nonatomic) AudioBufferList *recordingBufferList;
 
 
 - (void)initializeAUGraph;
@@ -39,6 +46,10 @@
 - (void)stopAUGraph;
 - (void)setFrequency:(int) value;
 - (void)getFrequency:(int*) value;
+- (void)recordingInit;
+- (void)recordingStart;
+- (void)recordingStop;
+
 
 
 @end
