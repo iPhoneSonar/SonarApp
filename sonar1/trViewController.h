@@ -8,6 +8,7 @@
 
 #import <UIKit/UIKit.h>
 #import "AudioController.h"
+#import "processing.h"
 
 @interface trViewController : UIViewController <UITextFieldDelegate>{
     

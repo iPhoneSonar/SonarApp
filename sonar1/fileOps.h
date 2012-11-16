@@ -22,8 +22,9 @@
 @property(nonatomic,retain) NSString *filePath;
 
 -(NSString*) getDocumentDir;
--(void) writeToStringfile:(NSMutableString*)textToWrite;
--(NSString*) readFormFile;
+-(void) WriteString:(NSMutableString*)textToWrite ToFile:(NSString*)ToFileName;
+-(NSString*) readFormFile:(NSString*)Name;
 -(NSString*) setFileName;
+-(NSMutableString*) FloatArrayToString:(float*)AIn OfArraySize:(int)SizeA;
 
 @end
