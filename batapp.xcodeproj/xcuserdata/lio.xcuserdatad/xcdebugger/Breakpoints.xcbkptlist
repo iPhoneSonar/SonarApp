@@ -2,30 +2,4 @@
 <Bucket
    type = "1"
    version = "1.0">
-   <FileBreakpoints>
-      <FileBreakpoint
-         shouldBeEnabled = "No"
-         ignoreCount = "0"
-         continueAfterRunningActions = "No"
-<<<<<<< HEAD
-         filePath = "sonar1/audioController.m"
-         timestampString = "374687032.504915"
-         startingColumnNumber = "9223372036854775807"
-         endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "402"
-         endingLineNumber = "402"
-         landmarkName = "recordingCallback()"
-         landmarkType = "7">
-=======
-         filePath = "sonar1/fileOps.h"
-         timestampString = "374681112.018149"
-         startingColumnNumber = "9223372036854775807"
-         endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "27"
-         endingLineNumber = "27"
-         landmarkName = "-setFileName"
-         landmarkType = "4">
->>>>>>> origin/KoMaBranch
-      </FileBreakpoint>
-   </FileBreakpoints>
 </Bucket>

@@ -5,6 +5,9 @@
 //  Created by lio 123 on 11/11/2012.
 //
 //
+#ifndef DEBUG
+#define NSLog(...)
+#endif
 
 #import "fileOps.h"
 

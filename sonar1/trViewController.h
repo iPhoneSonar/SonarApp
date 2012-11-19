@@ -17,7 +17,7 @@
     UIButton *btnPlayStop;
     UIButton *btnRecord;
     UIButton *btnRecordStop;
-
+    UIButton *btnProcess;
     UITextField *tf1;
     UITextField *tf2;
 }
@@ -33,11 +33,13 @@
 
 @property (retain, nonatomic) IBOutlet UIButton *btnRecord;
 @property (retain, nonatomic) IBOutlet UIButton *btnRecordStop;
+@property (retain, nonatomic) IBOutlet UIButton *btnProcess;
 
 - (IBAction)backgroundTouched:(id)sender;
 - (IBAction)play:(id)sender;
 - (IBAction)playStop:(id)sender;
 - (IBAction)record:(id)sender;
 - (IBAction)recordStop:(id)sender;
+- (IBAction)testOutput:(id)sender;
 
 @end

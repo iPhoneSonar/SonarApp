@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 #import <AudioToolbox/AudioToolbox.h>
 #import "CAStreamBasicDescription.h"
+#import "processing.h"
 
 
 
@@ -30,6 +31,7 @@
     //recording unit
     AudioComponentInstance audioUnit;
     AudioBufferList *recordingBufferList;
+    AudioBufferList *chirpBufferList;
 }
 
 @property(nonatomic) AUGraph mGraph;
@@ -39,6 +41,7 @@
 @property(nonatomic) int frequency;
 @property(nonatomic) AudioComponentInstance audioUnit;
 @property(nonatomic) AudioBufferList *recordingBufferList;
+@property(nonatomic) AudioBufferList *chirpBufferList;
 
 
 - (void)initializeAUGraph;
@@ -46,10 +49,10 @@
 - (void)stopAUGraph;
 - (void)setFrequency:(int) value;
 - (void)getFrequency:(int*) value;
-- (void)recordingInit;
-- (void)recordingStart;
-- (void)recordingStop;
-
+- (OSStatus)recordingInit;
+- (OSStatus)recordingStart;
+- (OSStatus)recordingStop;
+- (void)testOutput;
 
 
 @end

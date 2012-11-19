@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		328473221650536C00A9D62A /* fileOps.m in Sources */ = {isa = PBXBuildFile; fileRef = 328473211650536C00A9D62A /* fileOps.m */; };
+		328602C7165A61F00006F91E /* communicator.m in Sources */ = {isa = PBXBuildFile; fileRef = 328602C6165A61F00006F91E /* communicator.m */; };
 		32C218BF16527FC30024E731 /* processing.m in Sources */ = {isa = PBXBuildFile; fileRef = 32C218BE16527FC30024E731 /* processing.m */; };
 		32D352E4164D8CF600364CF9 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 32D352E3164D8CF600364CF9 /* Default-568h@2x.png */; };
 		32D352E7164D8E4C00364CF9 /* CAStreamBasicDescription.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D352E6164D8E4C00364CF9 /* CAStreamBasicDescription.cpp */; };
@@ -26,6 +27,8 @@
 /* Begin PBXFileReference section */
 		328473201650536C00A9D62A /* fileOps.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fileOps.h; sourceTree = "<group>"; };
 		328473211650536C00A9D62A /* fileOps.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = fileOps.m; sourceTree = "<group>"; };
+		328602C5165A61F00006F91E /* communicator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = communicator.h; sourceTree = "<group>"; };
+		328602C6165A61F00006F91E /* communicator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = communicator.m; sourceTree = "<group>"; };
 		32C218BD16527FC30024E731 /* processing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = processing.h; sourceTree = "<group>"; };
 		32C218BE16527FC30024E731 /* processing.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = processing.m; sourceTree = "<group>"; };
 		32D352E3164D8CF600364CF9 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
@@ -96,6 +99,8 @@
 		B4BA4AC3162056B200520207 /* sonar1 */ = {
 			isa = PBXGroup;
 			children = (
+				328602C5165A61F00006F91E /* communicator.h */,
+				328602C6165A61F00006F91E /* communicator.m */,
 				B4BA4ACC162056B300520207 /* trAppDelegate.h */,
 				32C218BD16527FC30024E731 /* processing.h */,
 				32C218BE16527FC30024E731 /* processing.m */,
@@ -195,6 +200,7 @@
 				32D352E7164D8E4C00364CF9 /* CAStreamBasicDescription.cpp in Sources */,
 				328473221650536C00A9D62A /* fileOps.m in Sources */,
 				32C218BF16527FC30024E731 /* processing.m in Sources */,
+				328602C7165A61F00006F91E /* communicator.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -256,6 +262,7 @@
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_PREPROCESSOR_DEFINITIONS = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				SDKROOT = iphoneos;

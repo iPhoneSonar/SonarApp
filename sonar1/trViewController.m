@@ -5,6 +5,9 @@
 //  Created by lion on 10/6/12.
 //  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
 //
+#ifndef DEBUG
+#define NSLog(...)
+#endif
 
 #import "trViewController.h"
 #import "fileOps.h"
@@ -16,6 +19,7 @@
 @synthesize btnPlayStop;
 @synthesize btnRecord;
 @synthesize btnRecordStop;
+@synthesize btnProcess;
 @synthesize tf1;
 @synthesize tf2;
 
@@ -50,6 +54,7 @@ float AKkf[KKFSIZE];
     [tf2 release];
     [btnRecord release];
     [btnRecordStop release];
+    [btnProcess release];
     [super dealloc];
 }
 
@@ -61,6 +66,7 @@ float AKkf[KKFSIZE];
     [self setTf2:nil];
     [self setBtnRecord:nil];
     [self setBtnRecordStop:nil];
+    [self setBtnProcess:nil];
     [super viewDidUnload];
     // Release any retained subviews of the main view.
     // e.g. self.myOutlet = nil;
@@ -101,39 +107,39 @@ float AKkf[KKFSIZE];
 - (IBAction)play:(id)sender {
     int freq = 0;
     freq = [self.tf1.text intValue];
-    [audioController setFrequency: freq];    
+    [audioController setFrequency: freq];
     [audioController startAUGraph];
     
     //create simulated receive signal
-    for (int i=0;i<NSAMPLE;i++)
-    {
-        ARecord[i]=0;
-    }
-    for (int i=280;i<NSAMPLE;i++)
-    {
-        ARecord[i]=ASend[i-280];
-    }
-    #ifndef NODEBUG
-    NSLog(@"Test Empfangssignal in trViewController erzeugt");
-    #endif
+    //for (int i=0;i<NSAMPLE;i++)
+    //{
+    //    ARecord[i]=0;
+    //}
+    //for (int i=280;i<NSAMPLE;i++)
+    //{
+    //    ARecord[i]=ASend[i-280];
+    //}
+    //#ifndef NODEBUG
+    //NSLog(@"Test Empfangssignal in trViewController erzeugt");
+    //#endif
     //Signal processing
-    KKF(ARecord, ASend, AKkf);
-    MaximumSuche(AKkf);    
+    //KKF(ARecord, ASend, AKkf);
+    //MaximumSuche(AKkf);
     
     //////////////
     // Export Arrays for Signal debugging
     //
-    fileOps *FRecord = [[fileOps alloc] init];
-    NSMutableString *SRecord= [NSString stringWithFormat:@"%@", [FRecord FloatArrayToString:ASend OfArraySize:NSAMPLE]];
-    [FRecord WriteString:[SRecord mutableCopy] ToFile:@"Record.txt"];
+    //fileOps *FRecord = [[fileOps alloc] init];
+    //NSMutableString *SRecord= [NSString stringWithFormat:@"%@", [FRecord FloatArrayToString:ASend OfArraySize:NSAMPLE]];
+    //[FRecord WriteString:[SRecord mutableCopy] ToFile:@"Record.txt"];
     
-    fileOps *FKKF = [[fileOps alloc] init];
-    NSMutableString *SKKF= [NSString stringWithFormat:@"%@", [FKKF FloatArrayToString:ASend OfArraySize:NSAMPLE]];
-    [FKKF WriteString:[SKKF mutableCopy] ToFile:@"KKF.txt"];
+    //fileOps *FKKF = [[fileOps alloc] init];
+    //NSMutableString *SKKF= [NSString stringWithFormat:@"%@", [FKKF FloatArrayToString:ASend OfArraySize:NSAMPLE]];
+    //[FKKF WriteString:[SKKF mutableCopy] ToFile:@"KKF.txt"];
     //
     // \Export Arrays for Signal debugging
     //////////////
-   
+    
     
     NSLog(@"%@%@", @"play freq=", self.tf1.text);
     fileOps *file = [[fileOps alloc] init];
@@ -154,6 +160,9 @@ float AKkf[KKFSIZE];
 }
 
 - (IBAction)record:(id)sender {
+    int freq = 0;
+    freq = [self.tf1.text intValue];
+    [audioController setFrequency: freq];
     [audioController recordingStart];
     fileOps *file = [[fileOps alloc] init];
     [file WriteString:[@"recording\n" mutableCopy] ToFile:@"log.txt"];
@@ -165,6 +174,11 @@ float AKkf[KKFSIZE];
     fileOps *file = [[fileOps alloc] init];
     [file WriteString:[@"stop\n" mutableCopy] ToFile:@"log.txt"];
     self.tf2.text = @"stop";
+}
+
+- (IBAction)testOutput:(id)sender {
+    [audioController testOutput];
+    self.tf2.text = @"test out";
 }
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField

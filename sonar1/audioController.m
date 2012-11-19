@@ -5,16 +5,16 @@
 //  Created by lion on 10/6/12.
 //  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
 //
-
+#ifndef DEBUG
+#define NSLog(...)
+#endif
 
 #import "audioController.h"
 
 // Native iphone sample rate of 44.1kHz, same as a CD.
 const Float64 kGraphSampleRate = 44100.0;
-int count = 0;
-int sumFrames = 0;
-int minFrames = 500;
-int maxFrames = 0;
+SInt16 record[4096];
+int frameCount = 0;
 
 @implementation audioController
 
@@ -25,6 +25,7 @@ int maxFrames = 0;
 @synthesize frequency;
 @synthesize audioUnit;
 @synthesize recordingBufferList;
+@synthesize chirpBufferList;
 
 // Clean up memory
 - (void)dealloc {
@@ -68,8 +69,11 @@ int maxFrames = 0;
 
 //
 // audio render procedure, don't allocate memory, don't take any locks, don't waste time
-static OSStatus renderInput(void *inRefCon, AudioUnitRenderActionFlags *ioActionFlags, const AudioTimeStamp *inTimeStamp, UInt32 inBusNumber, UInt32 inNumberFrames, AudioBufferList *ioData)
+static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioActionFlags, const AudioTimeStamp *inTimeStamp, UInt32 inBusNumber, UInt32 inNumberFrames, AudioBufferList *ioData)
 {
+    //no play
+    return noErr;
+    
 	// Get a reference to the object that was passed with the callback
 	// In this case, the AudioController passed itself so
 	// that you can access its data.
@@ -182,7 +186,7 @@ static OSStatus renderInput(void *inRefCon, AudioUnitRenderActionFlags *ioAction
 		// This struct describes the function that will be called
 		// to provide a buffer of audio samples for the mixer unit.
 		AURenderCallbackStruct renderCallbackStruct;
-		renderCallbackStruct.inputProc = &renderInput;
+		renderCallbackStruct.inputProc = &playingCallback;
 		renderCallbackStruct.inputProcRefCon = self;
         
         // Set a callback for the specified node's specified input
@@ -267,7 +271,7 @@ static OSStatus renderInput(void *inRefCon, AudioUnitRenderActionFlags *ioAction
 }
 
 //implementation for recording
--(void)recordingInit
+-(OSStatus)recordingInit
 {
     int kInputBus = 1;
     int kOutputBus = 0;
@@ -287,8 +291,8 @@ static OSStatus renderInput(void *inRefCon, AudioUnitRenderActionFlags *ioAction
     //get audio units
     status = AudioComponentInstanceNew(inputComponent,  &audioUnit);
     
-    //disable output
-    UInt32 flag = 0;
+    //enable output
+    UInt32 flag = 1;
     status = AudioUnitSetProperty(audioUnit ,
                                   kAudioOutputUnitProperty_EnableIO,
                                   kAudioUnitScope_Output,
@@ -341,15 +345,26 @@ static OSStatus renderInput(void *inRefCon, AudioUnitRenderActionFlags *ioAction
     callbackStruct.inputProc = &recordingCallback;
     callbackStruct.inputProcRefCon = self;
     
-    
     status = AudioUnitSetProperty(audioUnit ,
                                   kAudioOutputUnitProperty_SetInputCallback,
                                   kAudioUnitScope_Output,
                                   kInputBus,
                                   &callbackStruct, sizeof(callbackStruct));
 
-    NSLog(@"set callback status=%ld",status);
+    NSLog(@"set recordingCallback status=%ld",status);
+
     
+    callbackStruct.inputProc = &playingCallback;
+    callbackStruct.inputProcRefCon = self;
+    
+    status = AudioUnitSetProperty(audioUnit ,
+                                  kAudioUnitProperty_SetRenderCallback,
+                                  kAudioUnitScope_Input,
+                                  kOutputBus,
+                                  &callbackStruct, sizeof(callbackStruct));
+   
+    NSLog(@"set playingCallback status=%ld",status);
+
     /*
     flag = 0;
     status = AudioUnitSetProperty(audioUnit ,
@@ -360,13 +375,14 @@ static OSStatus renderInput(void *inRefCon, AudioUnitRenderActionFlags *ioAction
     
     NSLog(@"set no allocate status=%ld",status);
      */
+    //use the defined record[] as buffer
+    memset(record, 0, 4096);
     recordingBufferList = (AudioBufferList*)malloc(sizeof(AudioBufferList)) ;
     recordingBufferList->mNumberBuffers = 1;
-    recordingBufferList->mBuffers[0].mData = malloc(512*4);
+    recordingBufferList->mBuffers[0].mData = record;
     recordingBufferList->mBuffers[0].mNumberChannels = 1;
-
     
-    
+    return status;
 }
 
 static OSStatus recordingCallback(void *inRefCon,
@@ -376,7 +392,7 @@ static OSStatus recordingCallback(void *inRefCon,
                                   UInt32 inNumberFrames,
                                   AudioBufferList *ioData)
 {
-    int dataSize = inNumberFrames * 2 *sizeof(Byte); //as we have 16bit signed integers;
+    int dataSize = inNumberFrames * sizeof(Byte) * 2; // 16bit
     //NSLog(@"recordingCallback");
         
     OSStatus status;
@@ -390,6 +406,12 @@ static OSStatus recordingCallback(void *inRefCon,
     //AudioSampleType *tempA = (AudioSampleType *)ioData->mBuffers[0].mData;
     //for (int i=0; i<10;i++)
     //    NSLog(@"val %d=%d",i,tempA[i] );
+    if (inNumberFrames > 1024)
+    {
+        NSLog(@"inNumberFrames = %ld",inNumberFrames);
+        AudioOutputUnitStop(recordingUnit.audioUnit);
+        return noErr;
+    }
     
     status = AudioUnitRender(recordingUnit.audioUnit,
                              ioActionFlags,
@@ -397,57 +419,64 @@ static OSStatus recordingCallback(void *inRefCon,
                              inBusNumber,
                              inNumberFrames,
                              bufferList);
-    
-    //NSLog(@"audio unitRender=%ld", status);
-    //NSLog(@"frames=%ld",inNumberFrames);
-    //NSLog(@"frames=%ld",inNumberFrames);
-
-/*  AudioSampleType *tempA = (AudioSampleType *)bufferList->mBuffers[0].mData;
-    for (int i=0; i<10;i++)
-        NSLog(@"val %d=%d",i,tempA[i] );
-*/
-    count++;
-    if (count > 100)
+   
+    //NSLog(@"frames=%ld\n AudioUnitRender status = %ld",inNumberFrames,status);
+    frameCount += 1;
+    if (frameCount > 3)
     {
         AudioOutputUnitStop(recordingUnit.audioUnit);
-        NSLog(@"audioUnit stoped status = %ld", status);
-        
-        NSLog(@"maxFrames = %d", maxFrames);
-        NSLog(@"minFrames = %d", minFrames);
-        NSLog(@"sumFrames = %d", sumFrames);
-        count = 0;
-        maxFrames = 0;
-        minFrames = 500;
-        sumFrames = 0;
-        
-        AudioSampleType *tempA = (AudioSampleType *)bufferList->mBuffers[0].mData;
-        for (int i=0; i<inNumberFrames;i++)
-            NSLog(@"val %d=%d",i,tempA[i] );
+        NSLog(@"audioUnit stoped");
+        bufferList->mBuffers[0].mData = record;
+        frameCount = 0;
     }
-    if (inNumberFrames>maxFrames)
-        maxFrames = inNumberFrames;
-    else if (inNumberFrames<minFrames)
-        minFrames = inNumberFrames;
-    
-    sumFrames += inNumberFrames;
-    
+    else
+    {
+        bufferList->mBuffers[0].mData = record+frameCount*1024; 
+    }
     return noErr;
 
 }
 
--(void)recordingStart
+-(void)testOutput
 {
-    OSStatus status;
-    status = AudioOutputUnitStart(audioUnit);
-    NSLog(@"audioUnit started status = %ld", status);
+    //find the min and max amplitude values to get an idea of the range
+    //output all the 
+    SInt16 maxVal = 0;
+    SInt16 minVal = 0;
+    for (int i=0; i<sizeof(record)/2; i++) //because sizeof returns in size of bytes
+    {
+        //NSLog(@"val[%d]= %d",i,record[i]);
+        if (record[i]>maxVal)
+            maxVal = record[i];
+        else if (record[i]<minVal)
+            minVal = record[i];
+    }
+    NSLog(@"min=%d, max=%d",minVal,maxVal);
+
 }
 
--(void)recordingStop
+-(OSStatus)recordingStart
+{
+    OSStatus status;
+    //not the right place but needs to be checked
+    if (recordingBufferList)
+    {
+        status = AudioOutputUnitStart(audioUnit);
+        //NSLog(@"audioUnit started status = %ld", status);
+    }
+    else
+    {
+        NSLog(@"audioUnit start error = %ld", status);
+    }
+    return status;
+}
+
+-(OSStatus)recordingStop
 {
     OSStatus status;
     AudioOutputUnitStop(audioUnit);
     NSLog(@"audioUnit stoped status = %ld", status);
-
+    return status;
 }
 
 @end
