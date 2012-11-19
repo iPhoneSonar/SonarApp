@@ -29,20 +29,34 @@
 
 -(void) WriteString:(NSMutableString*)textToWrite ToFile:(NSString*)ToFileName
 {
-    filePath = [[NSString alloc] init];
-    
+    filePath = [[NSString alloc] init];    
     filePath = [self.getDocumentDir stringByAppendingPathComponent:ToFileName];
+    NSLog(@"Path=%@", filePath);
     if ([fileMgr fileExistsAtPath: filePath] == YES)
     {
-#ifndef NODEBUG
-        NSLog(@"file %@ exists", ToFileName);
-#endif
+        if ([fileMgr removeItemAtPath:filePath error:NULL] == YES)
+        {
+            NSLog(@"file %@ deleted", ToFileName);
+        }
+        else
+        {
+            NSLog(@"error deleting file: %@", ToFileName);
+        }
     }
     else
     {
-        NSLog(@"%@%@",@"file not found ",filePath);
-        [fileMgr createFileAtPath:filePath contents:nil attributes:nil] ;
+        NSLog(@"file %@ did not exist, not deleted", ToFileName);
+    }    
+    [fileMgr createFileAtPath:filePath contents:nil attributes:nil] ;
+    if ([fileMgr fileExistsAtPath: filePath] == YES)
+    {
+        NSLog(@"file %@ created", ToFileName);
     }
+    else
+    {
+        NSLog(@"error creating file %@", ToFileName);
+    }   
+    
     NSFileHandle *hFile = [NSFileHandle fileHandleForUpdatingAtPath:filePath];
     if (hFile == nil)
         NSLog(@"error open file %@", ToFileName);
@@ -80,10 +94,11 @@
     NSString *Sout= [NSString stringWithFormat:@"%.5f", AIn[0]];
     for (int i=1; i<SizeA;i++)
     {        
-        Sout=[Sout stringByAppendingString:@"\n"];
+        Sout=[Sout stringByAppendingString:@"\r\n"];
         Sout=[Sout stringByAppendingString:[NSString stringWithFormat:@"%.5f", AIn[i]]];
     }
 #ifndef NODEBUG
+    NSLog(@"%@",Sout);
     NSLog(@"Converted FloatArrayToString");
 #endif
     return [Sout mutableCopy];
