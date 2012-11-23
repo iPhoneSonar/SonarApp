@@ -10,6 +10,7 @@
 #import <AudioToolbox/AudioToolbox.h>
 #import "CAStreamBasicDescription.h"
 #import "processing.h"
+#import "communicator.h"
 
 
 
@@ -32,6 +33,9 @@
     AudioComponentInstance audioUnit;
     AudioBufferList *recordingBufferList;
     AudioBufferList *chirpBufferList;
+    AudioBufferList *testSin;
+    
+    communicator *com;
 }
 
 @property(nonatomic) AUGraph mGraph;
@@ -42,17 +46,21 @@
 @property(nonatomic) AudioComponentInstance audioUnit;
 @property(nonatomic) AudioBufferList *recordingBufferList;
 @property(nonatomic) AudioBufferList *chirpBufferList;
-
+@property(nonatomic) AudioBufferList *testSin;
+@property(nonatomic,retain) communicator *com;
 
 - (void)initializeAUGraph;
 - (void)startAUGraph;
 - (void)stopAUGraph;
 - (void)setFrequency:(int) value;
 - (void)getFrequency:(int*) value;
-- (OSStatus)recordingInit;
+- (OSStatus)audioUnitInit;
 - (OSStatus)recordingStart;
 - (OSStatus)recordingStop;
 - (void)testOutput;
+- (void)sinGen;
+- (void)mute:(UInt32)flag;
+
 
 
 @end

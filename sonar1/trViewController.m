@@ -22,6 +22,9 @@
 @synthesize btnProcess;
 @synthesize tf1;
 @synthesize tf2;
+@synthesize tfIp;
+@synthesize btnConnect;
+@synthesize btnMute;
 
 float ARecord[NSAMPLE];
 float ASend[NSAMPLE];
@@ -43,7 +46,7 @@ float AKkf[KKFSIZE];
     CreateSendSignal(ASend);
     
     [audioController initializeAUGraph];
-    [audioController recordingInit];}
+    [audioController audioUnitInit];}
 
 - (void)dealloc {
 	[audioController release];
@@ -55,6 +58,9 @@ float AKkf[KKFSIZE];
     [btnRecord release];
     [btnRecordStop release];
     [btnProcess release];
+    [tfIp release];
+    [btnConnect release];
+    [btnMute release];
     [super dealloc];
 }
 
@@ -67,6 +73,9 @@ float AKkf[KKFSIZE];
     [self setBtnRecord:nil];
     [self setBtnRecordStop:nil];
     [self setBtnProcess:nil];
+    [self setTfIp:nil];
+    [self setBtnConnect:nil];
+    [self setBtnMute:nil];
     [super viewDidUnload];
     // Release any retained subviews of the main view.
     // e.g. self.myOutlet = nil;
@@ -98,6 +107,7 @@ float AKkf[KKFSIZE];
     return (interfaceOrientation != UIInterfaceOrientationPortraitUpsideDown);
 }
 
+
 - (IBAction)backgroundTouched:(id)sender
 {
     [tf1 resignFirstResponder];
@@ -122,23 +132,7 @@ float AKkf[KKFSIZE];
     #ifndef NODEBUG
     NSLog(@"Test Empfangssignal in trViewController erzeugt");
     #endif
-    //Signal processing
-    //KKF(ARecord, ASend, AKkf);
-    //MaximumSuche(AKkf);
     
-    //////////////
-    // Export Arrays for Signal debugging
-    //
-    fileOps *FRecord = [[fileOps alloc] init];
-    NSMutableString *SRecord= [NSString stringWithFormat:@"%@", [FRecord FloatArrayToString:ASend OfArraySize:NSAMPLE]];
-    [FRecord WriteString:[SRecord mutableCopy] ToFile:@"Record.txt"];
-    
-    //fileOps *FKKF = [[fileOps alloc] init];
-    //NSMutableString *SKKF= [NSString stringWithFormat:@"%@", [FKKF FloatArrayToString:ASend OfArraySize:NSAMPLE]];
-    //[FKKF WriteString:[SKKF mutableCopy] ToFile:@"KKF.txt"];
-    //
-    // \Export Arrays for Signal debugging
-    //////////////
     
     
     NSLog(@"%@%@", @"play freq=", self.tf1.text);
@@ -171,6 +165,25 @@ float AKkf[KKFSIZE];
 - (IBAction)testOutput:(id)sender {
     [audioController testOutput];
     self.tf2.text = @"test out";
+}
+
+- (IBAction)mute:(id)sender {
+    if (self.btnMute.selected == YES)
+    {
+        self.btnMute.selected = NO;
+        [audioController mute:1];
+    }
+    else
+    {
+        self.btnMute.selected = YES;
+        [audioController mute:0];
+    }
+}
+
+- (IBAction)connect:(id)sender
+{
+    [[audioController com ]setHost: (CFStringRef)self.tfIp.text];
+    [[audioController com ]initNetworkCom];
 }
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField
