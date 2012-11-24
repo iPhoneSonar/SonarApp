@@ -443,6 +443,20 @@ static OSStatus playingCallbackTest(void *inRefCon, AudioUnitRenderActionFlags *
     
     NSLog(@"set no allocate status=%ld",status);
     */
+    UInt32 value = 0;
+    UInt32 size = sizeof(value);
+    
+    /* tests with audio session
+    AudioSessionInitialize(<#CFRunLoopRef inRunLoop#>, <#CFStringRef inRunLoopMode#>, <#AudioSessionInterruptionListener inInterruptionListener#>, <#void *inClientData#>)
+    status = AudioSessionSetActive(true);
+    NSLog(@"AudioSessionSetActive status=%ld",status);
+
+    
+    status = AudioSessionGetProperty(kAudioSessionProperty_AudioRoute,
+                                     &size,
+                                     &value);
+    
+    NSLog(@"audioSessionGetProperty = %ld status=%ld",value, status);
     
     //use the defined record[] as buffer
     memset(record, 0, 4096);
@@ -489,6 +503,7 @@ static OSStatus recordingCallback(void *inRefCon,
                              inNumberFrames,
                              bufferList);
    
+    
     //NSLog(@"frames=%ld\n AudioUnitRender status = %ld",inNumberFrames,status);
     /*
     frameCount += 1;
