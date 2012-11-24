@@ -457,7 +457,7 @@ static OSStatus playingCallbackTest(void *inRefCon, AudioUnitRenderActionFlags *
                                      &value);
     
     NSLog(@"audioSessionGetProperty = %ld status=%ld",value, status);
-    
+    */
     //use the defined record[] as buffer
     memset(record, 0, 4096);
     recordingBufferList = (AudioBufferList*)malloc(sizeof(AudioBufferList)) ;
