@@ -6,3 +6,4 @@
 void CreateSendSignal(float ASend[NSAMPLE]);
 void KKF(float ARecord[NSAMPLE], float Asend[NSAMPLE], float AKkf[KKFSIZE]);
 void MaximumSuche(float AKkf[KKFSIZE]);
+void sweepGen(SInt16 *T);
