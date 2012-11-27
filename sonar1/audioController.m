@@ -12,7 +12,9 @@
 #import "audioController.h"
 
 // Native iphone sample rate of 44.1kHz, same as a CD.
-const Float64 SAMPLERATE = 44100.0;
+//const Float64 SAMPLERATE = 44100.0;
+const Float64 SAMPLERATE = 48000.0;
+
 //setting the framerate to 48k increases the frame size to 1114
 SInt16 record[4096];
 int frameCount = 0;
@@ -32,10 +34,7 @@ SInt16 pos = 0;
 
 @implementation audioController
 
-@synthesize mGraph;
-@synthesize mMixer;
-@synthesize outputCASBD;
-@synthesize sinPhase;
+
 @synthesize frequency;
 @synthesize audioUnit;
 @synthesize recordingBufferList;
@@ -46,32 +45,9 @@ SInt16 pos = 0;
 // Clean up memory
 - (void)dealloc {
     
-    DisposeAUGraph(mGraph);
     [super dealloc];
 }
 
-
-// starts render
-- (void)startAUGraph
-{
-	// Start the AUGraph
-	OSStatus result = AUGraphStart(mGraph);
-	// Print the result
-	if (result) { printf("AUGraphStart result %d %08X %4.4s\n", (int)result, (int)result, (char*)&result); return; }
-}
-
-// stops render
-- (void)stopAUGraph
-{
-    Boolean isRunning = false;
-    
-    // Check to see if the graph is running.
-    OSStatus result = AUGraphIsRunning(mGraph, &isRunning);
-    // If the graph is running, stop it.
-    if (isRunning) {
-        result = AUGraphStop(mGraph);
-    }
-}
 
 - (void)setFrequency:(int) value
 {
@@ -81,58 +57,6 @@ SInt16 pos = 0;
 - (void)getFrequency:(int*) value
 {
     *value = frequency;
-}
-
-//
-// audio render procedure, don't allocate memory, don't take any locks, don't waste time
-static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioActionFlags, const AudioTimeStamp *inTimeStamp, UInt32 inBusNumber, UInt32 inNumberFrames, AudioBufferList *ioData)
-{
-    
-	// Get a reference to the object that was passed with the callback
-	// In this case, the AudioController passed itself so
-	// that you can access its data.
-	audioController *THIS = (audioController*)inRefCon;
-    
-	// Get a pointer to the dataBuffer of the AudioBufferList
-	AudioSampleType *outA = (AudioSampleType *)ioData->mBuffers[0].mData;
-    
-    
-    float freq = THIS->frequency;
-	// Calculations to produce a 600 Hz sinewave
-	// A constant frequency value, you can pass in a reference vary this.
-	// The amount the phase changes in  single sample
-	double phaseIncrement = M_PI * freq / SAMPLERATE;
-	// Pass in a reference to the phase value, you have to keep track of this
-	// so that the sin resumes right where the last call left off
-	float phase = THIS->sinPhase;
-    
-	float sinSignal;
-	// Loop through the callback buffer, generating samples
-	for (UInt32 i = 0; i < inNumberFrames; ++i) { 		
-        
-        // calculate the next sample
-        sinSignal = sin(phase);
-        // Put the sample into the buffer
-        // Scale the -1 to 1 values float to
-        // -32767 to 32767 and then cast to an integer
-        outA[i] = (SInt16)(sinSignal * 32767.0f);
-        // calculate the phase for the next sample
-        phase = phase + phaseIncrement;
-    }
-    // Reset the phase value to prevent the float from overflowing
-    if (phase >=  M_PI * freq) {
-		phase = phase - M_PI * freq;
-	}
-	// Store the phase for the next callback.
-	THIS->sinPhase = phase;
-    
-    //test
-    
-    //ioData->mBuffers[0].mData = (frame+pos);
-    //SInt16 shift = inNumberFrames-(inNumberFrames/48)*48;
-    //pos = (pos+shift)%48;
-    
-	return noErr;
 }
 
 
@@ -166,7 +90,7 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
 }
 
 // audio render procedure, don't allocate memory, don't take any locks, don't waste time
-static OSStatus playingCallbackTest(void *inRefCon, AudioUnitRenderActionFlags *ioActionFlags, const AudioTimeStamp *inTimeStamp, UInt32 inBusNumber, UInt32 inNumberFrames, AudioBufferList *ioData)
+static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioActionFlags, const AudioTimeStamp *inTimeStamp, UInt32 inBusNumber, UInt32 inNumberFrames, AudioBufferList *ioData)
 {
 	ioData->mBuffers[0].mData = (framePtr+pos);
     
@@ -176,164 +100,6 @@ static OSStatus playingCallbackTest(void *inRefCon, AudioUnitRenderActionFlags *
 }
 
 
-//init
-- (void)initializeAUGraph
-{
-    
-	//************************************************************
-	//*** Setup the AUGraph, add AUNodes, and make connections ***
-	//************************************************************
-	// Error checking result
-	OSStatus result = noErr;
-    
-	// create a new AUGraph
-	result = NewAUGraph(&mGraph);
-    
-    //preset the frequnecy
-    frequency = 600;
-    
-    // AUNodes represent AudioUnits on the AUGraph and provide an
-	// easy means for connecting audioUnits together.
-    AUNode outputNode;
-	AUNode mixerNode;
-
-    // Create AudioComponentDescriptions for the AUs we want in the graph
-    // mixer component
-	AudioComponentDescription mixer_desc;
-    mixer_desc.componentType = kAudioUnitType_Mixer;
-	mixer_desc.componentSubType = kAudioUnitSubType_MultiChannelMixer;
-	mixer_desc.componentFlags = 0;
-	mixer_desc.componentFlagsMask = 0;
-	mixer_desc.componentManufacturer = kAudioUnitManufacturer_Apple;
-    
-	//  output component
-	AudioComponentDescription output_desc;
-	output_desc.componentType = kAudioUnitType_Output;
-	output_desc.componentSubType = kAudioUnitSubType_RemoteIO;
-	output_desc.componentFlags = 0;
-	output_desc.componentFlagsMask = 0;
-	output_desc.componentManufacturer = kAudioUnitManufacturer_Apple;
-    
-    // Add nodes to the graph to hold our AudioUnits,
-	// You pass in a reference to the  AudioComponentDescription
-	// and get back an  AudioUnit
-	result = AUGraphAddNode(mGraph, &output_desc, &outputNode);
-	result = AUGraphAddNode(mGraph, &mixer_desc, &mixerNode );
-    
-	// Now we can manage connections using nodes in the graph.
-    // Connect the mixer node's output to the output node's input
-	result = AUGraphConnectNodeInput(mGraph, mixerNode, 0, outputNode, 0);
-    
-    // open the graph AudioUnits are open but not initialized (no resource allocation occurs here)
-	result = AUGraphOpen(mGraph);
-    
-	// Get a link to the mixer AU so we can talk to it later
-	result = AUGraphNodeInfo(mGraph, mixerNode, NULL, &mMixer);
-    
-	//************************************************************
-	//*** Make connections to the mixer unit's inputs ***
-	//************************************************************
-    // Set the number of input busses on the Mixer Unit
-	// Right now we are only doing a single bus.
-	UInt32 numbuses = 1;
-	UInt32 size = sizeof(numbuses);
-    result = AudioUnitSetProperty(mMixer, kAudioUnitProperty_ElementCount, kAudioUnitScope_Input, 0, &numbuses, size);
-    
-	CAStreamBasicDescription desc;
-    
-	// Loop through and setup a callback for each source you want to send to the mixer.
-	// Right now we are only doing a single bus so we could do without the loop.
-	for (int i = 0; i < numbuses; ++i) {
-        
-		// Setup render callback struct
-		// This struct describes the function that will be called
-		// to provide a buffer of audio samples for the mixer unit.
-		AURenderCallbackStruct renderCallbackStruct;
-		renderCallbackStruct.inputProc = &playingCallbackTest;
-		renderCallbackStruct.inputProcRefCon = self;
-        
-        // Set a callback for the specified node's specified input
-        result = AUGraphSetNodeInputCallback(mGraph, mixerNode, i, &renderCallbackStruct);
-        
-		// Get a CAStreamBasicDescription from the mixer bus.
-        size = sizeof(desc);
-		result = AudioUnitGetProperty(  mMixer,
-                                      kAudioUnitProperty_StreamFormat,
-                                      kAudioUnitScope_Input,
-                                      i,
-                                      &desc,
-                                      &size);
-        //NSLog(@"%d")
-		// Initializes the structure to 0 to ensure there are no spurious values.
-		memset (&desc, 0, sizeof (desc));        						
-        
-		// Make modifications to the CAStreamBasicDescription
-		// We're going to use 16 bit Signed Ints because they're easier to deal with
-		// The Mixer unit will accept either 16 bit signed integers or
-		// 32 bit 8.24 fixed point integers.
-		desc.mSampleRate = SAMPLERATE; // set sample rate
-		desc.mFormatID = kAudioFormatLinearPCM;
-		desc.mFormatFlags      = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
-		desc.mBitsPerChannel = sizeof(AudioSampleType) * 8; // AudioSampleType == 16 bit signed ints
-		desc.mChannelsPerFrame = 1;
-		desc.mFramesPerPacket = 1;
-		desc.mBytesPerFrame = ( desc.mBitsPerChannel / 8 ) * desc.mChannelsPerFrame;
-		desc.mBytesPerPacket = desc.mBytesPerFrame * desc.mFramesPerPacket;
-        
-		printf("Mixer file format: "); desc.Print();
-		// Apply the modified CAStreamBasicDescription to the mixer input bus
-		result = AudioUnitSetProperty(  mMixer,
-                                      kAudioUnitProperty_StreamFormat,
-                                      kAudioUnitScope_Input,
-                                      i,
-                                      &desc,
-                                      sizeof(desc));
-	}
-	// Apply the CAStreamBasicDescription to the mixer output bus
-	result = AudioUnitSetProperty(	 mMixer,
-                                  kAudioUnitProperty_StreamFormat,
-                                  kAudioUnitScope_Output,
-                                  0,
-                                  &desc,
-                                  sizeof(desc));
-    
-	//************************************************************
-	//*** Setup the audio output stream ***
-	//************************************************************
-    
-	// Get a CAStreamBasicDescription from the output Audio Unit
-    result = AudioUnitGetProperty(  mMixer,
-                                  kAudioUnitProperty_StreamFormat,
-                                  kAudioUnitScope_Output,
-                                  0,
-                                  &desc,
-                                  &size);
-    
-	// Initializes the structure to 0 to ensure there are no spurious values.
-	memset (&desc, 0, sizeof (desc));
-    
-	// Make modifications to the CAStreamBasicDescription
-	// AUCanonical on the iPhone is the 8.24 integer format that is native to the iPhone.
-	// The Mixer unit does the format shifting for you.
-	desc.SetAUCanonical(1, true);
-	desc.mSampleRate = SAMPLERATE;
-    
-    // Apply the modified CAStreamBasicDescription to the output Audio Unit
-	result = AudioUnitSetProperty(  mMixer,
-                                  kAudioUnitProperty_StreamFormat,
-                                  kAudioUnitScope_Output,
-                                  0,
-                                  &desc,
-                                  sizeof(desc));
-    
-    // Once everything is set up call initialize to validate connections
-    
-    
-    
- 	result = AUGraphInitialize(mGraph);
-}
-
-//implementation for recording
 -(OSStatus)audioUnitInit
 {
     //bring up the communication channel
@@ -424,7 +190,7 @@ static OSStatus playingCallbackTest(void *inRefCon, AudioUnitRenderActionFlags *
     NSLog(@"set recordingCallback status=%ld",status);
 
     
-    callbackStruct.inputProc = &playingCallbackTest;
+    callbackStruct.inputProc = &playingCallback;
     callbackStruct.inputProcRefCon = self;
     
     status = AudioUnitSetProperty(audioUnit ,
@@ -435,7 +201,7 @@ static OSStatus playingCallbackTest(void *inRefCon, AudioUnitRenderActionFlags *
    
     NSLog(@"set playingCallback status=%ld",status);
 
-    /*
+
     flag = 0;
     status = AudioUnitSetProperty(audioUnit ,
                                   kAudioUnitProperty_ShouldAllocateBuffer,
@@ -444,7 +210,7 @@ static OSStatus playingCallbackTest(void *inRefCon, AudioUnitRenderActionFlags *
                                   &flag, sizeof(flag));
     
     NSLog(@"set no allocate status=%ld",status);
-    */
+
  
     //use the defined record[] as buffer
     memset(record, 0, 4096);
@@ -577,35 +343,40 @@ static OSStatus playingCallbackTest(void *inRefCon, AudioUnitRenderActionFlags *
     
     }
     
-    double dData = 0;
+    double dData = SAMPLERATE;
+    uiDataSize = sizeof(double);
+    status = AudioSessionSetProperty(kAudioSessionProperty_PreferredHardwareSampleRate, uiDataSize, &dData);
+    NSLog(@"set perferred samplerate = %f, status = %ld = %4.4s\n",dData, status,(char*)&status);
+    
+    dData = 0;
+    uiDataSize = sizeof(double);
+    status = AudioSessionGetProperty(kAudioSessionProperty_PreferredHardwareSampleRate, &uiDataSize, &dData);
+    NSLog(@"perferred samplerate = %f, status = %ld = %4.4s\n",dData, status,(char*)&status);
+    
+    Float32 fData = 0;
+    uiDataSize = sizeof(Float32);
+    status = AudioSessionGetProperty(kAudioSessionProperty_PreferredHardwareIOBufferDuration, &uiDataSize, &fData);
+    NSLog(@"perferred buffer duration = %f, status = %ld = %4.4s\n",fData, status,(char*)&status);
+    
+    dData = 0;
     uiDataSize = sizeof(double);
     status = AudioSessionGetProperty(kAudioSessionProperty_CurrentHardwareSampleRate, &uiDataSize, &dData);
     NSLog(@"curren hwd samplerate = %f, status = %ld = %4.4s\n",dData, status,(char*)&status);
 
-    Float32 fData = 0;
+    fData = 0;
     uiDataSize = sizeof(Float32);
     status = AudioSessionGetProperty(kAudioSessionProperty_CurrentHardwareIOBufferDuration, &uiDataSize, &fData);
     NSLog(@"current hwd buffer duration = %f, status = %ld = %4.4s\n",fData, status,(char*)&status);
-
-    dData = 0;
-    uiDataSize = sizeof(double);
-    status = AudioSessionGetProperty(kAudioSessionProperty_PreferredHardwareSampleRate, &uiDataSize, &dData);
-    NSLog(@"curren perfered samplerate = %f, status = %ld = %4.4s\n",dData, status,(char*)&status);
-    
-    fData = 0;
-    uiDataSize = sizeof(Float32);
-    status = AudioSessionGetProperty(kAudioSessionProperty_PreferredHardwareIOBufferDuration, &uiDataSize, &fData);
-    NSLog(@"current perfered buffer duration = %f, status = %ld = %4.4s\n",fData, status,(char*)&status);
    
     fData = 0;
     uiDataSize = sizeof(Float32);
     status = AudioSessionGetProperty(kAudioSessionProperty_InputGainScalar, &uiDataSize, &fData);
-    NSLog(@"current perfered buffer duration = %f, status = %ld = %4.4s\n",fData, status,(char*)&status);
+    NSLog(@"input gain scalar = %f, status = %ld = %4.4s\n",fData, status,(char*)&status);
     
     UInt32 uiData = 0;
     uiDataSize = sizeof(UInt32);
     status = AudioSessionGetProperty(kAudioSessionProperty_InputGainAvailable, &uiDataSize, &uiData);
-    NSLog(@"current perfered buffer duration = %ld, status = %ld = %4.4s\n",uiData, status,(char*)&status);
+    NSLog(@"input gain available = %ld, status = %ld = %4.4s\n",uiData, status,(char*)&status);
     
     
     /*
@@ -644,14 +415,17 @@ static OSStatus playingCallbackTest(void *inRefCon, AudioUnitRenderActionFlags *
     uiData = 0;
     uiDataSize = sizeof(uiData);
     status = AudioSessionGetProperty(kAudioSessionProperty_AudioCategory, &uiDataSize, &uiData);
-    
     NSLog(@"category get status = %4.4s, data = %4.4s",(char*)&status,(char*)&uiData);
 
     fData = 0;
     uiDataSize = sizeof(fData);
     status = AudioSessionGetProperty(kAudioSessionProperty_CurrentHardwareOutputLatency, &uiDataSize, &fData);
-    
-    NSLog(@"hardware latency get status = %4.4s, data = %f",(char*)&status,fData);
+    NSLog(@"hwd output latency status = %4.4s, data = %f",(char*)&status,fData);
+
+    fData = 0;
+    uiDataSize = sizeof(fData);
+    status = AudioSessionGetProperty(kAudioSessionProperty_CurrentHardwareInputLatency, &uiDataSize, &fData);
+    NSLog(@"hwd input latency status = %4.4s, data = %f",(char*)&status,fData);
     
     status = AudioSessionSetActive(true);
     NSLog(@"set active = %ld",status);
@@ -686,12 +460,6 @@ static OSStatus recordingCallback(void *inRefCon,
         return noErr;
     }
     
-    status = AudioUnitRender(recordingUnit.audioUnit,
-                             ioActionFlags,
-                             inTimeStamp,
-                             inBusNumber,
-                             inNumberFrames,
-                             bufferList);
    
     
     //NSLog(@"frames=%ld\n AudioUnitRender status = %ld",inNumberFrames,status);
@@ -699,8 +467,13 @@ static OSStatus recordingCallback(void *inRefCon,
     frameCount += 1;
     if (frameCount == 4)
     {
-        NSLog(@"audioUnit stoped");
-        bufferList->mBuffers[0].mData = record;
+        status = AudioUnitRender(recordingUnit.audioUnit,
+                                 ioActionFlags,
+                                 inTimeStamp,
+                                 inBusNumber,
+                                 inNumberFrames,
+                                 bufferList);
+        NSLog(@"recording stoped");
     }
     else if (frameCount > 4)
     {
@@ -708,7 +481,13 @@ static OSStatus recordingCallback(void *inRefCon,
     }
     else
     {
-        bufferList->mBuffers[0].mData = record+frameCount*1024; 
+        status = AudioUnitRender(recordingUnit.audioUnit,
+                                 ioActionFlags,
+                                 inTimeStamp,
+                                 inBusNumber,
+                                 inNumberFrames,
+                                 bufferList);
+        bufferList->mBuffers[0].mData = record+frameCount*1024;
     }
 
     return noErr;
@@ -759,12 +538,13 @@ static OSStatus recordingCallback(void *inRefCon,
     NSLog(@"flag = %ld",flag);
 }
 
--(OSStatus)recordingStart
+-(OSStatus)start
 {
     OSStatus status;
     //not the right place but needs to be checked
     if (recordingBufferList)
     {
+        recordingBufferList->mBuffers[0].mData = record;
         status = AudioOutputUnitStart(audioUnit);
         NSLog(@"audioUnit started status = %ld", status);
     }
@@ -775,7 +555,7 @@ static OSStatus recordingCallback(void *inRefCon,
     return status;
 }
 
--(OSStatus)recordingStop
+-(OSStatus)stop
 {
     frameCount = 0;
     OSStatus status;

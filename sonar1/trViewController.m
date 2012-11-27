@@ -15,10 +15,9 @@
 @implementation trViewController
 
 @synthesize audioController;
-@synthesize btnPlay;
-@synthesize btnPlayStop;
-@synthesize btnRecord;
-@synthesize btnRecordStop;
+
+@synthesize btnStart;
+@synthesize btnStop;
 @synthesize btnProcess;
 @synthesize tf1;
 @synthesize tf2;
@@ -51,12 +50,10 @@ float AKkf[KKFSIZE];
 - (void)dealloc {
 	[audioController release];
     
-    [btnPlay release];
-    [btnPlayStop release];
+    [btnStart release];
+    [btnStop release];
     [tf1 release];
     [tf2 release];
-    [btnRecord release];
-    [btnRecordStop release];
     [btnProcess release];
     [tfIp release];
     [btnConnect release];
@@ -66,12 +63,10 @@ float AKkf[KKFSIZE];
 
 - (void)viewDidUnload
 {
-    [self setBtnPlay:nil];
-    [self setBtnPlayStop:nil];
+    [self setBtnStart:nil];
+    [self setBtnStop:nil];
     [self setTf1:nil];
     [self setTf2:nil];
-    [self setBtnRecord:nil];
-    [self setBtnRecordStop:nil];
     [self setBtnProcess:nil];
     [self setTfIp:nil];
     [self setBtnConnect:nil];
@@ -114,51 +109,13 @@ float AKkf[KKFSIZE];
 }
 
 
-- (IBAction)play:(id)sender {
-    int freq = 0;
-    freq = [self.tf1.text intValue];
-    [audioController setFrequency: freq];
-    [audioController startAUGraph];
-    
-    //create simulated receive signal
-    for (int i=0;i<NSAMPLE;i++)
-    {
-        ARecord[i]=0;
-    }
-    for (int i=280;i<NSAMPLE;i++)
-    {
-        ARecord[i]=ASend[i-280];
-    }
-    #ifndef NODEBUG
-    NSLog(@"Test Empfangssignal in trViewController erzeugt");
-    #endif
-    
-    
-    
-    NSLog(@"%@%@", @"play freq=", self.tf1.text);
-    self.tf2.text = @"play";
+- (IBAction)start:(id)sender { 
+    [audioController start];
+    self.tf2.text = @"start";
 }
 
-- (IBAction)playStop:(id)sender {
-    int freq = 0;
-    [audioController getFrequency: &freq];
-    self.tf1.text = [NSString stringWithFormat: @"%d", freq];
-
-    [audioController stopAUGraph];
-    NSLog(@"%@%@", @"stop freq=", self.tf1.text);
-    self.tf2.text = @"stop";
-}
-
-- (IBAction)record:(id)sender {
-    int freq = 0;
-    freq = [self.tf1.text intValue];
-    [audioController setFrequency: freq];
-    [audioController recordingStart];
-    self.tf2.text = @"recording";
-}
-
-- (IBAction)recordStop:(id)sender {
-    [audioController recordingStop];
+- (IBAction)stop:(id)sender {
+    [audioController stop];
     self.tf2.text = @"stop";
 }
 
@@ -178,6 +135,7 @@ float AKkf[KKFSIZE];
         self.btnMute.selected = YES;
         [audioController mute:0];
     }
+    self.tf1.text = @"hallo";
 }
 
 - (IBAction)connect:(id)sender

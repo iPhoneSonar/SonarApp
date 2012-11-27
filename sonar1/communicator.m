@@ -72,8 +72,6 @@ const SInt16 PORT = 2000;
     [self send:[fileStr stringByAppendingString:@"\n"]];
     [self send:@"fileEnd\n"];
     [self close];
-
-    
 }
 
 - (void)open
