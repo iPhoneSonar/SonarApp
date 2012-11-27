@@ -42,11 +42,11 @@ float AKkf[KKFSIZE];
 {
     [super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
-    
-    CreateSendSignal(ASend);
-    
-    [audioController initializeAUGraph];
-    [audioController audioUnitInit];}
+    [audioController audioUnitInit];
+       
+    //[audioController initializeAUGraph];
+
+}
 
 - (void)dealloc {
 	[audioController release];
