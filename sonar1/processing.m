@@ -65,9 +65,10 @@ void CreateSendSignal(float ASend[NSAMPLE])
 #endif
 }
 
+//this function will 
 void sweepGen(SInt16 *T)
 {
-    const int imax = 48 * 30; //48khz * 30ms = number of samples
+    const int imax = 48 * 30; //48khz * 30ms = 1440 number of samples
     const double fs = 48000.0;
     const double fmax = 10000.0;
     const double fmin = 1000.0;

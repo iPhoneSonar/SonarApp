@@ -110,6 +110,15 @@ float AKkf[KKFSIZE];
 
 
 - (IBAction)start:(id)sender { 
+    NSString *strRecordLen = self.tf1.text;
+    NSCharacterSet *decimalSet = [NSCharacterSet decimalDigitCharacterSet];
+    NSString *temp = [strRecordLen stringByTrimmingCharactersInSet:decimalSet];
+    if (temp.length == 0)
+    {
+        UInt16 value = [strRecordLen intValue];
+        if (value > 0)
+            [audioController recordBufferInit:value];
+    }
     [audioController start];
     self.tf2.text = @"start";
 }
@@ -129,13 +138,14 @@ float AKkf[KKFSIZE];
     {
         self.btnMute.selected = NO;
         [audioController mute:1];
+        self.tf1.text = @"playing";
     }
     else
     {
         self.btnMute.selected = YES;
         [audioController mute:0];
+        self.tf1.text = @"muted";
     }
-    self.tf1.text = @"hallo";
 }
 
 - (IBAction)connect:(id)sender

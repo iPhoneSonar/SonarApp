@@ -12,7 +12,21 @@
 #import "processing.h"
 #import "communicator.h"
 
+struct sig{
+    SInt16 *buf;
+    SInt32 pos;
+    SInt32 len;
+    SInt16 shift;
+    SInt16 samplesPerPeriod;
+};
+typedef struct sig sig;
 
+struct recordBuffer{
+    SInt16 *buf;
+    SInt32 pos;
+    SInt32 len;
+};
+typedef struct recordBuffer recordBuffer;
 
 @interface audioController : NSObject
 {
@@ -22,17 +36,17 @@
     //recording unit
     AudioComponentInstance audioUnit;
     AudioBufferList *recordingBufferList;
-    AudioBufferList *chirpBufferList;
-    AudioBufferList *testSin;
-    
+    sig *sine;
+    sig *mute;
+    recordBuffer record;
+    sig *play;
+
     communicator *com;
 }
 
 @property(nonatomic) int frequency;
 @property(nonatomic) AudioComponentInstance audioUnit;
 @property(nonatomic) AudioBufferList *recordingBufferList;
-@property(nonatomic) AudioBufferList *chirpBufferList;
-@property(nonatomic) AudioBufferList *testSin;
 @property(nonatomic,retain) communicator *com;
 
 
@@ -42,9 +56,9 @@
 - (OSStatus)start;
 - (OSStatus)stop;
 - (void)testOutput;
-- (void)sinGen;
 - (void)mute:(UInt32)flag;
-
-
+- (void)sineSigInit;
+- (void)recordBufferInit:(SInt32)len;
+- (void)muteSigInit;
 
 @end
