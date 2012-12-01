@@ -16,8 +16,8 @@ struct sig{
     SInt16 *buf;
     SInt32 pos;
     SInt32 len;
-    SInt16 shift;
-    SInt16 samplesPerPeriod;
+    SInt32 shift;
+    SInt32 samplesPerPeriod;
 };
 typedef struct sig sig;
 
@@ -40,6 +40,7 @@ typedef struct recordBuffer recordBuffer;
     sig *mute;
     recordBuffer record;
     sig *play;
+    sig *testSweep;
 
     communicator *com;
 }

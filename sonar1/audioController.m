@@ -59,7 +59,6 @@ SInt16 frameLen = 0;
 
 -(void)sineSigInit
 {
-    int index = 0;
     //check to avoid memory leaks
     if (sine)
     {
@@ -75,7 +74,8 @@ SInt16 frameLen = 0;
     sine->shift = 16;
     
     sine->buf = (SInt16*)malloc(sine->len*2); // SInt16 = 2 bytes
-    
+
+    int index = 0;
     for (int i=0; i<sine->len; i++)
     {
         sine->buf[i] = kHzSin[index];
@@ -88,6 +88,108 @@ SInt16 frameLen = 0;
     play = sine;
 
     NSLog(@"sineSigInit");
+}
+
+-(void)TestSweepGen
+{
+    double fstart=20;
+    double fstop=23000;
+    double fsteps=10;
+    const int steps=(int)((fstop-fstart)/fsteps);
+    double fm[2299];
+    int values[2299];
+
+    for (int i=0;i<=steps;i++)
+    {
+        fm[steps-i]=fstop-i*fsteps;
+        values[steps-i]=3*SAMPLERATE/fm[steps-i];
+    }
+    int pos=0;
+    int nextpos=0;
+    for (int i=0; i<=steps; i++)
+    {
+        double ytmp[10000];
+        nextpos=pos+values[i];
+        for (int j=0; j<values[i]; j++)
+        {
+            ytmp[j]=sin(2*M_PI*(double)(fm[i])*(double)j/SAMPLERATE);
+        }
+        for (int j=pos; j<nextpos; j++)
+        {
+            TestSignal[j]=(SInt16)((ytmp[j-pos])*32000);
+        }
+        pos=nextpos;
+    }
+    NSLog(@"TestChirp created Value 0");
+
+    if (testSweep)
+    {
+        if(testSweep->buf) free(testSweep->buf);
+        free(testSweep);
+    }
+
+    testSweep = (sig*)malloc(sizeof(sig));
+    testSweep->buf=TestSignal;
+    testSweep->len = 106496;
+}
+
+SInt16 TestSignal[106496];
+
+
+-(void)testSweepSigInit
+{
+
+    //check to avoid memory leaks
+    if (testSweep)
+    {
+        if(testSweep->buf) free(testSweep->buf);
+        free(testSweep);
+    }
+
+    testSweep = (sig*)malloc(sizeof(sig));
+
+    testSweep->len = 106496;
+    testSweep->pos = 0;
+    testSweep->samplesPerPeriod = 106496;
+    testSweep->shift = 0;
+
+    //testSweep->buf = (SInt16*)malloc(testSweep->len*2); // SInt16 = 2 bytes
+
+
+    double fstart=20;
+    double fstop=23000;
+    double fsteps=10;
+    const int steps=(int)((fstop-fstart)/fsteps);
+    double fm[2299];
+    int values[2299];
+    
+    for (int i=0;i<=steps;i++)
+    {
+        fm[steps-i]=fstop-i*fsteps;
+        values[steps-i]=3*SAMPLERATE/fm[steps-i];
+    }
+    int pos=0;
+    int nextpos=0;
+    for (int i=0; i<=steps; i++)
+    {
+        double ytmp[10000];
+        nextpos=pos+values[i];
+        for (int j=0; j<values[i]; j++)
+        {
+            ytmp[j]=sin(2*M_PI*(double)(fm[i])*(double)j/SAMPLERATE);
+        }
+        for (int j=pos; j<nextpos; j++)
+        {
+            TestSignal[j]=(SInt16)((ytmp[j-pos])*32000);
+        }
+        pos=nextpos;
+    }
+    NSLog(@"TestChirp created %i",TestSignal[1]);
+    
+
+    testSweep->buf=TestSignal;
+    play = testSweep;
+    
 }
 
 -(void)recordBufferInit:(SInt32)len
@@ -135,7 +237,7 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
 
     //the calculation of the shift is signal specific so these values should be set in the
     //signal generating functions
-    audioUnit->play->pos += 1024;
+    audioUnit->play->pos += inNumberFrames;
     audioUnit->play->pos = (audioUnit->play->pos+audioUnit->play->shift)%audioUnit->play->samplesPerPeriod;
 
     frameLen = inNumberFrames;
@@ -150,7 +252,8 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
     //prepare an empty frame to mute
     [self muteSigInit];
     [self recordBufferInit: 4096];
-    [self sineSigInit];
+    //[self sineSigInit];
+    [self testSweepSigInit];
     //bring up the communication channel
     com = [[communicator alloc] init];
   
@@ -556,35 +659,47 @@ static OSStatus recordingCallback(void *inRefCon,
 
 }
 
+//mainly used for debugging, outputs the recorded data by sending to the python server
 -(void)testOutput
 {
-    //find the min and max amplitude values to get an idea of the range
-    //output all the
-    
-    SInt16 maxVal = 0;
-    SInt16 minVal = 0;
-    
+
     NSString *outStr = [[NSString alloc] init];
-    
-    for (int i=0; i<record.len; i++)
+    [com open];
+    [com send:@"fileName:record.txt\n"];
+    for (int i=0; i< record.len; i++)
     {
         outStr = [outStr stringByAppendingFormat: @"%d,", record.buf[i]];
-        //NSLog(@"val[%d]= %d",i,record[i]);
-        if (record.buf[i]>maxVal)
-            maxVal = record.buf[i];
-        else if (record.buf[i]<minVal)
-            minVal = record.buf[i];
+        // to package the frame data check the  size of the outStr
+        if (outStr.length > 4095)
+        {
+            if (com.host) //short test assumes that the network is also initialized
+            {
+                outStr = [outStr stringByAppendingString: @"\n"];
+                [com send:outStr];
+                NSLog(@"com part send");
+                outStr = @"";
+            }           
+        }
+
     }
-    NSLog(@"min=%d, max=%d",minVal,maxVal);
-    if (com.host) //short test assumes that the network is also initialized
+    //send the rest of the content if there is
+    if (outStr.length > 0)
     {
-        //remove the last ','
-        outStr = [outStr substringToIndex:[outStr length] -1];
-        [com send:outStr :@"record.txt"];
-        NSLog(@"record.txt send");
+        if (com.host) //short test assumes that the network is also initialized
+        {
+            //remove the last ','
+            outStr = [outStr substringToIndex:[outStr length] -1];
+            outStr = [outStr stringByAppendingString: @"\n"];
+            [com send:outStr];
+            NSLog(@"com send");
+        }
     }
+    [com send:@"fileEnd\n"];
+    NSLog(@"com fileEnd send");
+    [com close];
 
 }
+
 
 -(void)mute:(UInt32)flag
 {
@@ -594,13 +709,14 @@ static OSStatus recordingCallback(void *inRefCon,
     }
     else
     {
-        play = sine;
+        play = testSweep;
     }
     NSLog(@"flag = %ld",flag);
 }
 
 -(OSStatus)start
 {
+    play->pos = 0;
     OSStatus status;
     if (recordingBufferList)
     {
