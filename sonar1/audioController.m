@@ -17,7 +17,6 @@ const Float64 SAMPLERATE = 48000.0;
 const SInt16 FRAMESIZE = 1024;
 const SInt16 SAMPLES_PER_PERIOD = 48;
 
-
 //AudioTimeStamp timeTags[RECORDLEN];
 
 
@@ -28,7 +27,8 @@ SInt16 kHzSin[] = {0,3916,7765,11481,15000,18263,21213,23801,
                     -27716,-28978,-29743,-30000,-29743,-28978,-27716,-25981,
                     -23801,-21213,-18263,-15000,-11481,-7765,-3916};
 
-
+SInt16 sin12kHz[] = {15000,15000,-15000,-15000};
+SInt16 sin6kHz[] = {0,21213,30000,21213,0,-21213,-30000,-21213};
 SInt16 frameLen = 0;
 
 @implementation audioController
@@ -70,16 +70,16 @@ SInt16 frameLen = 0;
 
     sine->len = (1024+48);
     sine->pos = 0;
-    sine->samplesPerPeriod = 48;
-    sine->shift = 16;
+    sine->samplesPerPeriod = 6;
+    sine->shift = 32;
     
     sine->buf = (SInt16*)malloc(sine->len*2); // SInt16 = 2 bytes
 
     int index = 0;
     for (int i=0; i<sine->len; i++)
     {
-        sine->buf[i] = kHzSin[index];
-        index = (index+1)%48;
+        sine->buf[i] = sin6kHz[index];
+        index = (index+1)%6;
         //outStr = [outStr stringByAppendingFormat: @"%d,", frame[i]];
     }
 
@@ -90,49 +90,7 @@ SInt16 frameLen = 0;
     NSLog(@"sineSigInit");
 }
 
--(void)TestSweepGen
-{
-    double fstart=20;
-    double fstop=23000;
-    double fsteps=10;
-    const int steps=(int)((fstop-fstart)/fsteps);
-    double fm[2299];
-    int values[2299];
-
-    for (int i=0;i<=steps;i++)
-    {
-        fm[steps-i]=fstop-i*fsteps;
-        values[steps-i]=3*SAMPLERATE/fm[steps-i];
-    }
-    int pos=0;
-    int nextpos=0;
-    for (int i=0; i<=steps; i++)
-    {
-        double ytmp[10000];
-        nextpos=pos+values[i];
-        for (int j=0; j<values[i]; j++)
-        {
-            ytmp[j]=sin(2*M_PI*(double)(fm[i])*(double)j/SAMPLERATE);
-        }
-        for (int j=pos; j<nextpos; j++)
-        {
-            TestSignal[j]=(SInt16)((ytmp[j-pos])*32000);
-        }
-        pos=nextpos;
-    }
-    NSLog(@"TestChirp created Value 0");
-
-    if (testSweep)
-    {
-        if(testSweep->buf) free(testSweep->buf);
-        free(testSweep);
-    }
-
-    testSweep = (sig*)malloc(sizeof(sig));
-    testSweep->buf=TestSignal;
-    testSweep->len = 106496;
-}
-
+/*
 SInt16 TestSignal[106496];
 
 
@@ -187,17 +145,44 @@ SInt16 TestSignal[106496];
     NSLog(@"TestChirp created %i",TestSignal[1]);
     
 
-    testSweep->buf=TestSignal;
+    testSweep->buf= TestSignal;
     play = testSweep;
-    
+
 }
+*/
+
+-(void)testSweepSigInit
+{
+    //check to avoid memory leaks
+    if (testSweep)
+    {
+        if(testSweep->buf) free(testSweep->buf);
+        free(testSweep);
+    }
+
+    testSweep = (sig*)malloc(sizeof(sig));
+
+    int size = (((4*48*5000)/1024)+1)*1024;
+    testSweep->buf = (SInt16*)malloc(size);
+    
+    sweepGen(testSweep->buf);
+    
+
+    testSweep->len = size/2;
+    testSweep->pos = 0;
+    testSweep->samplesPerPeriod = size/2;
+    testSweep->shift = 0;
+
+    play = testSweep;
+}
+
 
 -(void)recordBufferInit:(SInt32)len
 {
     //check to avoid memory leaks
     if(record.buf && (len !=record.len)) free(record.buf);
         
-    record.len = len;
+    record.len = len*1024;
 
     record.buf = (SInt16*)malloc(record.len*2); //SInt16 = 2 Bytes
     record.pos = 0;
@@ -232,13 +217,18 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
         AudioOutputUnitStop(audioUnit.audioUnit);
         return noErr;
     }
+
+    
 	ioData->mBuffers[0].mData = (audioUnit->play->buf + audioUnit->play->pos);
     
 
-    //the calculation of the shift is signal specific so these values should be set in the
-    //signal generating functions
     audioUnit->play->pos += inNumberFrames;
-    audioUnit->play->pos = (audioUnit->play->pos+audioUnit->play->shift)%audioUnit->play->samplesPerPeriod;
+
+    if (audioUnit->play->pos + inNumberFrames > audioUnit->play->len)
+    {
+        SInt32 t1= (audioUnit->play->pos/audioUnit->play->samplesPerPeriod)*audioUnit->play->samplesPerPeriod;
+        audioUnit->play->pos = audioUnit->play->pos - t1;
+   }
 
     frameLen = inNumberFrames;
     return noErr;
@@ -519,12 +509,12 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
     status = AudioSessionGetProperty(kAudioSessionProperty_PreferredHardwareSampleRate, &uiDataSize, &dData);
     NSLog(@"perferred samplerate = %f, status = %ld = %4.4s\n",dData, status,(char*)&status);
 
-    
+/*
     fData = 0.022f;
     uiDataSize = sizeof(Float32);
     status = AudioSessionSetProperty(kAudioSessionProperty_PreferredHardwareIOBufferDuration, uiDataSize, &fData);
     NSLog(@"set perferred buffer duration = %f, status = %ld = %4.4s\n",fData, status,(char*)&status);
-    
+  */  
 
     fData = 0;
     uiDataSize = sizeof(Float32);
@@ -666,17 +656,18 @@ static OSStatus recordingCallback(void *inRefCon,
     NSString *outStr = [[NSString alloc] init];
     [com open];
     [com send:@"fileName:record.txt\n"];
-    for (int i=0; i< record.len; i++)
+    int i=0;
+    for (i=0; i < record.len; i++)
     {
         outStr = [outStr stringByAppendingFormat: @"%d,", record.buf[i]];
         // to package the frame data check the  size of the outStr
-        if (outStr.length > 4095)
+        if (outStr.length > 1024)
         {
             if (com.host) //short test assumes that the network is also initialized
             {
                 outStr = [outStr stringByAppendingString: @"\n"];
                 [com send:outStr];
-                NSLog(@"com part send");
+                NSLog(@"com part %d send",i);
                 outStr = @"";
             }           
         }
@@ -696,6 +687,7 @@ static OSStatus recordingCallback(void *inRefCon,
     }
     [com send:@"fileEnd\n"];
     NSLog(@"com fileEnd send");
+    NSLog(@"i = %d",i);
     [com close];
 
 }

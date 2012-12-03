@@ -138,13 +138,13 @@ float AKkf[KKFSIZE];
     {
         self.btnMute.selected = NO;
         [audioController mute:1];
-        self.tf1.text = @"playing";
+        self.tf2.text = @"playing";
     }
     else
     {
         self.btnMute.selected = YES;
         [audioController mute:0];
-        self.tf1.text = @"muted";
+        self.tf2.text = @"muted";
     }
 }
 

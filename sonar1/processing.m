@@ -65,10 +65,9 @@ void CreateSendSignal(float ASend[NSAMPLE])
 #endif
 }
 
-//this function will 
 void sweepGen(SInt16 *T)
 {
-    const int imax = 48 * 30; //48khz * 30ms = 1440 number of samples
+    const int imax = 48 * 5000; //48khz * 30ms = 1440 number of samples
     const double fs = 48000.0;
     const double fmax = 10000.0;
     const double fmin = 1000.0;
@@ -77,12 +76,12 @@ void sweepGen(SInt16 *T)
     double omega = 0.0;
     SInt16 *pT = T + 2*imax-1; // pointer to the end for the negative gradient
 
-    SInt16 x;
+    SInt32 x;
     for(x = 0;x<imax;x++){
         fm = ((fmax - fmin)/(double)imax)*x + fmin;
         f = fm/fs;
         omega = M_PI * 2.0 * f;
-        T[x] = sin(omega*(double)x) * 3000;
+        T[x] = sin(omega*(double)x) * 30000;
         *(pT--) = T[x];
     }
 }
