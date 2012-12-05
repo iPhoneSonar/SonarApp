@@ -5,9 +5,6 @@
 //  Created by lion on 10/6/12.
 //  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
 //
-#ifndef DEBUG
-#define NSLog(...)
-#endif
 
 #import "audioController.h"
 
@@ -90,51 +87,6 @@ SInt16 frameLen = 0;
     NSLog(@"sineSigInit");
 }
 
--(void)TestSweepGen
-{
-    double fstart=20;
-    double fstop=23000;
-    double fsteps=10;
-    const int steps=(int)((fstop-fstart)/fsteps);
-    double fm[2299];
-    int values[2299];
-
-    for (int i=0;i<=steps;i++)
-    {
-        fm[steps-i]=fstop-i*fsteps;
-        values[steps-i]=3*SAMPLERATE/fm[steps-i];
-    }
-    int pos=0;
-    int nextpos=0;
-    for (int i=0; i<=steps; i++)
-    {
-        double ytmp[10000];
-        nextpos=pos+values[i];
-        for (int j=0; j<values[i]; j++)
-        {
-            ytmp[j]=sin(2*M_PI*(double)(fm[i])*(double)j/SAMPLERATE);
-        }
-        for (int j=pos; j<nextpos; j++)
-        {
-            TestSignal[j]=(SInt16)((ytmp[j-pos])*32000);
-        }
-        pos=nextpos;
-    }
-    NSLog(@"TestChirp created Value 0");
-
-    if (testSweep)
-    {
-        if(testSweep->buf) free(testSweep->buf);
-        free(testSweep);
-    }
-
-    testSweep = (sig*)malloc(sizeof(sig));
-    testSweep->buf=TestSignal;
-    testSweep->len = 106496;
-}
-
-SInt16 TestSignal[106496];
-
 
 -(void)testSweepSigInit
 {
@@ -145,51 +97,38 @@ SInt16 TestSignal[106496];
         if(testSweep->buf) free(testSweep->buf);
         free(testSweep);
     }
-
+    double fstart=50;
+    double fstop=18000;
+    double fsteps=20;
+    const int steps=(int)((fstop-fstart)/fsteps)+1;
+    NSLog(@"Startfrequenz: %f, Stopfrequenz: %f, Frequenzschritt: %f, Anzahl Frequenzschritte: %i", fstart, fstop, fsteps, steps);
+    double *fm=(double*)malloc(sizeof(double)*steps);
+    SInt32 NValues=4800*(steps);    
+    NSLog(@"Signallänge: %li Werte, Entspricht %li Frames, Entspricht %f Sekunden",NValues,NValues/1024, NValues/SAMPLERATE);
+    int j=0;
+    for (int i=fstart;i<=fstop;i=i+fsteps)
+    {
+        fm[j]=i;
+        j++;
+    }
+    
+    
     testSweep = (sig*)malloc(sizeof(sig));
-
-    testSweep->len = 106496;
+    testSweep->len = NValues;
+    testSweep->buf = (SInt16*)malloc(sizeof(SInt16)*testSweep->len);
     testSweep->pos = 0;
-    testSweep->samplesPerPeriod = 106496;
+    testSweep->samplesPerPeriod = testSweep->len;
     testSweep->shift = 0;
-
-    //testSweep->buf = (SInt16*)malloc(testSweep->len*2); // SInt16 = 2 bytes
-
-
-    double fstart=20;
-    double fstop=23000;
-    double fsteps=10;
-    const int steps=(int)((fstop-fstart)/fsteps);
-    double fm[2299];
-    int values[2299];
-    
-    for (int i=0;i<=steps;i++)
+    for (SInt32 i=0; i<steps; i++)
     {
-        fm[steps-i]=fstop-i*fsteps;
-        values[steps-i]=3*SAMPLERATE/fm[steps-i];
-    }
-    int pos=0;
-    int nextpos=0;
-    for (int i=0; i<=steps; i++)
-    {
-        double ytmp[10000];
-        nextpos=pos+values[i];
-        for (int j=0; j<values[i]; j++)
+        for (SInt32 j=0; j<4800; j++)
         {
-            ytmp[j]=sin(2*M_PI*(double)(fm[i])*(double)j/SAMPLERATE);
+            testSweep->buf[i*4800+j]=(SInt32)(32000*sin(2*M_PI*(double)(fm[i])*(double)j/SAMPLERATE));
         }
-        for (int j=pos; j<nextpos; j++)
-        {
-            TestSignal[j]=(SInt16)((ytmp[j-pos])*32000);
-        }
-        pos=nextpos;
     }
-    NSLog(@"TestChirp created %i",TestSignal[1]);
+    NSLog(@"TestChirp created %i",testSweep->buf[1]);
     
-
-    testSweep->buf=TestSignal;
     play = testSweep;
-    
 }
 
 -(void)recordBufferInit:(SInt32)len
@@ -197,7 +136,7 @@ SInt16 TestSignal[106496];
     //check to avoid memory leaks
     if(record.buf && (len !=record.len)) free(record.buf);
         
-    record.len = len;
+    record.len = len*1024;
 
     record.buf = (SInt16*)malloc(record.len*2); //SInt16 = 2 Bytes
     record.pos = 0;
@@ -251,7 +190,7 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
 {
     //prepare an empty frame to mute
     [self muteSigInit];
-    [self recordBufferInit: 4096];
+    [self recordBufferInit: 10];
     //[self sineSigInit];
     [self testSweepSigInit];
     //bring up the communication channel
@@ -390,7 +329,6 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
 {
     OSStatus status;
     UInt32 uiDataSize;
-    
     status = AudioSessionInitialize(NULL, NULL, NULL, self);
     NSLog(@"session init = %ld",status);
  
@@ -662,42 +600,96 @@ static OSStatus recordingCallback(void *inRefCon,
 //mainly used for debugging, outputs the recorded data by sending to the python server
 -(void)testOutput
 {
-
+     NSString *outStr = [[NSString alloc] init];
+     [com open];
+     [com send:@"fileName:record.txt\n"];
+     char *sOut = (char*)malloc(2000);
+     char *sOutPtr = sOut;
+     int len = 0;
+     for (int i=0; i< record.len; i++)
+     {
+     //outStr = [outStr stringByAppendingFormat: @"%d,", record.buf[i]];
+     sprintf(sOutPtr,"%d,",record.buf[i]);
+     len += strlen(sOutPtr);
+     sOutPtr = sOut + len;
+     // to package the frame data check the  size of the outStr
+     if (len > 1990)
+     {
+     if (com.host) //short test assumes that the network is also initialized
+     {
+     sOutPtr[len] = 0;
+     outStr = [NSString stringWithFormat:@"%s\n",sOut];
+     [com send:outStr];
+     //NSLog(@"com part send");
+     sOutPtr = sOut;
+     len = 0;
+     memset(sOut,0,2000);
+     }
+     }
+     
+     }
+     //send the rest of the content if there is
+     if (len > 0)
+     {
+     if (com.host) //short test assumes that the network is also initialized
+     {
+     //remove the last ','
+     sOut[len] = 0;
+     outStr = [NSString stringWithFormat:@"%s\n",sOut];
+     [com send:outStr];
+     NSLog(@"com send");
+     }
+     }
+     [com send:@"fileEnd\n"];
+     NSLog(@"com fileEnd send");
+     [com close];
+/*
     NSString *outStr = [[NSString alloc] init];
     [com open];
     [com send:@"fileName:record.txt\n"];
-    for (int i=0; i< record.len; i++)
+    char *sOut = (char*)malloc(2000);
+    char *sOutPtr = sOut;
+    int len = 0;
+    int i=0;
+    for (i=0; i< testSweep->len; i++)
     {
-        outStr = [outStr stringByAppendingFormat: @"%d,", record.buf[i]];
+        //outStr = [outStr stringByAppendingFormat: @"%d,", record.buf[i]];
+        sprintf(sOutPtr,"%d,",testSweep->buf[i]);
+        len += strlen(sOutPtr);
+        sOutPtr = sOut + len;
         // to package the frame data check the  size of the outStr
-        if (outStr.length > 4095)
+        if (len > 1990)
         {
             if (com.host) //short test assumes that the network is also initialized
             {
-                outStr = [outStr stringByAppendingString: @"\n"];
+                sOutPtr[len] = 0;
+                outStr = [NSString stringWithFormat:@"%s\n",sOut];
                 [com send:outStr];
-                NSLog(@"com part send");
-                outStr = @"";
+                //NSLog(@"com part send");
+                sOutPtr = sOut;
+                len = 0;
+                memset(sOut,0,2000);
             }           
         }
 
+
     }
     //send the rest of the content if there is
-    if (outStr.length > 0)
+    if (len > 0)
     {
         if (com.host) //short test assumes that the network is also initialized
         {
             //remove the last ','
-            outStr = [outStr substringToIndex:[outStr length] -1];
-            outStr = [outStr stringByAppendingString: @"\n"];
+            sOut[len] = 0;
+            outStr = [NSString stringWithFormat:@"%s\n",sOut];
             [com send:outStr];
             NSLog(@"com send");
         }
     }
     [com send:@"fileEnd\n"];
-    NSLog(@"com fileEnd send");
+    NSLog(@"com fileEnd send i:%i testSweep->len: %li",i,testSweep->len);
     [com close];
-
+ */
 }
 
 

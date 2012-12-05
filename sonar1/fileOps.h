@@ -26,5 +26,6 @@
 -(NSString*) readFormFile:(NSString*)Name;
 -(NSString*) setFileName;
 -(NSMutableString*) FloatArrayToString:(float*)AIn OfArraySize:(int)SizeA;
+-(NSMutableString*) Sint16ArrayToString:(SInt16*)AIn OfArraySize:(int)SizeA;
 
 @end

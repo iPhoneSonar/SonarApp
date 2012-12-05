@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 #import <AudioToolbox/AudioToolbox.h>
 #import "CAStreamBasicDescription.h"
+#import "fileOps.h"
 #import "processing.h"
 #import "communicator.h"
 

@@ -104,5 +104,20 @@
     return [Sout mutableCopy];
 }
 
+-(NSMutableString*) Sint16ArrayToString:(SInt16*)AIn OfArraySize:(int)SizeA;
+{
+    NSString *Sout= [NSString stringWithFormat:@"%.i", AIn[0]];
+    for (int i=1; i<SizeA;i++)
+    {
+        Sout=[Sout stringByAppendingString:@"\r\n"];
+        Sout=[Sout stringByAppendingString:[NSString stringWithFormat:@"%i", AIn[i]]];
+    }
+#ifndef NODEBUG
+    NSLog(@"%@",Sout);
+    NSLog(@"Converted FloatArrayToString");
+#endif
+    return [Sout mutableCopy];
+}
+
 
 @end
