@@ -59,7 +59,6 @@ typedef struct recordBuffer recordBuffer;
 - (OSStatus)stop;
 - (void)testOutput;
 - (void)mute:(UInt32)flag;
-- (void)sineSigInit;
 - (void)recordBufferInit:(SInt32)len;
 - (void)muteSigInit;
 

@@ -56,7 +56,7 @@ const SInt16 PORT = 2000;
 	NSData *data = [[NSData alloc] initWithData:[msg dataUsingEncoding:NSASCIIStringEncoding]];
     uint8_t *dataBytes = (uint8_t*)[data bytes];
 	NSInteger bytesWritten = [outputStream write:dataBytes maxLength:[data length]];
-    //NSLog(@"written: %d",bytesWritten);
+    NSLog(@"written: %d",bytesWritten);
     if (flagWasOpen == false)
     {
         [self close];
