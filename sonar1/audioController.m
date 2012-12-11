@@ -69,7 +69,7 @@ SInt16 frameLen = 0;
     const int steps=(int)((fstop-fstart)/fsteps)+1;
     NSLog(@"Startfrequenz: %f, Stopfrequenz: %f, Frequenzschritt: %f, Anzahl Frequenzschritte: %i", fstart, fstop, fsteps, steps);
     double *fm=(double*)malloc(sizeof(double)*steps);
-    SInt32 NValues=4800*(steps);
+    SInt32 NValues=480*(steps);
     NSLog(@"Signallänge: %li Werte, Entspricht %li Frames, Entspricht %f Sekunden",NValues,NValues/1024, NValues/SAMPLERATE);
     int j=0;
     for (int i=fstart;i<=fstop;i=i+fsteps)
@@ -81,15 +81,17 @@ SInt16 frameLen = 0;
     
     testSweep = (sig*)malloc(sizeof(sig));
     testSweep->len = NValues;
-    testSweep->buf = (SInt16*)malloc(sizeof(SInt16)*testSweep->len);
+    int size = 2*(((testSweep->len)/1024)+1)*1024;
+    testSweep->buf = (SInt16*)malloc(size);
+    memset(testSweep->buf,0,size);
     testSweep->pos = 0;
     testSweep->samplesPerPeriod = testSweep->len;
     testSweep->shift = 0;
     for (SInt32 i=0; i<steps; i++)
     {
-        for (SInt32 j=0; j<4800; j++)
+        for (SInt32 j=0; j<480; j++)
         {
-            testSweep->buf[i*4800+j]=(SInt32)(32000*sin(2*M_PI*(double)(fm[i])*(double)j/SAMPLERATE));
+            testSweep->buf[i*480+j]=(SInt32)(32000*sin(2*M_PI*(double)(fm[i])*(double)j/SAMPLERATE));
         }
     }
     NSLog(@"TestChirp created %i",testSweep->buf[1]);
