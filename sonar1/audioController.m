@@ -64,12 +64,12 @@ SInt16 frameLen = 0;
         free(testSweep);
     }
     double fstart=1000;
-    double fstop=1020;
-    double fsteps=20;
+    double fstop=10000;
+    double fsteps=2000;
     const int steps=(int)((fstop-fstart)/fsteps)+1;
     NSLog(@"Startfrequenz: %f, Stopfrequenz: %f, Frequenzschritt: %f, Anzahl Frequenzschritte: %i", fstart, fstop, fsteps, steps);
     double *fm=(double*)malloc(sizeof(double)*steps);
-    SInt32 NValues=480000*(steps);
+    SInt32 NValues=4800*(steps);
     NSLog(@"Signallänge: %li Werte, Entspricht %li Frames, Entspricht %f Sekunden",NValues,NValues/1024, NValues/SAMPLERATE);
     int j=0;
     for (int i=fstart;i<=fstop;i=i+fsteps)
@@ -87,9 +87,9 @@ SInt16 frameLen = 0;
     testSweep->shift = 0;
     for (SInt32 i=0; i<steps; i++)
     {
-        for (SInt32 j=0; j<480000; j++)
+        for (SInt32 j=0; j<4800; j++)
         {
-            testSweep->buf[i*480000+j]=(SInt32)(32000*sin(2*M_PI*(double)(fm[i])*(double)j/SAMPLERATE));
+            testSweep->buf[i*4800+j]=(SInt32)(32000*sin(2*M_PI*(double)(fm[i])*(double)j/SAMPLERATE));
         }
     }
     NSLog(@"TestChirp created %i",testSweep->buf[1]);
@@ -379,7 +379,6 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
     }
     Float32 fData;
     double dData;
-
     
     dData = SAMPLERATE;
     uiDataSize = sizeof(double);
@@ -432,8 +431,6 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
         NSLog(@"input gain not available");
     }
     
-
-     
     //these are only to check if all was set up the right way
     uiData = 0;
     uiDataSize = sizeof(uiData);
