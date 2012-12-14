@@ -54,6 +54,46 @@ SInt16 frameLen = 0;
     *value = frequency;
 }
 
+-(void)ChirpInit
+{
+    
+    //check to avoid memory leaks
+    if (testSweep)
+    {
+        if(testSweep->buf) free(testSweep->buf);
+        free(testSweep);
+    }
+    double fstart=1000;
+    double fstop=10000;
+    int NSamples=2048;
+    float fSlope=((double)(fstop-fstart)/NSamples);
+    NSLog(@"Signallänge: %i Werte, Entspricht %i Frames, Entspricht %f Sekunden",5*1024+2*NSamples,5+2*NSamples/1024, (5*1024+2*NSamples)/SAMPLERATE);
+    
+    testSweep = (sig*)malloc(sizeof(sig));
+    testSweep->len = 2*NSamples+5*1024;
+    int size = 2*(((testSweep->len)/1024)+1)*1024;
+    testSweep->buf = (SInt16*)malloc(size);
+    memset(testSweep->buf,0,size);
+    testSweep->pos = 0;
+    testSweep->samplesPerPeriod = testSweep->len;
+    testSweep->shift = 0;
+    for (int i=0; i<5*1024;i++)
+    {
+        testSweep->buf[i]=0;
+    }
+    for (SInt32 i=0; i<NSamples; i++)
+    {
+        double fm=fSlope*i+(double)fstart;
+        double phi=2*M_PI*(fm/SAMPLERATE);
+        testSweep->buf[5*1024+i]=(SInt16)32000*sin(phi*i);
+        testSweep->buf[5*1024+2*NSamples-i]=-testSweep->buf[5*1024+i];
+    }
+    NSLog(@"Chirp created");
+    
+    play = testSweep;
+}
+
+
 -(void)testSweepSigInit
 {
 
@@ -155,7 +195,7 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
 {
     //prepare an empty frame to mute
     [self muteSigInit];
-    [self testSweepSigInit];
+    [self ChirpInit];
     //bring up the communication channel
     com = [[communicator alloc] init];
   
