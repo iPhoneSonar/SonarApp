@@ -24,7 +24,7 @@ SInt16 kHzSin[] = {0,3916,7765,11481,15000,18263,21213,23801,
                     -3916,-7765,-11481,-15000,-18263,-21213,-23801,-25981,
                     -27716,-28978,-29743,-30000,-29743,-28978,-27716,-25981,
                     -23801,-21213,-18263,-15000,-11481,-7765,-3916};
-
+SInt16 T[500*1024];
 
 SInt16 frameLen = 0;
 
@@ -195,6 +195,7 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
 {
     //prepare an empty frame to mute
     [self muteSigInit];
+    sweepGen(T);
     [self ChirpInit];
     //bring up the communication channel
     com = [[communicator alloc] init];
