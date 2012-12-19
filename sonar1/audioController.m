@@ -80,7 +80,6 @@ SInt16 frameLen = 0;
     {
         sine->buf[i] = kHzSin[index];
         index = (index+1)%48;
-        //outStr = [outStr stringByAppendingFormat: @"%d,", frame[i]];
     }
 
     //very important
@@ -88,6 +87,68 @@ SInt16 frameLen = 0;
     play = sine;
 
     NSLog(@"sineSigInit");
+}
+
+-(void)PulseSigInit
+{
+    //check to avoid memory leaks
+    if (sine)
+    {
+        if(sine->buf) free(sine->buf);
+        free(sine);
+    }
+    
+    sine = (sig*)malloc(sizeof(sig));
+    
+    sine->len = 5*(1024);
+    sine->pos = 0;
+    sine->samplesPerPeriod = 0;
+    sine->shift = 0;
+    
+    sine->buf = (SInt16*)malloc(sine->len*2); // SInt16 = 2 bytes
+    for (int j=0; j<1;j++)
+    {
+    for (int i=0; i<4; i++)
+    {
+        sine->buf[j*4+i] = sin12kHz[i];
+    }
+    }
+    
+    //very important
+    //set the sig play to the sine
+    play = sine;
+    
+    NSLog(@"PulseSigInit");
+}
+
+-(void)RandSigInit
+{
+    //check to avoid memory leaks
+    if (sine)
+    {
+        if(sine->buf) free(sine->buf);
+        free(sine);
+    }
+    
+    sine = (sig*)malloc(sizeof(sig));
+    
+    sine->len = 10*1024;
+    sine->pos = 0;
+    sine->samplesPerPeriod = 0;
+    sine->shift = 0;
+    
+    sine->buf = (SInt16*)malloc(sine->len*2); // SInt16 = 2 bytes
+    
+    for (int i=0; i<sine->len; i++)
+    {
+        sine->buf[i] = rand()/2+15000;
+    }
+    
+    //very important
+    //set the sig play to the sine
+    play = sine;
+    
+    NSLog(@"RandSigIni");
 }
 
 
@@ -262,7 +323,7 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
     [self muteSigInit];
     [self recordBufferInit: 10];
     //[self sineSigInit];
-    [self testSweepSigInit];
+    [self PulseSigInit];
     
     int kOutputBus = 0;
     int kInputBus = 1;
@@ -715,78 +776,91 @@ static OSStatus recordingCallback(void *inRefCon,
 //mainly used for debugging, outputs the recorded data by sending to the python server
 -(void)testOutput
 {
-
     NSString *outStr = [[NSString alloc] init];
     [com open];
-    [com send:@"fileName:record1k_7k_.txt\n"];
-    int i=0;
-    for (i=0; i < record.len; i++)
+    [com send:@"fileName:record.txt\n"];
+    char *sOut = (char*)malloc(2000);
+    char *sOutPtr = sOut;
+    int len = 0;
+    for (int i=0; i< record.len; i++)
     {
-        outStr = [outStr stringByAppendingFormat: @"%d,", record.buf[i]];
+        //outStr = [outStr stringByAppendingFormat: @"%d,", record.buf[i]];
+        sprintf(sOutPtr,"%d,",record.buf[i]);
+        len += strlen(sOutPtr);
+        sOutPtr = sOut + len;
         // to package the frame data check the  size of the outStr
-        if (outStr.length > 1024)
+        if (len > 1990)
         {
             if (com.host) //short test assumes that the network is also initialized
             {
-                outStr = [outStr stringByAppendingString: @"\n"];
+                sOutPtr[len] = 0;
+                outStr = [NSString stringWithFormat:@"%s\n",sOut];
                 [com send:outStr];
-                NSLog(@"com part %d send",i);
-                outStr = @"";
-            }           
-        }
-
-    }
-    //send the rest of the content if there is
-    if (outStr.length > 0)
-    {
-        if (com.host) //short test assumes that the network is also initialized
-        {
-            //remove the last ','
-            outStr = [outStr substringToIndex:[outStr length] -1];
-            outStr = [outStr stringByAppendingString: @"\n"];
-            [com send:outStr];
-            NSLog(@"com send");
-        }
-    }
-    [com send:@"fileEnd\n"];
-    NSLog(@"com fileEnd send");
-    NSLog(@"i = %d",i);
-
-    [com send:@"fileName:play1k_7k_.txt\n"];
-    
-    for (i=0; i < play->len; i++)
-    {
-        outStr = [outStr stringByAppendingFormat: @"%d,", play->buf[i]];
-        // to package the frame data check the  size of the outStr
-        if (outStr.length > 1024)
-        {
-            if (com.host) //short test assumes that the network is also initialized
-            {
-                outStr = [outStr stringByAppendingString: @"\n"];
-                [com send:outStr];
-                NSLog(@"com part %d send",i);
-                outStr = @"";
+                //NSLog(@"com part send");
+                sOutPtr = sOut;
+                len = 0;
+                memset(sOut,0,2000);
             }
         }
-
+        
     }
     //send the rest of the content if there is
-    if (outStr.length > 0)
+    if (len > 0)
     {
         if (com.host) //short test assumes that the network is also initialized
         {
             //remove the last ','
-            outStr = [outStr substringToIndex:[outStr length] -1];
-            outStr = [outStr stringByAppendingString: @"\n"];
+            sOut[len] = 0;
+            outStr = [NSString stringWithFormat:@"%s\n",sOut];
             [com send:outStr];
             NSLog(@"com send");
         }
     }
     [com send:@"fileEnd\n"];
     NSLog(@"com fileEnd send");
-    NSLog(@"i = %d",i);
+    
+    [com send:@"fileName:play.txt\n"];
+    len = 0;
+    memset(sOut,0,2000);
+    sOutPtr=sOut;
+    for (int i=0; i< play->len; i++)
+    {
+        //outStr = [outStr stringByAppendingFormat: @"%d,", record.buf[i]];
+        sprintf(sOutPtr,"%i,",play->buf[i]);
+        len += strlen(sOutPtr);
+        sOutPtr = sOut + len;
+        // to package the frame data check the  size of the outStr
+        if (len > 1990)
+        {
+            if (com.host) //short test assumes that the network is also initialized
+            {
+               
+                sOutPtr[len] = 0;
+                outStr = [NSString stringWithFormat:@"%s\n",sOut];
+                [com send:outStr];
+                //NSLog(@"com part send");
+                sOutPtr = sOut;
+                len = 0;
+                memset(sOut,0,2000);
+            }
+        }
+        
+    }
+    //send the rest of the content if there is
+    if (len > 0)
+    {
+        if (com.host) //short test assumes that the network is also initialized
+        {
+            //remove the last ','
+            sOut[len] = 0;
+            outStr = [NSString stringWithFormat:@"%s\n",sOut];
+            [com send:outStr];
+            NSLog(@"com send");
+        }
+    }
+    [com send:@"fileEnd\n"];
+    NSLog(@"com fileEnd send");
     [com close];
-
 }
 
 
