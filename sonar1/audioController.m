@@ -226,12 +226,13 @@ SInt16 TestSignal[106496];
 
     const int imax = 48 * 50; //48khz * 30ms = 1440 number of samples
     SInt32 len = imax *2;
-    SInt32 shift = 4*1024;
+    SInt32 shift = 2*1024;
 
     SInt32 size = ((len*2/1024)+1)*1024 +shift*2;
+    size = size*2;
     testSweep->buf = (SInt16*)malloc(size);
     
-    size = sweepGen((testSweep->buf));
+    sweepGen((testSweep->buf)+shift);
     
     testSweep->len = size/2;
     testSweep->pos = 0;
@@ -323,7 +324,7 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
     [self muteSigInit];
     [self recordBufferInit: 10];
     //[self sineSigInit];
-    [self PulseSigInit];
+    [self testSweepSigInit];
     
     int kOutputBus = 0;
     int kInputBus = 1;
@@ -778,7 +779,7 @@ static OSStatus recordingCallback(void *inRefCon,
 {
     NSString *outStr = [[NSString alloc] init];
     [com open];
-    [com send:@"fileName:record.txt\n"];
+    [com send:@"fileName:record1k_10k_.txt\n"];
     char *sOut = (char*)malloc(2000);
     char *sOutPtr = sOut;
     int len = 0;
@@ -819,7 +820,7 @@ static OSStatus recordingCallback(void *inRefCon,
     [com send:@"fileEnd\n"];
     NSLog(@"com fileEnd send");
     
-    [com send:@"fileName:play.txt\n"];
+    [com send:@"fileName:play1k_10k_.txt\n"];
     len = 0;
     memset(sOut,0,2000);
     sOutPtr=sOut;
