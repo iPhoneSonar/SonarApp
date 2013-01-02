@@ -20,7 +20,7 @@ SInt16 muteFlag = 0;
 //AudioTimeStamp timeTags[RECORDLEN];
 
 
-SInt16 kHzSin[] = {0,3916,7765,11481,15000,18263,21213,23801,
+SInt16 sin1kHz[] = {0,3916,7765,11481,15000,18263,21213,23801,
                     25981,27716,28978,29743,30000,29743,28978,27716,
                     25981,23801,21213,18263,15000,11481,7765,3916,0,
                     -3916,-7765,-11481,-15000,-18263,-21213,-23801,-25981,
@@ -78,7 +78,7 @@ SInt16 frameLen = 0;
     int index = 0;
     for (int i=0; i<sine->len; i++)
     {
-        sine->buf[i] = kHzSin[index];
+        sine->buf[i] = sin1kHz[index];
         index = (index+1)%48;
     }
 
@@ -100,19 +100,69 @@ SInt16 frameLen = 0;
     
     sine = (sig*)malloc(sizeof(sig));
     
-    sine->len = 5*(1024);
+    sine->len = 183*(1024);
     sine->pos = 0;
     sine->samplesPerPeriod = 0;
     sine->shift = 0;
     
     sine->buf = (SInt16*)malloc(sine->len*2); // SInt16 = 2 bytes
-    for (int j=0; j<1;j++)
+    
+    SInt16 signal[240];
+    for (int j=0; j<10*8;j++)
     {
-    for (int i=0; i<4; i++)
+        signal[j]=sin6kHz[j%8];
+    }
+    for (int j=0; j<10*16;j++)
     {
-        sine->buf[j*4+i] = sin12kHz[i];
+        signal[80+j]=32000*sin(2*M_PI*3000*j/SAMPLERATE);
+    }
+    
+    for (int i=0;i<760;i++)
+    {
+        bool run=false;
+        if (i==0|i==6|i==20|i==40|i==50|i==70|i==100|i==111|i==127|i==150|i==255|i==300|i==340|i==700|i==400)
+        {
+            run=true;
+        }
+        for (int j=0; j<240; j++)
+        {
+            if(run)
+            {
+                sine->buf[i*240+j]=signal[j];
+            }
+            else
+            {
+                sine->buf[i*240+j]=0;
+            }
+        }
+    }
+    /*int periods=10, samples=48;
+    for (int j=0; j<periods;j++)
+    {
+    for (int i=0; i<samples; i++)
+    {
+        sine->buf[j*samples+i] = sin1kHz[i];
     }
     }
+    int offset=periods*samples;
+    samples=32;
+    for (int i=0; i<periods*samples;i++)
+    {
+        sine->buf[offset+i]=32000*sin(2*M_PI*1500*i/SAMPLERATE);
+    }
+    offset+=periods*samples;
+    samples=24;
+    for (int i=0; i<periods*samples;i++)
+    {
+        sine->buf[offset+i]=32000*sin(2*M_PI*2000*i/SAMPLERATE);
+    }*/
+    /*for (int j=0; j<periods;j++)
+    {
+        for (int i=0; i<samples; i++)
+        {
+            sine->buf[offset+j*samples+i] = sin6kHz[i];
+        }
+    }*/
     
     //very important
     //set the sig play to the sine
@@ -323,7 +373,7 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
     [self muteSigInit];
     [self recordBufferInit: 10];
     //[self sineSigInit];
-    [self PulseSigInit];
+    [self testSweepSigInit];
     
     int kOutputBus = 0;
     int kInputBus = 1;
