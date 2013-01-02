@@ -225,8 +225,10 @@ SInt16 TestSignal[106496];
 
 
     const int imax = 48 * 50; //48khz * 30ms = 1440 number of samples
-    SInt32 len = imax *2;
-    SInt32 shift = 2*1024;
+
+    SInt32 len = (imax *2 + 1024) * 4;
+
+    SInt32 shift = 1024;
 
     SInt32 size = ((len*2/1024)+1)*1024 +shift*2;
     size = size*2;
@@ -556,16 +558,19 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
                 //kAudioSessionOutputRoute_HDMI
                 //kAudioSessionOutputRoute_AirPlay
                 
-                UInt32 cfsRouteOverwrite = kAudioSessionOverrideAudioRoute_Speaker;
-                //UInt32 cfsRouteOverwrite = kAudioSessionOverrideAudioRoute_None;
-
+                //UInt32 cfsRouteOverwrite = kAudioSessionOverrideAudioRoute_Speaker;
+                UInt32 cfsRouteOverwrite = kAudioSessionOverrideAudioRoute_None;
+                
                 uiDataSize = sizeof(UInt32);
                 status = AudioSessionSetProperty(kAudioSessionProperty_OverrideAudioRoute,
                                                  uiDataSize,
                                                  &cfsRouteOverwrite);
                 
                 NSLog(@"route overwrite = %ld",status);
-                 
+
+
+                //kAudioSessionProperty_InputSource
+                
             }
         }
         CFArrayRef cfaInputs = (CFArrayRef)CFDictionaryGetValue(cfdRouteDesc, kAudioSession_AudioRouteKey_Inputs);
@@ -779,7 +784,7 @@ static OSStatus recordingCallback(void *inRefCon,
 {
     NSString *outStr = [[NSString alloc] init];
     [com open];
-    [com send:@"fileName:record1k_10k_.txt\n"];
+    [com send:@"fileName:record_2k_6k_6k_10k_.txt\n"];
     char *sOut = (char*)malloc(2000);
     char *sOutPtr = sOut;
     int len = 0;
@@ -820,7 +825,7 @@ static OSStatus recordingCallback(void *inRefCon,
     [com send:@"fileEnd\n"];
     NSLog(@"com fileEnd send");
     
-    [com send:@"fileName:play1k_10k_.txt\n"];
+    [com send:@"fileName:play_2k_6k_6k_10k_.txt\n"];
     len = 0;
     memset(sOut,0,2000);
     sOutPtr=sOut;

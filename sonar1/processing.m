@@ -74,7 +74,7 @@ SInt32 sweepGen(SInt16 *Tptr)
 
     double fs = 48000.0;
     double fmin = 2000.0;
-    double fmax = 6000.0;
+    double fmax = 3000.0;
     double f = 0.0;
     double fm = 0.0; //momentary frequency
     double omega = 0.0;
@@ -92,8 +92,8 @@ SInt32 sweepGen(SInt16 *Tptr)
 
     SInt32 shift = len + 1024;
     fs = 48000.0;
-    fmin = 6000.0;
-    fmax = 10000.0;
+    fmin = 3000.0;
+    fmax = 4000.0;
     f = 0.0;
     fm = 0.0; //momentary frequency
     omega = 0.0;
@@ -109,7 +109,42 @@ SInt32 sweepGen(SInt16 *Tptr)
     }
 
 
+    shift = (len + 1024) * 2;
+    fs = 48000.0;
+    fmin = 4000.0;
+    fmax = 5000.0;
+    f = 0.0;
+    fm = 0.0; //momentary frequency
+    omega = 0.0;
+    pT = T + 2*imax-1 + shift; // pointer to the end for the negative gradient
+
+    for(x = 0;x<imax;x++)
+    {
+        fm = ((fmax - fmin)/(double)imax)*x + fmin;
+        f = fm/fs;
+        omega = M_PI * 2.0 * f;
+        T[x+shift] = sin(omega*(double)x) * 30000;
+        *(pT--) = -T[x+shift];
+    }
+
+    shift = (len + 1024) * 3;
+    fs = 48000.0;
+    fmin = 5000.0;
+    fmax = 6000.0;
+    f = 0.0;
+    fm = 0.0; //momentary frequency
+    omega = 0.0;
+    pT = T + 2*imax-1 + shift; // pointer to the end for the negative gradient
+
+    for(x = 0;x<imax;x++)
+    {
+        fm = ((fmax - fmin)/(double)imax)*x + fmin;
+        f = fm/fs;
+        omega = M_PI * 2.0 * f;
+        T[x+shift] = sin(omega*(double)x) * 30000;
+        *(pT--) = -T[x+shift];
+    }
     
-    memcpy(T+len+1024, T, len*2);
+    //memcpy(T+len+1024, T, len*2);
     return 1; //it was meant to allocate the memory in the function an return the size
 }
