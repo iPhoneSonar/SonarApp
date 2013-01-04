@@ -5,7 +5,7 @@ void KKF(SInt16 ARecord[NSAMPLE], SInt16 ASend[NSAMPLE], SInt64 AKkf[KKFSIZE])
     int i=0;
     int j=0;
     //Nullen aller AKkf Werte
-    memset(AKkf,0,KKFSIZE);
+    memset(AKkf,0,KKFSIZE*sizeof(SInt64));
     
     //Durchfürhung KKF (noch Matlab implementierung, also auf auch "negative" Zeiten werden berechnet, Beginn sollte später bei NSAMPLE sein)
     for (i=0;i<KKFSIZE;i++)

@@ -98,13 +98,11 @@
     return (interfaceOrientation != UIInterfaceOrientationPortraitUpsideDown);
 }
 
-
 - (IBAction)backgroundTouched:(id)sender
 {
     [tf1 resignFirstResponder];
     //insert start here for start at Background touch
 }
-
 
 - (IBAction)start:(id)sender {
     //can be added to backgroundTouched
@@ -117,9 +115,12 @@
         if (value > 0)
         {
             //Init Buffer with Frame length insertet in tb1
-            [audioController recordBufferInit:value];
+            //[audioController recordBufferInit:value];            
+        }
+        else
+        {
             //Init Buffer with length of send Signal
-            //[audioController recordBufferInitSamples:NSAMPLE];
+            [audioController recordBufferInitSamples];
         }
     }
     [audioController start];
@@ -163,8 +164,5 @@
         [tf1 resignFirstResponder];
     return NO;
 }
-
-
-
 
 @end

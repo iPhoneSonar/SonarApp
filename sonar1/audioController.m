@@ -11,8 +11,6 @@
 
 #import "audioController.h"
 
-// Native iphone sample rate of 44.1kHz, same as a CD.
-//const Float64 SAMPLERATE = 44100.0;
 const Float64 SAMPLERATE = 48000.0;
 const SInt16 FRAMESIZE = 1024;
 const SInt16 SAMPLES_PER_PERIOD = 48;
@@ -33,7 +31,6 @@ SInt16 frameLen = 0;
 
 @implementation audioController
 
-
 @synthesize frequency;
 @synthesize audioUnit;
 @synthesize recordingBufferList;
@@ -45,7 +42,6 @@ SInt16 frameLen = 0;
     
     [super dealloc];
 }
-
 
 - (void)setFrequency:(int) value
 {
@@ -132,7 +128,6 @@ SInt16 frameLen = 0;
 
     testSweep = (sig*)malloc(sizeof(sig));
 
-
     const int imax = 48 * 50; //48khz * 30ms = 1440 number of samples
 
     SInt32 len = (imax *2 + 1024) * 4;
@@ -149,16 +144,16 @@ SInt16 frameLen = 0;
     testSweep->pos = 0;
     testSweep->samplesPerPeriod = size/2;
     testSweep->shift = 0;
-
+    NSLog(@"Sendesignal Länge: %li Samples",testSweep->len);
     play = testSweep;
 }
 
--(void)recordBufferInitSamples:(SInt32)len
+-(void)recordBufferInitSamples
 {
     //check to avoid memory leaks
-    if(len !=record.len)
+    if(play->len !=record.len)
     {
-        record.len = len;
+        record.len = play->len;
         if(record.buf)
         {
             free(record.buf);
@@ -167,7 +162,7 @@ SInt16 frameLen = 0;
         record.buf = (SInt16*)malloc(record.len*2); //SInt16 = 2 Bytes
     }
     memset(record.buf,0,record.len*2);
-    
+    NSLog(@"Empfangssignal Länge: %li Samples",record.len);
     record.pos = 0;
 }
 
@@ -206,7 +201,6 @@ SInt16 frameLen = 0;
     mute->shift = 0;
 }
 
-
 // audio render procedure, don't allocate memory, don't take any locks, don't waste time
 static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioActionFlags, const AudioTimeStamp *inTimeStamp, UInt32 inBusNumber, UInt32 inNumberFrames, AudioBufferList *ioData)
 {
@@ -236,9 +230,6 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
     frameLen = inNumberFrames;
     return noErr;
 }
-
-
-
 
 -(OSStatus)audioUnitInit
 {
@@ -401,8 +392,6 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
     
     return status;
 }
-
-
 
 - (void)sessionInit
 {
@@ -644,7 +633,6 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
     NSLog(@"set active = %ld",status);
 }
 
-
 static OSStatus recordingCallback(void *inRefCon,
                                   AudioUnitRenderActionFlags *ioActionFlags,
                                   const AudioTimeStamp *inTimeStamp,
@@ -796,7 +784,6 @@ static OSStatus recordingCallback(void *inRefCon,
     NSLog(@"com fileEnd send");
     [com close];
 }
-
 
 -(void)mute:(UInt32)flag
 {
