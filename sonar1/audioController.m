@@ -684,12 +684,10 @@ static OSStatus recordingCallback(void *inRefCon,
             NSLog(@"mDataByteSize = %ld",bufferList->mBuffers[0].mDataByteSize);
             NSLog(@"mNumberChannels = %ld",bufferList->mBuffers[0].mNumberChannels);
             NSLog(@"ioActionFlags = %ld",*ioActionFlags);
-
         }
     }
     frameLen = inNumberFrames;
     return noErr;
-
 }
 
 //mainly used for debugging, outputs the recorded data by sending to the python server
@@ -782,6 +780,7 @@ static OSStatus recordingCallback(void *inRefCon,
     }
     [com send:@"fileEnd\n"];
     NSLog(@"com fileEnd send");
+    
     [com close];
 }
 
