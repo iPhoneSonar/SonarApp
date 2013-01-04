@@ -25,10 +25,6 @@
 @synthesize btnConnect;
 @synthesize btnMute;
 
-float ARecord[NSAMPLE];
-float ASend[NSAMPLE];
-float AKkf[KKFSIZE];
-
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
@@ -106,10 +102,12 @@ float AKkf[KKFSIZE];
 - (IBAction)backgroundTouched:(id)sender
 {
     [tf1 resignFirstResponder];
+    //insert start here for start at Background touch
 }
 
 
-- (IBAction)start:(id)sender { 
+- (IBAction)start:(id)sender {
+    //can be added to backgroundTouched
     NSString *strRecordLen = self.tf1.text;
     NSCharacterSet *decimalSet = [NSCharacterSet decimalDigitCharacterSet];
     NSString *temp = [strRecordLen stringByTrimmingCharactersInSet:decimalSet];
@@ -117,7 +115,12 @@ float AKkf[KKFSIZE];
     {
         UInt16 value = [strRecordLen intValue];
         if (value > 0)
+        {
+            //Init Buffer with Frame length insertet in tb1
             [audioController recordBufferInit:value];
+            //Init Buffer with length of send Signal
+            //[audioController recordBufferInitSamples:NSAMPLE];
+        }
     }
     [audioController start];
     self.tf2.text = @"start";

@@ -60,6 +60,7 @@ typedef struct recordBuffer recordBuffer;
 - (void)mute:(UInt32)flag;
 - (void)sineSigInit;
 - (void)recordBufferInit:(SInt32)len;
+- (void)recordBufferInitSamples:(SInt32)len;
 - (void)muteSigInit;
 
 @end

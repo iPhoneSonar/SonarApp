@@ -1,15 +1,11 @@
 #import "processing.h"
 
-void KKF(float ARecord[NSAMPLE], float ASend[NSAMPLE], float AKkf[KKFSIZE])
+void KKF(SInt16 ARecord[NSAMPLE], SInt16 ASend[NSAMPLE], SInt64 AKkf[KKFSIZE])
 {
     int i=0;
     int j=0;
     //Nullen aller AKkf Werte
-    for (i=0;i<NSAMPLE;i++)
-    {
-        AKkf[i*2]=0;
-        AKkf[i*2+1]=0;
-    }
+    memset(AKkf,0,KKFSIZE);
     
     //Durchfürhung KKF (noch Matlab implementierung, also auf auch "negative" Zeiten werden berechnet, Beginn sollte später bei NSAMPLE sein)
     for (i=0;i<KKFSIZE;i++)
@@ -25,12 +21,10 @@ void KKF(float ARecord[NSAMPLE], float ASend[NSAMPLE], float AKkf[KKFSIZE])
             }
         }
     }
-#ifndef NODEBUG
     NSLog(@"KKF Durchgeführt");
-#endif
 }
 
-void MaximumSuche(float AKkf[KKFSIZE])
+SInt16 MaximumSuche(SInt64 AKkf[KKFSIZE])
 {
     float max=0;
     int max_t=0;
@@ -44,25 +38,8 @@ void MaximumSuche(float AKkf[KKFSIZE])
             max_t=i;
         }
     }
-#ifndef NODEBUG
-    NSLog(@"Maximum bei KKF Punkt: %i",max_t);
-#endif
-}
-
-void CreateSendSignal(float ASend[NSAMPLE])
-{
-    float fm, fmax, fmin;
-    fmin=1000;
-    fmax=10000;
-    for (int i=0;i<NSAMPLE/2;i++)
-    {
-        fm=((fmax-fmin)/(NSAMPLE/2))*i+fmin;
-        ASend[i]=sin(2*M_PI*fm/44100*i);
-        ASend[NSAMPLE-i]=-ASend[i];
-    }
-#ifndef NODEBUG
-    NSLog(@"Sendesignal erzeugt");
-#endif
+    NSLog(@"Maximum bei KKF Punkt: %i mit dem Wert: %f ",max_t,max);
+    return max_t;
 }
 
 SInt32 sweepGen(SInt16 *Tptr)

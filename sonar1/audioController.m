@@ -20,7 +20,7 @@ SInt16 muteFlag = 0;
 //AudioTimeStamp timeTags[RECORDLEN];
 
 
-SInt16 kHzSin[] = {0,3916,7765,11481,15000,18263,21213,23801,
+SInt16 sin1KHz[] = {0,3916,7765,11481,15000,18263,21213,23801,
                     25981,27716,28978,29743,30000,29743,28978,27716,
                     25981,23801,21213,18263,15000,11481,7765,3916,0,
                     -3916,-7765,-11481,-15000,-18263,-21213,-23801,-25981,
@@ -78,7 +78,7 @@ SInt16 frameLen = 0;
     int index = 0;
     for (int i=0; i<sine->len; i++)
     {
-        sine->buf[i] = kHzSin[index];
+        sine->buf[i] = sin1KHz[index];
         index = (index+1)%48;
     }
 
@@ -121,97 +121,6 @@ SInt16 frameLen = 0;
     NSLog(@"PulseSigInit");
 }
 
--(void)RandSigInit
-{
-    //check to avoid memory leaks
-    if (sine)
-    {
-        if(sine->buf) free(sine->buf);
-        free(sine);
-    }
-    
-    sine = (sig*)malloc(sizeof(sig));
-    
-    sine->len = 10*1024;
-    sine->pos = 0;
-    sine->samplesPerPeriod = 0;
-    sine->shift = 0;
-    
-    sine->buf = (SInt16*)malloc(sine->len*2); // SInt16 = 2 bytes
-    
-    for (int i=0; i<sine->len; i++)
-    {
-        sine->buf[i] = rand()/2+15000;
-    }
-    
-    //very important
-    //set the sig play to the sine
-    play = sine;
-    
-    NSLog(@"RandSigIni");
-}
-
-
-SInt16 TestSignal[106496];
-
-/*
--(void)testSweepSigInit
-{
-
-    //check to avoid memory leaks
-    if (testSweep)
-    {
-        if(testSweep->buf) free(testSweep->buf);
-        free(testSweep);
-    }
-
-    testSweep = (sig*)malloc(sizeof(sig));
-
-    testSweep->len = 106496;
-    testSweep->pos = 0;
-    testSweep->samplesPerPeriod = 106496;
-    testSweep->shift = 0;
-
-    //testSweep->buf = (SInt16*)malloc(testSweep->len*2); // SInt16 = 2 bytes
-
-
-    double fstart=1000;
-    double fstop=23000;
-    double fsteps=10;
-    const int steps=(int)((fstop-fstart)/fsteps);
-    double fm[2299];
-    int values[2299];
-    
-    for (int i=0;i<=steps;i++)
-    {
-        fm[steps-i]=fstop-i*fsteps;
-        values[steps-i]=3*SAMPLERATE/fm[steps-i];
-    }
-    int pos=0;
-    int nextpos=0;
-    for (int i=0; i<=steps; i++)
-    {
-        double ytmp[10000];
-        nextpos=pos+values[i];
-        for (int j=0; j<values[i]; j++)
-        {
-            ytmp[j]=sin(2*M_PI*(double)(fm[i])*(double)j/SAMPLERATE);
-        }
-        for (int j=pos; j<nextpos; j++)
-        {
-            TestSignal[j]=(SInt16)((ytmp[j-pos])*32000);
-        }
-        pos=nextpos;
-    }
-    NSLog(@"TestChirp created %i",TestSignal[1]);
-    
-
-    testSweep->buf= TestSignal;
-    play = testSweep;
-
-}
-
-*/
 -(void)testSweepSigInit
 {
     //check to avoid memory leaks
@@ -244,6 +153,23 @@ SInt16 TestSignal[106496];
     play = testSweep;
 }
 
+-(void)recordBufferInitSamples:(SInt32)len
+{
+    //check to avoid memory leaks
+    if(len !=record.len)
+    {
+        record.len = len;
+        if(record.buf)
+        {
+            free(record.buf);
+            record.buf = NULL;
+        }
+        record.buf = (SInt16*)malloc(record.len*2); //SInt16 = 2 Bytes
+    }
+    memset(record.buf,0,record.len*2);
+    
+    record.pos = 0;
+}
 
 -(void)recordBufferInit:(SInt32)len
 {
@@ -773,7 +699,6 @@ static OSStatus recordingCallback(void *inRefCon,
 
         }
     }
-
     frameLen = inNumberFrames;
     return noErr;
 
@@ -782,6 +707,9 @@ static OSStatus recordingCallback(void *inRefCon,
 //mainly used for debugging, outputs the recorded data by sending to the python server
 -(void)testOutput
 {
+    SInt64 AKkf[KKFSIZE];
+    KKF(record.buf, play->buf, AKkf);
+    MaximumSuche(AKkf);
     NSString *outStr = [[NSString alloc] init];
     [com open];
     [com send:@"fileName:record_2k_6k_6k_10k_.txt\n"];
