@@ -1,22 +1,26 @@
 #import "processing.h"
 
-void KKF(SInt16 ARecord[NSAMPLE], SInt16 ASend[NSAMPLE], SInt64 AKkf[KKFSIZE])
+void KKF(SInt16 *ARecord,SInt16 *ASend,SInt64 *AKkf,SInt32 Nsamples)
 {
-    int i=0;
-    int j=0;
+    NSLog(@"KKF Function started");
+    SInt32 KKFSize=2*Nsamples;
     //Nullen aller AKkf Werte
-    memset(AKkf,0,KKFSIZE*sizeof(SInt64));
-    
+    memset(AKkf,0,KKFSize*sizeof(SInt64));
+    NSLog(@"KKF NULLED");
     //Durchfürhung KKF (noch Matlab implementierung, also auf auch "negative" Zeiten werden berechnet, Beginn sollte später bei NSAMPLE sein)
-    for (i=0;i<KKFSIZE;i++)
+    for (int i=0;i<KKFSize;i++)
     {
-        for (j=0;j<NSAMPLE;j++)
+        if (i%1000==0)
         {
-            if (j+i>NSAMPLE)
+        NSLog(@"Run: %i",i);
+        }
+        for (int j=0;j<Nsamples;j++)
+        {
+            if (j+i>Nsamples)
             {
-                if (j+i<=KKFSIZE)
+                if (j+i<=KKFSize)
                 {
-                    AKkf[i]=AKkf[i]+ASend[j]*ARecord[j+i-NSAMPLE];
+                    AKkf[i]=AKkf[i]+ASend[j]*ARecord[j+i-Nsamples];
                 }
             }
         }
@@ -24,13 +28,13 @@ void KKF(SInt16 ARecord[NSAMPLE], SInt16 ASend[NSAMPLE], SInt64 AKkf[KKFSIZE])
     NSLog(@"KKF Durchgeführt");
 }
 
-SInt16 MaximumSuche(SInt64 AKkf[KKFSIZE])
+SInt16 MaximumSuche(SInt64 *AKkf, SInt32 KKFSize)
 {
     float max=0;
     int max_t=0;
     
     //Bestimmung der Entfernung (offset eventuell dynamisch aus Hardwarevorgabe berechnen, offset eventuell größer für reale signale)
-    for (int i=NSAMPLE+20;i<KKFSIZE;i++)
+    for (int i=0;i<KKFSize;i++)
     {
         if (max<abs( (int)AKkf[i]) )
         {

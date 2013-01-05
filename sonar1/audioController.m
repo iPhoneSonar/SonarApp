@@ -693,9 +693,12 @@ static OSStatus recordingCallback(void *inRefCon,
 //mainly used for debugging, outputs the recorded data by sending to the python server
 -(void)testOutput
 {
-    SInt64 AKkf[KKFSIZE];
-    KKF(record.buf, play->buf, AKkf);
-    MaximumSuche(AKkf);
+    SInt32 KKFSize=2*play->len;
+    SInt64 AKkf[KKFSize];
+    NSLog(@"KKF Initialized");
+    KKF(record.buf, play->buf, AKkf, play->len);
+    NSLog(@"KKF berechnet");
+    //MaximumSuche(AKkf, KKFSize);
     NSString *outStr = [[NSString alloc] init];
     [com open];
     [com send:@"fileName:record_2k_6k_6k_10k_.txt\n"];
@@ -704,8 +707,7 @@ static OSStatus recordingCallback(void *inRefCon,
     int len = 0;
     for (int i=0; i< record.len; i++)
     {
-        //outStr = [outStr stringByAppendingFormat: @"%d,", record.buf[i]];
-        sprintf(sOutPtr,"%d,",record.buf[i]);
+        sprintf(sOutPtr,"%i,",record.buf[i]);
         len += strlen(sOutPtr);
         sOutPtr = sOut + len;
         // to package the frame data check the  size of the outStr
@@ -716,7 +718,6 @@ static OSStatus recordingCallback(void *inRefCon,
                 sOutPtr[len] = 0;
                 outStr = [NSString stringWithFormat:@"%s\n",sOut];
                 [com send:outStr];
-                //NSLog(@"com part send");
                 sOutPtr = sOut;
                 len = 0;
                 memset(sOut,0,2000);
@@ -745,7 +746,6 @@ static OSStatus recordingCallback(void *inRefCon,
     sOutPtr=sOut;
     for (int i=0; i< play->len; i++)
     {
-        //outStr = [outStr stringByAppendingFormat: @"%d,", record.buf[i]];
         sprintf(sOutPtr,"%i,",play->buf[i]);
         len += strlen(sOutPtr);
         sOutPtr = sOut + len;
@@ -758,7 +758,6 @@ static OSStatus recordingCallback(void *inRefCon,
                 sOutPtr[len] = 0;
                 outStr = [NSString stringWithFormat:@"%s\n",sOut];
                 [com send:outStr];
-                //NSLog(@"com part send");
                 sOutPtr = sOut;
                 len = 0;
                 memset(sOut,0,2000);
