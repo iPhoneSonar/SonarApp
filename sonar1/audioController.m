@@ -128,21 +128,16 @@ SInt16 frameLen = 0;
 
     testSweep = (sig*)malloc(sizeof(sig));
 
-    const int imax = 48 * 50; //48khz * 30ms = 1440 number of samples
+    SInt32 shift = 0;
 
-    SInt32 len = (imax *2 + 1024) * 4;
-
-    SInt32 shift = 1024;
-
-    SInt32 size = ((len*2/1024)+1)*1024 +shift*2;
-    size = size*2;
-    testSweep->buf = (SInt16*)malloc(size);
+    SInt32 size = 22528;
+    testSweep->buf = (SInt16*)malloc(size*sizeof(SInt16));
     
     sweepGen((testSweep->buf)+shift);
     
-    testSweep->len = size/2;
+    testSweep->len = size;
     testSweep->pos = 0;
-    testSweep->samplesPerPeriod = size/2;
+    testSweep->samplesPerPeriod = size;
     testSweep->shift = 0;
     NSLog(@"Sendesignal Länge: %li Samples",testSweep->len);
     play = testSweep;
@@ -693,12 +688,18 @@ static OSStatus recordingCallback(void *inRefCon,
 //mainly used for debugging, outputs the recorded data by sending to the python server
 -(void)testOutput
 {
+    NSLog(@"testOutput started");
     SInt32 KKFSize=2*play->len;
     SInt64 AKkf[KKFSize];
-    NSLog(@"KKF Initialized");
     KKF(record.buf, play->buf, AKkf, play->len);
-    NSLog(@"KKF berechnet");
-    //MaximumSuche(AKkf, KKFSize);
+    SInt32 FirstPeak=MaximumSuche(AKkf, 0, KKFSize);
+    NSLog(@"erster Peak bei %li, entspricht NRL bei 1 Geräte System",FirstPeak);
+    SInt32 Offset=40;
+    SInt32 SecondPeak=MaximumSuche(AKkf,FirstPeak+Offset,KKFSize);
+    NSLog(@"zweiter Peak bei %li, entspricht Ziel bei 1 Geräte System (offset für Mindestentfernung %li Samples)",SecondPeak,Offset);
+    float Distance=(float)(SecondPeak-FirstPeak);
+    float DistanceM=Distance/SAMPLERATE*343;
+    NSLog(@"Entfernung für ein Geräte System: %f Samples, entspricht %f Meter",Distance, DistanceM);
     NSString *outStr = [[NSString alloc] init];
     [com open];
     [com send:@"fileName:record_2k_6k_6k_10k_.txt\n"];
@@ -780,6 +781,45 @@ static OSStatus recordingCallback(void *inRefCon,
     [com send:@"fileEnd\n"];
     NSLog(@"com fileEnd send");
     
+    [com send:@"fileName:KKF_2k_6k_6k_10k_.txt\n"];
+    len = 0;
+    memset(sOut,0,2000);
+    sOutPtr=sOut;
+    for (int i=0; i< KKFSize; i++)
+    {
+        sprintf(sOutPtr,"%lli,",AKkf[i]);
+        len += strlen(sOutPtr);
+        sOutPtr = sOut + len;
+        // to package the frame data check the  size of the outStr
+        if (len > 1990)
+        {
+            if (com.host) //short test assumes that the network is also initialized
+            {
+                
+                sOutPtr[len] = 0;
+                outStr = [NSString stringWithFormat:@"%s\n",sOut];
+                [com send:outStr];
+                sOutPtr = sOut;
+                len = 0;
+                memset(sOut,0,2000);
+            }
+        }
+        
+    }
+    //send the rest of the content if there is
+    if (len > 0)
+    {
+        if (com.host) //short test assumes that the network is also initialized
+        {
+            //remove the last ','
+            sOut[len] = 0;
+            outStr = [NSString stringWithFormat:@"%s\n",sOut];
+            [com send:outStr];
+            NSLog(@"com send");
+        }
+    }
+    [com send:@"fileEnd\n"];
+    NSLog(@"com fileEnd send");
     [com close];
 }
 

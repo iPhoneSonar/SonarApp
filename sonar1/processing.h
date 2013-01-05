@@ -4,5 +4,5 @@
 //#define KKFSIZE 5292
 
 void KKF(SInt16 *ARecord, SInt16 *ASend, SInt64 *AKkf,SInt32 Nsamples);
-SInt16 MaximumSuche(SInt64 *AKkf,SInt32 KKFSize);
+SInt16 MaximumSuche(SInt64 *AKkf,SInt32 StartValue, SInt32 EndValue);
 SInt32 sweepGen(SInt16 *Tptr);

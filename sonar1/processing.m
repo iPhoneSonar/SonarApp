@@ -2,47 +2,56 @@
 
 void KKF(SInt16 *ARecord,SInt16 *ASend,SInt64 *AKkf,SInt32 Nsamples)
 {
-    NSLog(@"KKF Function started");
     SInt32 KKFSize=2*Nsamples;
     //Nullen aller AKkf Werte
     memset(AKkf,0,KKFSize*sizeof(SInt64));
-    NSLog(@"KKF NULLED");
-    //Durchfürhung KKF (noch Matlab implementierung, also auf auch "negative" Zeiten werden berechnet, Beginn sollte später bei NSAMPLE sein)
-    for (int i=0;i<KKFSize;i++)
+    int i=0;
+    int j=0;
+    int endJ=0;
+    /*int startJ=0;
+    //für erste Hälfte (nicht nötig, da keine kausale aussage möglich ist)
+    for (i=0; i<Nsamples; i++)
     {
         if (i%1000==0)
         {
-        NSLog(@"Run: %i",i);
+            NSLog(@"Run: %i",i);
         }
-        for (int j=0;j<Nsamples;j++)
+        startJ=Nsamples-i;
+        for(j=startJ;j<Nsamples;j++)
         {
-            if (j+i>Nsamples)
-            {
-                if (j+i<=KKFSize)
-                {
-                    AKkf[i]=AKkf[i]+ASend[j]*ARecord[j+i-Nsamples];
-                }
-            }
+            AKkf[i]=AKkf[i]+ASend[j]*ARecord[j+i-Nsamples];
+        }
+    }*/
+    
+    //zweite Hälfte, ab hier kausale Aussage möglich.
+    //Berechnung um 2048 Werte später als Mitte, da das Empfangssignal um etwas mehr als 2 Frames verzögert ist
+    //for (i=Nsamples+2048;i<KKFSize;i++)
+    //3500 Werte entsprechen ca. 25 Meter, darum nicht mehr berechnen
+    NSLog(@"Start der KKF Berechnung");
+    for (i=Nsamples+2048;i<Nsamples+2048+3500;i++)
+    {
+        endJ=KKFSize-i;
+        for(j=1;j<endJ;j++)
+        {
+            AKkf[i]=AKkf[i]+ASend[j]*ARecord[j+i-Nsamples];
         }
     }
-    NSLog(@"KKF Durchgeführt");
+    NSLog(@"Berechnung der KKF durchgeführt");
 }
 
-SInt16 MaximumSuche(SInt64 *AKkf, SInt32 KKFSize)
+SInt16 MaximumSuche(SInt64 *AKkf, SInt32 StartValue, SInt32 EndValue)
 {
     float max=0;
     int max_t=0;
-    
-    //Bestimmung der Entfernung (offset eventuell dynamisch aus Hardwarevorgabe berechnen, offset eventuell größer für reale signale)
-    for (int i=0;i<KKFSize;i++)
+    //get absolut highest peak of KKF between the values
+    for (int i=StartValue;i<EndValue;i++)
     {
-        if (max<abs( (int)AKkf[i]) )
+        if (max<abs(AKkf[i]))
         {
-            max=abs( (int)AKkf[i]);
+            max=abs(AKkf[i]);
             max_t=i;
         }
     }
-    NSLog(@"Maximum bei KKF Punkt: %i mit dem Wert: %f ",max_t,max);
     return max_t;
 }
 
@@ -125,7 +134,5 @@ SInt32 sweepGen(SInt16 *Tptr)
         T[x+shift] = sin(omega*(double)x) * 30000;
         *(pT--) = -T[x+shift];
     }
-    
-    //memcpy(T+len+1024, T, len*2);
     return 1; //it was meant to allocate the memory in the function an return the size
 }
