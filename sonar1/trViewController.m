@@ -10,7 +10,6 @@
 #endif
 
 #import "trViewController.h"
-#import "fileOps.h"
 
 @implementation trViewController
 
@@ -23,7 +22,6 @@
 @synthesize tf2;
 @synthesize tfIp;
 @synthesize btnConnect;
-@synthesize btnMute;
 
 - (void)didReceiveMemoryWarning
 {
@@ -53,7 +51,6 @@
     [btnProcess release];
     [tfIp release];
     [btnConnect release];
-    [btnMute release];
     [super dealloc];
 }
 
@@ -66,7 +63,6 @@
     [self setBtnProcess:nil];
     [self setTfIp:nil];
     [self setBtnConnect:nil];
-    [self setBtnMute:nil];
     [super viewDidUnload];
     // Release any retained subviews of the main view.
     // e.g. self.myOutlet = nil;
@@ -137,20 +133,6 @@
     self.tf2.text = @"test out";
 }
 
-- (IBAction)mute:(id)sender {
-    if (self.btnMute.selected == YES)
-    {
-        self.btnMute.selected = NO;
-        [audioController mute:1];
-        self.tf2.text = @"playing";
-    }
-    else
-    {
-        self.btnMute.selected = YES;
-        [audioController mute:0];
-        self.tf2.text = @"muted";
-    }
-}
 
 - (IBAction)connect:(id)sender
 {

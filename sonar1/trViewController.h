@@ -32,9 +32,7 @@
 @property (retain, nonatomic) IBOutlet UIButton *btnProcess;
 @property (retain, nonatomic) IBOutlet UITextField *tfIp;
 @property (retain, nonatomic) IBOutlet UIButton *btnConnect;
-@property (retain, nonatomic) IBOutlet UIButton *btnMute;
 
-- (IBAction)mute:(id)sender;
 - (IBAction)connect:(id)sender;
 - (IBAction)backgroundTouched:(id)sender;
 - (IBAction)start:(id)sender;

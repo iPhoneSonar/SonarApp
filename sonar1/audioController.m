@@ -15,6 +15,8 @@ const Float64 SAMPLERATE = 48000.0;
 const SInt16 FRAMESIZE = 1024;
 const SInt16 SAMPLES_PER_PERIOD = 48;
 SInt16 muteFlag = 0;
+char test[1000];
+int testIndex = 0;
 //AudioTimeStamp timeTags[RECORDLEN];
 
 
@@ -200,6 +202,8 @@ SInt16 frameLen = 0;
 // audio render procedure, don't allocate memory, don't take any locks, don't waste time
 static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioActionFlags, const AudioTimeStamp *inTimeStamp, UInt32 inBusNumber, UInt32 inNumberFrames, AudioBufferList *ioData)
 {
+    test[testIndex] = 'p';
+    testIndex ++;
     audioController* audioUnit = (audioController*)inRefCon;
     
     if (inNumberFrames > FRAMESIZE)
@@ -634,6 +638,8 @@ static OSStatus recordingCallback(void *inRefCon,
                                   UInt32 inNumberFrames,
                                   AudioBufferList *ioData)
 {
+    test[testIndex] = 'r';
+    testIndex ++;
     
     UInt32 inBusNumberX = inBusNumber;
     UInt32 inNumberFramesX = inNumberFrames;
@@ -827,6 +833,7 @@ static OSStatus recordingCallback(void *inRefCon,
     [com send:@"fileEnd\n"];
     NSLog(@"com fileEnd send");
     [com close];
+    //NSLog(@"reihenfolge %s",test);
 }
 
 -(void)mute:(UInt32)flag
