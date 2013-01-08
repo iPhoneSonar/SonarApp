@@ -15,7 +15,9 @@ const Float64 SAMPLERATE = 48000.0;
 const SInt16 FRAMESIZE = 1024;
 const SInt16 SAMPLES_PER_PERIOD = 48;
 SInt16 muteFlag = 0;
-//AudioTimeStamp timeTags[RECORDLEN];
+AudioTimeStamp sendtimeTags[100000];
+AudioTimeStamp receivetimeTags[100000];
+SInt32 count[2];
 
 
 SInt16 sin1KHz[] = {0,3916,7765,11481,15000,18263,21213,23801,
@@ -129,10 +131,8 @@ SInt16 frameLen = 0;
     testSweep = (sig*)malloc(sizeof(sig));
 
     SInt32 shift = 0;
-
     SInt32 size = 22528;
     testSweep->buf = (SInt16*)malloc(size*sizeof(SInt16));
-    
     sweepGen((testSweep->buf)+shift);
     
     testSweep->len = size;
@@ -216,8 +216,8 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
 
     if (audioUnit->play->pos + inNumberFrames > audioUnit->play->len)
     {
-        //SInt32 t1= (audioUnit->play->pos/audioUnit->play->samplesPerPeriod)*audioUnit->play->samplesPerPeriod;
-        //audioUnit->play->pos = audioUnit->play->pos - t1;
+        memcpy(&(sendtimeTags[count[0]]),inTimeStamp,sizeof(AudioTimeStamp));
+        count[0]++;
         ioData->mBuffers[0].mData = audioUnit->mute->buf;
         audioUnit->play->pos -= inNumberFrames;
     }
@@ -392,6 +392,8 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
 {
     OSStatus status;
     UInt32 uiDataSize;
+    count[0]=0;
+    count[1]=0;
     
     status = AudioSessionInitialize(NULL, NULL, NULL, self);
     NSLog(@"session init = %ld",status);
@@ -419,22 +421,6 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
                                      &uiDefaultSpeaker);
 
     NSLog(@"set mode = %ld",status);
-    
-
-/*
-    //does not work on iphone
-    CFNumberRef cfnOutData;
-    uiDataSize = sizeof(CFNumberRef);
-    status = AudioSessionGetProperty(kAudioSessionProperty_OutputDestination, &uiDataSize, &cfnOutData);
-    NSLog(@"destination get status = %ld = %4.4s\n DataSize = %ld",status,(char*)&status,uiDataSize);
-
-    SInt32 siDest;
-    status = CFNumberGetValue(cfnOutData, kCFNumberSInt32Type, &siDest);
-    if (status == noErr)
-    {
-        NSLog(@"destination = %ld",siDest);
-    }
-  */
     
     //as playand record sends audio output by default to the builtinreceifer,
     //first check the state and overwrite it to the speaker
@@ -637,7 +623,6 @@ static OSStatus recordingCallback(void *inRefCon,
 {
 
     int dataSize = inNumberFrames * sizeof(Byte) * 2; // 16bit
-    //NSLog(@"recordingCallback");
         
     OSStatus status;
    
@@ -645,22 +630,18 @@ static OSStatus recordingCallback(void *inRefCon,
     
     AudioBufferList *bufferList = ru.recordingBufferList;
     bufferList->mBuffers[0].mDataByteSize = dataSize;
-   
-    //AudioSampleType *tempA = (AudioSampleType *)ioData->mBuffers[0].mData;
-    //for (int i=0; i<10;i++)
-    //    NSLog(@"val %d=%d",i,tempA[i] );
+
     if (inNumberFrames > FRAMESIZE)
     {
         NSLog(@"inNumberFrames = %ld",inNumberFrames);
         AudioOutputUnitStop(ru.audioUnit);
         return noErr;
     }
-    
-    //NSLog(@"frames=%ld\n AudioUnitRender status = %ld",inNumberFrames,status);
 
     if (ru->record.pos+inNumberFrames <= ru->record.len)
     {
-        //memcpy(&(timeTags[frameIndex]),inTimeStamp,sizeof(AudioTimeStamp));
+        memcpy(&(receivetimeTags[count[1]]),inTimeStamp,sizeof(AudioTimeStamp));
+        count[1]++;
         bufferList->mBuffers[0].mData = ru->record.buf+ru->record.pos;
         //AudioUnitRenderActionFlags ioActionFlags;
         status = AudioUnitRender(ru.audioUnit,
@@ -669,7 +650,6 @@ static OSStatus recordingCallback(void *inRefCon,
                                  inBusNumber,
                                  inNumberFrames,
                                  bufferList);
-        
         ru->record.pos += inNumberFrames;
     
         if (ru->record.pos+inNumberFrames > ru->record.len)
@@ -699,7 +679,10 @@ static OSStatus recordingCallback(void *inRefCon,
     float DistanceM=Distance/SAMPLERATE*343;
     
     NSString *outStr = [[NSString alloc] init];
-    
+    NSLog(@"0end mSampleTime: %f, receive mSampleTime: %f , div: %f",sendtimeTags[0].mSampleTime,receivetimeTags[0].mSampleTime,receivetimeTags[0].mSampleTime-sendtimeTags[0].mSampleTime);
+    NSLog(@"1send mSampleTime: %f, receive mSampleTime: %f , div: %f",sendtimeTags[1].mSampleTime,receivetimeTags[1].mSampleTime,receivetimeTags[1].mSampleTime-sendtimeTags[1].mSampleTime);
+    NSLog(@"2send mSampleTime: %f, receive mSampleTime: %f , div: %f",sendtimeTags[2].mSampleTime,receivetimeTags[2].mSampleTime,receivetimeTags[2].mSampleTime-sendtimeTags[2].mSampleTime);
+    NSLog(@"3send mSampleTime: %f, receive mSampleTime: %f , div: %f",sendtimeTags[3].mSampleTime,sendtimeTags[4].mSampleTime,sendtimeTags[4].mSampleTime-sendtimeTags[3].mSampleTime);
     
     [com open];
     [com send:@"fileName:record_2k_6k_6k_10k_.txt\n"];

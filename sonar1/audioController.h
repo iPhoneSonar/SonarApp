@@ -11,6 +11,7 @@
 #import "CAStreamBasicDescription.h"
 #import "processing.h"
 #import "communicator.h"
+#import <time.h>
 
 struct sig{
     SInt16 *buf;
