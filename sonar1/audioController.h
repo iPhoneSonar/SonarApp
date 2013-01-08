@@ -13,7 +13,7 @@
 #import "communicator.h"
 
 struct sig{
-    SInt16 *buf;
+    SInt32 *buf;
     SInt32 pos;
     SInt32 len;
     SInt32 shift;
@@ -22,7 +22,7 @@ struct sig{
 typedef struct sig sig;
 
 struct recordBuffer{
-    SInt16 *buf;
+    SInt32 *buf;
     SInt32 pos;
     SInt32 len;
 };
@@ -41,7 +41,6 @@ typedef struct recordBuffer recordBuffer;
     recordBuffer record;
     sig *play;
     sig *testSweep;
-
     communicator *com;
 }
 

@@ -69,7 +69,7 @@ SInt16 frameLen = 0;
     sine->samplesPerPeriod = 48;
     sine->shift = 32;
     
-    sine->buf = (SInt16*)malloc(sine->len*2); // SInt16 = 2 bytes
+    sine->buf = (SInt32*)malloc(sine->len*sizeof(SInt32)); // SInt16 = 2 bytes
 
     int index = 0;
     for (int i=0; i<sine->len; i++)
@@ -101,7 +101,7 @@ SInt16 frameLen = 0;
     sine->samplesPerPeriod = 0;
     sine->shift = 0;
     
-    sine->buf = (SInt16*)malloc(sine->len*2); // SInt16 = 2 bytes
+    sine->buf = (SInt32*)malloc(sine->len*sizeof(SInt32)); // SInt16 = 2 bytes
     for (int j=0; j<1;j++)
     {
     for (int i=0; i<4; i++)
@@ -131,7 +131,7 @@ SInt16 frameLen = 0;
     SInt32 shift = 0;
 
     SInt32 size = 22528;
-    testSweep->buf = (SInt16*)malloc(size*sizeof(SInt16));
+    testSweep->buf = (SInt32*)malloc(size*sizeof(SInt32));
     
     sweepGen((testSweep->buf)+shift);
     
@@ -146,17 +146,18 @@ SInt16 frameLen = 0;
 -(void)recordBufferInitSamples
 {
     //check to avoid memory leaks
-    if(play->len !=record.len)
+    UInt32 uiExtention = 2*1024;
+    if(play->len !=record.len - uiExtention)
     {
-        record.len = play->len;
+        record.len = play->len + uiExtention;
         if(record.buf)
         {
             free(record.buf);
             record.buf = NULL;
         }
-        record.buf = (SInt16*)malloc(record.len*2); //SInt16 = 2 Bytes
+        record.buf = (SInt32*)malloc(record.len*sizeof(SInt32)); //SInt16 = 2 Bytes
     }
-    memset(record.buf,0,record.len*2);
+    memset(record.buf,0,record.len*sizeof(SInt32));
     NSLog(@"Empfangssignal Länge: %li Samples",record.len);
     record.pos = 0;
 }
@@ -172,7 +173,7 @@ SInt16 frameLen = 0;
             free(record.buf);
             record.buf = NULL;
         }
-        record.buf = (SInt16*)malloc(record.len*2); //SInt16 = 2 Bytes
+        record.buf = (SInt32*)malloc(record.len*sizeof(SInt32)); //SInt16 = 2 Bytes
     }
     memset(record.buf,0,record.len*2);
 
@@ -190,8 +191,8 @@ SInt16 frameLen = 0;
     mute= (sig*)malloc(sizeof(sig));
 
     mute->len = mute->samplesPerPeriod = 1024;
-    mute->buf = (SInt16*)malloc(mute->len*2); //SInt16 = 2 Bytes
-    memset(mute->buf, 0,mute->len*2);
+    mute->buf = (SInt32*)malloc(mute->len*sizeof(SInt32)); //SInt16 = 2 Bytes
+    memset(mute->buf, 0,mute->len*sizeof(SInt32));
     mute->pos = 0;
     mute->shift = 0;
 }
@@ -210,7 +211,6 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
 
     
 	ioData->mBuffers[0].mData = (audioUnit->play->buf + audioUnit->play->pos);
-    
 
     audioUnit->play->pos += inNumberFrames;
 
@@ -228,7 +228,6 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
 
 -(OSStatus)audioUnitInit
 {
-  
     [self sessionInit];
     //bring up the communication channel
     com = [[communicator alloc] init];
@@ -286,11 +285,12 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
     audioFormat.mSampleRate = SAMPLERATE;
     audioFormat.mFormatID = kAudioFormatLinearPCM;
     audioFormat.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
+    audioFormat.mBytesPerPacket = 4;
     audioFormat.mFramesPerPacket = 1;
-    audioFormat.mChannelsPerFrame = 1;
+    audioFormat.mBytesPerFrame = 4;
+    audioFormat.mChannelsPerFrame = 2; //stereo but we fill the second buffer with zeros
     audioFormat.mBitsPerChannel = 16;
-    audioFormat.mBytesPerPacket = 2;
-    audioFormat.mBytesPerFrame = 2;
+
     
     //we set the output as the input is not writeable
     status = AudioUnitSetProperty(audioUnit ,
@@ -383,7 +383,7 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
     recordingBufferList = (AudioBufferList*)malloc(sizeof(AudioBufferList)) ;
     recordingBufferList->mNumberBuffers = 1;
     recordingBufferList->mBuffers[0].mData = record.buf;
-    recordingBufferList->mBuffers[0].mNumberChannels = 1;
+    recordingBufferList->mBuffers[0].mNumberChannels = 2;
     
     return status;
 }
@@ -435,7 +435,7 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
         NSLog(@"destination = %ld",siDest);
     }
   */
-    
+
     //as playand record sends audio output by default to the builtinreceifer,
     //first check the state and overwrite it to the speaker
     CFDictionaryRef cfdRouteDesc;
@@ -605,7 +605,6 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
      kAudioSessionProperty_InputGainAvailable                    = 'igav',   // UInt32           (get only/property listener)
      kAudioSessionProperty_InputGainScalar                       = 'igsc',   // Float32          (get/set/property listener)
      kAudioSessionProperty_AudioRouteDescription                 = 'crar',   // CFDictionaryRef  (get 
-     
      */
      
     //these are only to check if all was set up the right way
@@ -635,12 +634,15 @@ static OSStatus recordingCallback(void *inRefCon,
                                   UInt32 inNumberFrames,
                                   AudioBufferList *ioData)
 {
+    
+    UInt32 inBusNumberX = inBusNumber;
+    UInt32 inNumberFramesX = inNumberFrames;
 
-    int dataSize = inNumberFrames * sizeof(Byte) * 2; // 16bit
+    int dataSize = inNumberFrames * sizeof(SInt32); // 16bit twice
     //NSLog(@"recordingCallback");
-        
+
     OSStatus status;
-   
+
     audioController* ru = (audioController*)inRefCon;
     
     AudioBufferList *bufferList = ru.recordingBufferList;
@@ -674,10 +676,13 @@ static OSStatus recordingCallback(void *inRefCon,
     
         if (ru->record.pos+inNumberFrames > ru->record.len)
         {
-            NSLog(@"recording stoped, status = %ld",status);
+            NSLog(@"recording stoped");
+            NSLog(@"AudioUnitRender status = %ld",status);
             NSLog(@"frame index = %ld",ru->record.pos);
             NSLog(@"mDataByteSize = %ld",bufferList->mBuffers[0].mDataByteSize);
             NSLog(@"mNumberChannels = %ld",bufferList->mBuffers[0].mNumberChannels);
+            NSLog(@"inNumberFramesX = %ld", inNumberFramesX);
+            NSLog(@"inBusNumberX = %ld", inBusNumberX);
             NSLog(@"ioActionFlags = %ld",*ioActionFlags);
         }
     }
@@ -690,12 +695,13 @@ static OSStatus recordingCallback(void *inRefCon,
 {
     NSLog(@"testOutput started");
     SInt32 KKFSize=2*play->len;
-    SInt64 AKkf[KKFSize];
+    SInt64* AKkf;
+    AKkf = (SInt64*)malloc(KKFSize*sizeof(SInt64));
     KKF(record.buf, play->buf, AKkf, play->len);
-    SInt32 FirstPeak=MaximumSuche(AKkf, 0, KKFSize);
+    UInt32 FirstPeak=MaximumSuche(AKkf, 0, KKFSize);
     NSLog(@"erster Peak bei %li, entspricht NRL bei 1 Geräte System",FirstPeak);
-    SInt32 Offset=40;
-    SInt32 SecondPeak=MaximumSuche(AKkf,FirstPeak+Offset,KKFSize);
+    UInt32 Offset=40;
+    UInt32 SecondPeak=MaximumSuche(AKkf,FirstPeak+Offset,KKFSize);
     NSLog(@"zweiter Peak bei %li, entspricht Ziel bei 1 Geräte System (offset für Mindestentfernung %li Samples)",SecondPeak,Offset);
     float Distance=(float)(SecondPeak-FirstPeak);
     float DistanceM=Distance/SAMPLERATE*343;
@@ -708,13 +714,13 @@ static OSStatus recordingCallback(void *inRefCon,
     int len = 0;
     for (int i=0; i< record.len; i++)
     {
-        sprintf(sOutPtr,"%i,",record.buf[i]);
+        sprintf(sOutPtr,"%li,",record.buf[i]);
         len += strlen(sOutPtr);
         sOutPtr = sOut + len;
         // to package the frame data check the  size of the outStr
         if (len > 1990)
         {
-            if (com.host) //short test assumes that the network is also initialized
+            if (com.host) //short test assumes that the network is initialized
             {
                 sOutPtr[len] = 0;
                 outStr = [NSString stringWithFormat:@"%s\n",sOut];
@@ -729,7 +735,7 @@ static OSStatus recordingCallback(void *inRefCon,
     //send the rest of the content if there is
     if (len > 0)
     {
-        if (com.host) //short test assumes that the network is also initialized
+        if (com.host) //short test assumes that the network is initialized
         {
             //remove the last ','
             sOut[len] = 0;
@@ -747,13 +753,13 @@ static OSStatus recordingCallback(void *inRefCon,
     sOutPtr=sOut;
     for (int i=0; i< play->len; i++)
     {
-        sprintf(sOutPtr,"%i,",play->buf[i]);
+        sprintf(sOutPtr,"%li,",play->buf[i]);
         len += strlen(sOutPtr);
         sOutPtr = sOut + len;
         // to package the frame data check the  size of the outStr
         if (len > 1990)
         {
-            if (com.host) //short test assumes that the network is also initialized
+            if (com.host) //short test assumes that the network is initialized
             {
                
                 sOutPtr[len] = 0;
@@ -769,7 +775,7 @@ static OSStatus recordingCallback(void *inRefCon,
     //send the rest of the content if there is
     if (len > 0)
     {
-        if (com.host) //short test assumes that the network is also initialized
+        if (com.host) //short test assumes that the network is initialized
         {
             //remove the last ','
             sOut[len] = 0;
@@ -793,7 +799,7 @@ static OSStatus recordingCallback(void *inRefCon,
         // to package the frame data check the  size of the outStr
         if (len > 1990)
         {
-            if (com.host) //short test assumes that the network is also initialized
+            if (com.host) //short test assumes that the network is initialized
             {
                 
                 sOutPtr[len] = 0;
@@ -809,7 +815,7 @@ static OSStatus recordingCallback(void *inRefCon,
     //send the rest of the content if there is
     if (len > 0)
     {
-        if (com.host) //short test assumes that the network is also initialized
+        if (com.host) //short test assumes that the network is initialized
         {
             //remove the last ','
             sOut[len] = 0;

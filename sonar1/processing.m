@@ -1,6 +1,6 @@
 #import "processing.h"
 
-void KKF(SInt16 *ARecord,SInt16 *ASend,SInt64 *AKkf,SInt32 Nsamples)
+void KKF(SInt32 *ARecord,SInt32 *ASend,SInt64 *AKkf,SInt32 Nsamples)
 {
     SInt32 KKFSize=2*Nsamples;
     //Nullen aller AKkf Werte
@@ -33,15 +33,15 @@ void KKF(SInt16 *ARecord,SInt16 *ASend,SInt64 *AKkf,SInt32 Nsamples)
         endJ=KKFSize-i;
         for(j=1;j<endJ;j++)
         {
-            AKkf[i]=AKkf[i]+ASend[j]*ARecord[j+i-Nsamples];
+            AKkf[i]=AKkf[i]+(SInt16)ASend[j]*(SInt16)ARecord[j+i-Nsamples];
         }
     }
     NSLog(@"Berechnung der KKF durchgeführt");
 }
 
-SInt16 MaximumSuche(SInt64 *AKkf, SInt32 StartValue, SInt32 EndValue)
+SInt32 MaximumSuche(SInt64 *AKkf, UInt32 StartValue, UInt32 EndValue)
 {
-    float max=0;
+    UInt64 max=0;
     int max_t=0;
     //get absolut highest peak of KKF between the values
     for (int i=StartValue;i<EndValue;i++)
@@ -50,17 +50,20 @@ SInt16 MaximumSuche(SInt64 *AKkf, SInt32 StartValue, SInt32 EndValue)
         {
             max=abs(AKkf[i]);
             max_t=i;
+            NSLog(@"max_t = %d max = %lld",max_t, max);
         }
     }
+    NSLog(@"start = %ld, end = %ld, max = %lld",StartValue, EndValue, max);
     return max_t;
 }
 
-SInt32 sweepGen(SInt16 *Tptr)
+SInt32 sweepGen(SInt32 *Tptr)
 {
-    SInt16 *T = NULL;
+    SInt32 *T = NULL;
     T = Tptr;
     const int imax = 48 * 50; //48khz * 30ms = 1440 number of samples
-    SInt32 len = imax *2;  
+    SInt32 len = imax *2;
+    SInt32 mask = 0x0000FFFF;
 
     double fs = 48000.0;
     double fmin = 2000.0;
@@ -68,7 +71,7 @@ SInt32 sweepGen(SInt16 *Tptr)
     double f = 0.0;
     double fm = 0.0; //momentary frequency
     double omega = 0.0;
-    SInt16 *pT = T + 2*imax-1; // pointer to the end for the negative gradient
+    SInt32 *pT = T + 2*imax-1; // pointer to the end for the negative gradient
 
     SInt32 x;
     for(x = 0;x<imax;x++)
@@ -76,7 +79,7 @@ SInt32 sweepGen(SInt16 *Tptr)
         fm = ((fmax - fmin)/(double)imax)*x + fmin;
         f = fm/fs;
         omega = M_PI * 2.0 * f;
-        T[x] = sin(omega*(double)x) * 30000;
+        T[x] = mask & (SInt32)(sin(omega*(double)x) * 30000);
         *(pT--) = -T[x];
     }
 
@@ -94,7 +97,7 @@ SInt32 sweepGen(SInt16 *Tptr)
         fm = ((fmax - fmin)/(double)imax)*x + fmin;
         f = fm/fs;
         omega = M_PI * 2.0 * f;
-        T[x+shift] = sin(omega*(double)x) * 30000;
+        T[x+shift] = mask & (SInt32)(sin(omega*(double)x) * 30000);
         *(pT--) = -T[x+shift];
     }
 
@@ -113,7 +116,7 @@ SInt32 sweepGen(SInt16 *Tptr)
         fm = ((fmax - fmin)/(double)imax)*x + fmin;
         f = fm/fs;
         omega = M_PI * 2.0 * f;
-        T[x+shift] = sin(omega*(double)x) * 30000;
+        T[x+shift] = mask & (SInt32)(sin(omega*(double)x) * 30000);
         *(pT--) = -T[x+shift];
     }
 
@@ -131,7 +134,7 @@ SInt32 sweepGen(SInt16 *Tptr)
         fm = ((fmax - fmin)/(double)imax)*x + fmin;
         f = fm/fs;
         omega = M_PI * 2.0 * f;
-        T[x+shift] = sin(omega*(double)x) * 30000;
+        T[x+shift] = mask & (SInt32)(sin(omega*(double)x) * 30000);
         *(pT--) = -T[x+shift];
     }
     return 1; //it was meant to allocate the memory in the function an return the size
