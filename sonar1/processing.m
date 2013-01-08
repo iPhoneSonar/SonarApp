@@ -41,16 +41,40 @@ void KKF(SInt16 *ARecord,SInt16 *ASend,SInt64 *AKkf,SInt32 Nsamples)
 
 SInt16 MaximumSuche(SInt64 *AKkf, SInt32 StartValue, SInt32 EndValue)
 {
-    float max=0;
+    SInt64 pmax=0;
+    SInt64 nmax=0;
+    int pmax_t=0;
+    int nmax_t=0;
     int max_t=0;
     //get absolut highest peak of KKF between the values
     for (int i=StartValue;i<EndValue;i++)
     {
-        if (max<abs(AKkf[i]))
+        //abs(Sint64) doesn´t work, abs() is only usable for Int
+        if (AKkf[i]>0)
         {
-            max=abs(AKkf[i]);
-            max_t=i;
+            if (pmax<AKkf[i])
+            {
+                pmax=AKkf[i];
+                pmax_t=i;
+            }
         }
+        else
+        {
+            if (nmax>AKkf[i] || nmax==0)
+            {
+                nmax=AKkf[i];
+                nmax_t=i;
+            }
+            
+        }
+    }
+    if (nmax+pmax>=0)
+    {
+        max_t=pmax_t;
+    }
+    else
+    {
+        max_t=nmax_t;
     }
     return max_t;
 }

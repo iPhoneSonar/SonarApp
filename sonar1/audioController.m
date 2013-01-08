@@ -692,15 +692,15 @@ static OSStatus recordingCallback(void *inRefCon,
     SInt32 KKFSize=2*play->len;
     SInt64 AKkf[KKFSize];
     KKF(record.buf, play->buf, AKkf, play->len);
-    SInt32 FirstPeak=MaximumSuche(AKkf, 0, KKFSize);
-    NSLog(@"erster Peak bei %li, entspricht NRL bei 1 Geräte System",FirstPeak);
+    SInt32 FirstPeak=MaximumSuche(AKkf, 0, KKFSize);    
     SInt32 Offset=40;
     SInt32 SecondPeak=MaximumSuche(AKkf,FirstPeak+Offset,KKFSize);
-    NSLog(@"zweiter Peak bei %li, entspricht Ziel bei 1 Geräte System (offset für Mindestentfernung %li Samples)",SecondPeak,Offset);
     float Distance=(float)(SecondPeak-FirstPeak);
     float DistanceM=Distance/SAMPLERATE*343;
-    NSLog(@"Entfernung für ein Geräte System: %f Samples, entspricht %f Meter",Distance, DistanceM);
+    
     NSString *outStr = [[NSString alloc] init];
+    
+    
     [com open];
     [com send:@"fileName:record_2k_6k_6k_10k_.txt\n"];
     char *sOut = (char*)malloc(2000);
@@ -724,7 +724,6 @@ static OSStatus recordingCallback(void *inRefCon,
                 memset(sOut,0,2000);
             }
         }
-        
     }
     //send the rest of the content if there is
     if (len > 0)
@@ -755,7 +754,6 @@ static OSStatus recordingCallback(void *inRefCon,
         {
             if (com.host) //short test assumes that the network is also initialized
             {
-               
                 sOutPtr[len] = 0;
                 outStr = [NSString stringWithFormat:@"%s\n",sOut];
                 [com send:outStr];
@@ -764,7 +762,6 @@ static OSStatus recordingCallback(void *inRefCon,
                 memset(sOut,0,2000);
             }
         }
-        
     }
     //send the rest of the content if there is
     if (len > 0)
@@ -781,6 +778,7 @@ static OSStatus recordingCallback(void *inRefCon,
     [com send:@"fileEnd\n"];
     NSLog(@"com fileEnd send");
     
+    
     [com send:@"fileName:KKF_2k_6k_6k_10k_.txt\n"];
     len = 0;
     memset(sOut,0,2000);
@@ -795,7 +793,6 @@ static OSStatus recordingCallback(void *inRefCon,
         {
             if (com.host) //short test assumes that the network is also initialized
             {
-                
                 sOutPtr[len] = 0;
                 outStr = [NSString stringWithFormat:@"%s\n",sOut];
                 [com send:outStr];
@@ -804,7 +801,6 @@ static OSStatus recordingCallback(void *inRefCon,
                 memset(sOut,0,2000);
             }
         }
-        
     }
     //send the rest of the content if there is
     if (len > 0)
@@ -821,6 +817,10 @@ static OSStatus recordingCallback(void *inRefCon,
     [com send:@"fileEnd\n"];
     NSLog(@"com fileEnd send");
     [com close];
+    
+    NSLog(@"erster Peak bei %li, entspricht NRL bei 1 Geräte System",FirstPeak);
+    NSLog(@"zweiter Peak bei %li, entspricht Ziel bei 1 Geräte System (offset für Mindestentfernung %li Samples)",SecondPeak,Offset);
+    NSLog(@"Entfernung für ein Geräte System: %f Samples, entspricht %f Meter",Distance, DistanceM);
 }
 
 -(void)mute:(UInt32)flag
