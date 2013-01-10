@@ -19,6 +19,11 @@ char test[1000];
 int testIndex = 0;
 //AudioTimeStamp timeTags[RECORDLEN];
 
+AudioTimeStamp sendtimeTags[100000];
+AudioTimeStamp receivetimeTags[100000];
+SInt32 count[2];
+
+
 
 SInt16 sin1KHz[] = {0,3916,7765,11481,15000,18263,21213,23801,
                     25981,27716,28978,29743,30000,29743,28978,27716,
@@ -131,8 +136,8 @@ SInt16 frameLen = 0;
     testSweep = (sig*)malloc(sizeof(sig));
 
     SInt32 shift = 0;
-
     SInt32 size = 22528;
+
     testSweep->buf = (SInt32*)malloc(size*sizeof(SInt32));
     
     sweepGen((testSweep->buf)+shift);
@@ -220,8 +225,8 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
 
     if (audioUnit->play->pos + inNumberFrames > audioUnit->play->len)
     {
-        //SInt32 t1= (audioUnit->play->pos/audioUnit->play->samplesPerPeriod)*audioUnit->play->samplesPerPeriod;
-        //audioUnit->play->pos = audioUnit->play->pos - t1;
+        memcpy(&(sendtimeTags[count[0]]),inTimeStamp,sizeof(AudioTimeStamp));
+        count[0]++;
         ioData->mBuffers[0].mData = audioUnit->mute->buf;
         audioUnit->play->pos -= inNumberFrames;
     }
@@ -396,6 +401,8 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
 {
     OSStatus status;
     UInt32 uiDataSize;
+    count[0]=0;
+    count[1]=0;
     
     status = AudioSessionInitialize(NULL, NULL, NULL, self);
     NSLog(@"session init = %ld",status);
@@ -424,6 +431,7 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
 
     NSLog(@"set mode = %ld",status);
     
+
 
 /*
     //does not work on iphone
@@ -644,6 +652,7 @@ static OSStatus recordingCallback(void *inRefCon,
     UInt32 inBusNumberX = inBusNumber;
     UInt32 inNumberFramesX = inNumberFrames;
 
+
     int dataSize = inNumberFrames * sizeof(SInt32); // 16bit twice
     //NSLog(@"recordingCallback");
 
@@ -653,22 +662,18 @@ static OSStatus recordingCallback(void *inRefCon,
     
     AudioBufferList *bufferList = ru.recordingBufferList;
     bufferList->mBuffers[0].mDataByteSize = dataSize;
-   
-    //AudioSampleType *tempA = (AudioSampleType *)ioData->mBuffers[0].mData;
-    //for (int i=0; i<10;i++)
-    //    NSLog(@"val %d=%d",i,tempA[i] );
+
     if (inNumberFrames > FRAMESIZE)
     {
         NSLog(@"inNumberFrames = %ld",inNumberFrames);
         AudioOutputUnitStop(ru.audioUnit);
         return noErr;
     }
-    
-    //NSLog(@"frames=%ld\n AudioUnitRender status = %ld",inNumberFrames,status);
 
     if (ru->record.pos+inNumberFrames <= ru->record.len)
     {
-        //memcpy(&(timeTags[frameIndex]),inTimeStamp,sizeof(AudioTimeStamp));
+        memcpy(&(receivetimeTags[count[1]]),inTimeStamp,sizeof(AudioTimeStamp));
+        count[1]++;
         bufferList->mBuffers[0].mData = ru->record.buf+ru->record.pos;
         //AudioUnitRenderActionFlags ioActionFlags;
         status = AudioUnitRender(ru.audioUnit,
@@ -677,7 +682,6 @@ static OSStatus recordingCallback(void *inRefCon,
                                  inBusNumber,
                                  inNumberFrames,
                                  bufferList);
-        
         ru->record.pos += inNumberFrames;
     
         if (ru->record.pos+inNumberFrames > ru->record.len)
@@ -704,15 +708,22 @@ static OSStatus recordingCallback(void *inRefCon,
     SInt64* AKkf;
     AKkf = (SInt64*)malloc(KKFSize*sizeof(SInt64));
     KKF(record.buf, play->buf, AKkf, play->len);
+
     UInt32 FirstPeak=MaximumSuche(AKkf, 0, KKFSize);
     NSLog(@"erster Peak bei %li, entspricht NRL bei 1 Geräte System",FirstPeak);
     UInt32 Offset=40;
     UInt32 SecondPeak=MaximumSuche(AKkf,FirstPeak+Offset,KKFSize);
     NSLog(@"zweiter Peak bei %li, entspricht Ziel bei 1 Geräte System (offset für Mindestentfernung %li Samples)",SecondPeak,Offset);
+
     float Distance=(float)(SecondPeak-FirstPeak);
     float DistanceM=Distance/SAMPLERATE*343;
-    NSLog(@"Entfernung für ein Geräte System: %f Samples, entspricht %f Meter",Distance, DistanceM);
+    
     NSString *outStr = [[NSString alloc] init];
+    NSLog(@"0end mSampleTime: %f, receive mSampleTime: %f , div: %f",sendtimeTags[0].mSampleTime,receivetimeTags[0].mSampleTime,receivetimeTags[0].mSampleTime-sendtimeTags[0].mSampleTime);
+    NSLog(@"1send mSampleTime: %f, receive mSampleTime: %f , div: %f",sendtimeTags[1].mSampleTime,receivetimeTags[1].mSampleTime,receivetimeTags[1].mSampleTime-sendtimeTags[1].mSampleTime);
+    NSLog(@"2send mSampleTime: %f, receive mSampleTime: %f , div: %f",sendtimeTags[2].mSampleTime,receivetimeTags[2].mSampleTime,receivetimeTags[2].mSampleTime-sendtimeTags[2].mSampleTime);
+    NSLog(@"3send mSampleTime: %f, receive mSampleTime: %f , div: %f",sendtimeTags[3].mSampleTime,sendtimeTags[4].mSampleTime,sendtimeTags[4].mSampleTime-sendtimeTags[3].mSampleTime);
+    
     [com open];
     [com send:@"fileName:record_2k_6k_6k_10k_.txt\n"];
     char *sOut = (char*)malloc(2000);
@@ -736,7 +747,6 @@ static OSStatus recordingCallback(void *inRefCon,
                 memset(sOut,0,2000);
             }
         }
-        
     }
     //send the rest of the content if there is
     if (len > 0)
@@ -767,7 +777,6 @@ static OSStatus recordingCallback(void *inRefCon,
         {
             if (com.host) //short test assumes that the network is initialized
             {
-               
                 sOutPtr[len] = 0;
                 outStr = [NSString stringWithFormat:@"%s\n",sOut];
                 [com send:outStr];
@@ -776,7 +785,6 @@ static OSStatus recordingCallback(void *inRefCon,
                 memset(sOut,0,2000);
             }
         }
-        
     }
     //send the rest of the content if there is
     if (len > 0)
@@ -793,6 +801,7 @@ static OSStatus recordingCallback(void *inRefCon,
     [com send:@"fileEnd\n"];
     NSLog(@"com fileEnd send");
     
+    
     [com send:@"fileName:KKF_2k_6k_6k_10k_.txt\n"];
     len = 0;
     memset(sOut,0,2000);
@@ -807,7 +816,6 @@ static OSStatus recordingCallback(void *inRefCon,
         {
             if (com.host) //short test assumes that the network is initialized
             {
-                
                 sOutPtr[len] = 0;
                 outStr = [NSString stringWithFormat:@"%s\n",sOut];
                 [com send:outStr];
@@ -816,7 +824,6 @@ static OSStatus recordingCallback(void *inRefCon,
                 memset(sOut,0,2000);
             }
         }
-        
     }
     //send the rest of the content if there is
     if (len > 0)
@@ -833,7 +840,14 @@ static OSStatus recordingCallback(void *inRefCon,
     [com send:@"fileEnd\n"];
     NSLog(@"com fileEnd send");
     [com close];
+
     //NSLog(@"reihenfolge %s",test);
+
+    
+    NSLog(@"erster Peak bei %li, entspricht NRL bei 1 Geräte System",FirstPeak);
+    NSLog(@"zweiter Peak bei %li, entspricht Ziel bei 1 Geräte System (offset für Mindestentfernung %li Samples)",SecondPeak,Offset);
+    NSLog(@"Entfernung für ein Geräte System: %f Samples, entspricht %f Meter",Distance, DistanceM);
+
 }
 
 -(void)mute:(UInt32)flag
