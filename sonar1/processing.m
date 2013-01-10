@@ -28,11 +28,12 @@ void KKF(SInt32 *ARecord,SInt32 *ASend,SInt64 *AKkf,SInt32 Nsamples)
     //for (i=Nsamples+2048;i<KKFSize;i++)
     //3500 Werte entsprechen ca. 25 Meter, darum nicht mehr berechnen
     NSLog(@"Start der KKF Berechnung");
-    for (i=Nsamples+2048;i<Nsamples+2048+3500;i++)
+    for (i=Nsamples+2048;i<Nsamples+3500+2048;i++)
     {
         endJ=KKFSize-i;
         for(j=1;j<endJ;j++)
         {
+            //add 2048 (2*Framesize), because record is 2 Samples longer than send.
             AKkf[i]=AKkf[i]+(SInt16)ASend[j]*(SInt16)ARecord[j+i-Nsamples];
         }
     }
@@ -56,14 +57,11 @@ SInt32 MaximumSuche(SInt64 *AKkf, UInt32 StartValue, UInt32 EndValue)
         {
             max=abs(AKkf[i]);
             max_t=i;
-            NSLog(@"max_t = %d max = %lld",max_t, max);
-
             if (pmax<AKkf[i])
             {
                 pmax=AKkf[i];
                 pmax_t=i;
             }
-
         }
         else
         {
@@ -72,7 +70,6 @@ SInt32 MaximumSuche(SInt64 *AKkf, UInt32 StartValue, UInt32 EndValue)
                 nmax=AKkf[i];
                 nmax_t=i;
             }
-            
         }
     }
     if (nmax+pmax>=0)

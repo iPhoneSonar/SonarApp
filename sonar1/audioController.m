@@ -137,7 +137,6 @@ SInt16 frameLen = 0;
 
     SInt32 shift = 0;
     SInt32 size = 22528;
-g
     testSweep->buf = (SInt32*)malloc(size*sizeof(SInt32));
     
     sweepGen((testSweep->buf)+shift);
@@ -731,7 +730,9 @@ static OSStatus recordingCallback(void *inRefCon,
     int len = 0;
     for (int i=0; i< record.len; i++)
     {
-        sprintf(sOutPtr,"%li,",record.buf[i]);
+        SInt16 TMP;
+        TMP = ((SInt16*)record.buf)[2*i+1];
+        sprintf(sOutPtr,"%i,",TMP);
         len += strlen(sOutPtr);
         sOutPtr = sOut + len;
         // to package the frame data check the  size of the outStr
@@ -769,7 +770,9 @@ static OSStatus recordingCallback(void *inRefCon,
     sOutPtr=sOut;
     for (int i=0; i< play->len; i++)
     {
-        sprintf(sOutPtr,"%li,",play->buf[i]);
+        SInt16 TMP;
+        TMP = ((SInt16*)play->buf)[2*i];
+        sprintf(sOutPtr,"%i,",TMP);
         len += strlen(sOutPtr);
         sOutPtr = sOut + len;
         // to package the frame data check the  size of the outStr

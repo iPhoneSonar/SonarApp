@@ -103,7 +103,7 @@ void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address, const 
     NSData *address = [ NSData dataWithBytes: &addr length: sizeof(addr) ];
     if (CFSocketSetAddress(pSock, (CFDataRef) &addr) != kCFSocketSuccess) {
         fprintf(stderr, "CFSocketSetAddress() failed\n");
-        CFRelease(TCPServer);
+        //CFRelease(TCPServer);
         return EXIT_FAILURE;
     }
 
