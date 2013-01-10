@@ -91,6 +91,22 @@ void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address, const 
     
     NSLog(@"socket created successfull");
 
+    /* Set the port and address we want to listen on*/
+    struct sockaddr_in addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_len = sizeof(addr);
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(PORT);
+    addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+
+    NSData *address = [ NSData dataWithBytes: &addr length: sizeof(addr) ];
+    if (CFSocketSetAddress(pSock, (CFDataRef) &addr) != kCFSocketSuccess) {
+        fprintf(stderr, "CFSocketSetAddress() failed\n");
+        CFRelease(TCPServer);
+        return EXIT_FAILURE;
+    }
+
               
     return 0;
 }
