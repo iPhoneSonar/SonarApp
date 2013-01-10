@@ -8,6 +8,10 @@
 
 #import <Foundation/Foundation.h>
 
+#import <CoreFoundation/CoreFoundation.h>
+#import <sys/socket.h>
+#import <netinet/in.h>
+
 @interface communicator : NSObject {
 NSInputStream *inputStream;
 NSOutputStream *outputStream;
@@ -25,4 +29,7 @@ CFStringRef host;
 - (void)send:(NSString*)fileStr :(NSString*)fileName;
 - (void)open;
 - (void)close;
+
+void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address, const void *data, void *info);
+
 @end

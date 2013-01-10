@@ -37,6 +37,66 @@ const SInt16 PORT = 2000;
     NSLog(@"communicator started");
 }
 
+void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address, const void *data, void *info)
+{
+    NSLog(@"socketCallback called");
+    switch(type)
+    {
+        case kCFSocketNoCallBack:
+            NSLog(@"kCFSocketNoCallBack");
+            break;
+        case kCFSocketReadCallBack:
+            NSLog(@"kCFSocketReadCallBack");
+            break;
+        case kCFSocketAcceptCallBack:
+            NSLog(@"kCFSocketAcceptCallBack");
+            break;
+        case kCFSocketDataCallBack:
+            NSLog(@"kCFSocketDataCallBack");
+            break;
+        case kCFSocketConnectCallBack:
+            NSLog(@"kCFSocketConnectCallBack");
+            break;
+        case kCFSocketWriteCallBack:
+            NSLog(@"kCFSocketWriteCallBack");
+            break;
+    };
+}
+
+- (SInt16)initCom
+{
+    //activate all available callbacks
+    CFOptionFlags callBackTypes = kCFSocketReadCallBack |
+                                  kCFSocketAcceptCallBack |
+                                  kCFSocketDataCallBack |
+                                  kCFSocketConnectCallBack |
+                                  kCFSocketWriteCallBack;
+
+    const CFSocketContext *context = NULL;
+    
+    CFSocketRef	pSock = CFSocketCreate(kCFAllocatorDefault,
+                                       AF_INET,
+                                       SOCK_STREAM,
+                                       IPPROTO_TCP,
+                                       callBackTypes,
+                                       callout, context);
+
+    NSLog(@"socket %ld", (SInt32)pSock);
+    
+    if (pSock == NULL)
+    {
+        NSLog(@"error socket create");
+        return -1;
+    }
+    
+    NSLog(@"socket created successfull");
+
+              
+    return 0;
+}
+
+
+
 - (void)setHost: (CFStringRef)ip
 {
     NSLog(@"set ip");
