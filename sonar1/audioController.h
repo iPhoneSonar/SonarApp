@@ -7,11 +7,13 @@
 //
 
 #import <Foundation/Foundation.h>
+#ifndef AudioToolbox
 #import <AudioToolbox/AudioToolbox.h>
+#define AudioToolbox
+#endif
 #import "CAStreamBasicDescription.h"
 #import "processing.h"
 #import "communicator.h"
-#import <time.h>
 
 struct sig{
     SInt32 *buf;

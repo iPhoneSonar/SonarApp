@@ -40,6 +40,38 @@ void KKF(SInt32 *ARecord,SInt32 *ASend,SInt64 *AKkf,SInt32 Nsamples)
     NSLog(@"Berechnung der KKF durchgeführt");
 }
 
+void FastKKF(SInt32 *ARecord,SInt32 *ASend,SInt64 *AKkf,SInt32 NRecordSamples, SInt32 NSendSamples)
+{
+    SInt32 KKFLen=2*NRecordSamples;
+    //Nullen aller AKkf Werte
+    int i=0;
+    int j=0;
+    int endJ=0;
+    int startJ=0;
+     //für erste Hälfte (nicht nötig, da keine kausale aussage möglich ist)
+     for (i=0; i<NRecordSamples; i++)
+     {
+         startJ=Nsamples-i;
+         for(j=startJ;j<Nsamples;j++)
+         {
+             AKkf[i]=AKkf[i]+ASend[j]*ARecord[j+i-Nsamples];
+         }
+     }
+    
+    NSLog(@"Start der KKF Berechnung");
+    for (i=NRecordSamples;i<KKFLen;i++)
+    {
+        endJ=KKFSize-i;
+        for(j=1;j<endJ;j++)
+        {
+            //add 2048 (2*Framesize), because record is 2 Samples longer than send.
+            AKkf[i]=AKkf[i]+(SInt16)ASend[j]*(SInt16)ARecord[j+i-Nsamples];
+        }
+    }
+    NSLog(@"Berechnung der KKF durchgeführt");
+}
+
+
 SInt32 MaximumSuche(SInt64 *AKkf, UInt32 StartValue, UInt32 EndValue)
 {
     UInt64 max=0;
@@ -165,4 +197,28 @@ SInt32 sweepGen(SInt32 *Tptr)
         *(pT--) = -T[x+shift];
     }
     return 1; //it was meant to allocate the memory in the function an return the size
+}
+
+Float64 GetSample(SInt32 KKFSample, SInt32 Samples, AudioTimeStamp *timeTags)
+{
+    SInt32 Start=KKFSample-Samples;
+    SInt32 Frame=Start/1024;
+    Float64 Sample=timeTags[Frame].mSampleTime+(Float64)(Start%1024);
+    NSLog(@"Vergleich: Empfangsframe: %f Darin Abtastwert: %li, Entspricht Sample: %f",timeTags[Frame].mSampleTime,Start%1024,Sample);
+    return Sample;
+}
+
+Float64 GetLatency(Float64 SendStart, Float64 ReceiveStart)
+{
+    Float64 Latency=ReceiveStart-SendStart;
+    return Latency;
+}
+
+
+
+float GetDistance(SInt32 Samples)
+{
+    float Distance;
+    Distance=((float)Samples)*343.0f/48000.0f;
+    return Distance;
 }
