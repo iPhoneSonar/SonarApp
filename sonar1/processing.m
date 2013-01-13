@@ -36,9 +36,42 @@ void KKF(SInt32 *ARecord,SInt32 *ASend,SInt64 *AKkf,SInt32 Nsamples)
     NSLog(@"Berechnung der KKF durchgeführt");
 }
 
-void FastKKF(SInt32 *ARecord,SInt32 *ASend,SInt64 *AKkf,SInt32 NRecordSamples, SInt32 NSendSamples)
+void RingKKF(SInt32 *ARecord,SInt32 *ASend,SInt64 *AKkf,SInt32 NRecordSamples, SInt32 NSendSamples)
 {
-    NSLog(@"Berechnung der KKF durchgeführt");
+    NSLog(@"Start der RingKKF berechnung");
+    SInt32 startJ, endJ;
+    SInt32 i, j;
+    
+    for(i=0; i<NSendSamples;i++)
+    {
+        startJ=NSendSamples-i;
+        for(j=startJ;j<NSendSamples;j++)
+        {
+            AKkf[i]=AKkf[i]+(SInt16)ASend[j]*(SInt16)ARecord[i+j-NSendSamples];
+        }            
+    }
+    for(i=NSendSamples;i<NRecordSamples;i++)
+    {
+        for(j=0;j<NSendSamples;j++)
+        {
+            AKkf[i]=AKkf[i]+(SInt16)ASend[j]*(SInt16)ARecord[i+j-NSendSamples];
+        }
+    }
+    for(i=NRecordSamples;i<NRecordSamples+NSendSamples;i++)
+    {
+        endJ=NRecordSamples+NSendSamples-i;
+        for(j=0;j<endJ;j++)
+        {
+            AKkf[i]=AKkf[i]+(SInt16)ASend[j]*(SInt16)ARecord[i+j-NSendSamples];
+        }
+    }
+    
+    for(i=0;i<NSendSamples;i++)
+    {
+        AKkf[i]=AKkf[i]+AKkf[NRecordSamples-i];
+        AKkf[NRecordSamples-i]=0;
+    }
+    NSLog(@"Berechnung der RingKKF durchgeführt");
 }
 
 

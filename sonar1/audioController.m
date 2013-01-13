@@ -722,6 +722,13 @@ static OSStatus recordingCallback(void *inRefCon,
     Float64 SecondPeakSample;
     SecondPeakSample=GetSample(SecondPeak,record.len, receivetimeTags);
     NSLog(@"Empfangsstart des ersten Signales bei Sample: %f", SecondPeakSample);
+
+    SInt64* AKkf2;
+    AKkf2 = (SInt64*)malloc((2*play->len+record.len)*sizeof(SInt64));
+    RingKKF(record.buf, play->buf, AKkf2, record.len, 4800);
+    
+    UInt32 RingKKFPeak=MaximumSuche(AKkf2, 0, 2*play->len+record.len);
+    NSLog(@"RingKKFPeak bei %li",RingKKFPeak);
     
     NSString *outStr = [[NSString alloc] init];
     
@@ -805,7 +812,46 @@ static OSStatus recordingCallback(void *inRefCon,
     }
     [com send:@"fileEnd\n"];
     NSLog(@"com fileEnd send");
-    
+
+
+
+    [com send:@"fileName:RingKKF_2k_6k_6k_10k_.txt\n"];
+    len = 0;
+    memset(sOut,0,2000);
+    sOutPtr=sOut;
+    for (int i=0; i< 2*play->len+record.len; i++)
+    {
+        sprintf(sOutPtr,"%lli,",AKkf2[i]);
+        len += strlen(sOutPtr);
+        sOutPtr = sOut + len;
+        // to package the frame data check the  size of the outStr
+        if (len > 1990)
+        {
+            if (com.host) //short test assumes that the network is initialized
+            {
+                sOutPtr[len] = 0;
+                outStr = [NSString stringWithFormat:@"%s\n",sOut];
+                [com send:outStr];
+                sOutPtr = sOut;
+                len = 0;
+                memset(sOut,0,2000);
+            }
+        }
+    }
+    //send the rest of the content if there is
+    if (len > 0)
+    {
+        if (com.host) //short test assumes that the network is initialized
+        {
+            //remove the last ','
+            sOut[len] = 0;
+            outStr = [NSString stringWithFormat:@"%s\n",sOut];
+            [com send:outStr];
+            NSLog(@"com send");
+        }
+    }
+    [com send:@"fileEnd\n"];
+    NSLog(@"com fileEnd send");
     
     [com send:@"fileName:KKF_2k_6k_6k_10k_.txt\n"];
     len = 0;

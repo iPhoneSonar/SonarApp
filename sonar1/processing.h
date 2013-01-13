@@ -5,6 +5,7 @@
 #endif
 
 void KKF(SInt32 *ARecord, SInt32 *ASend, SInt64 *AKkf,SInt32 Nsamples);
+void RingKKF(SInt32 *ARecord,SInt32 *ASend,SInt64 *AKkf,SInt32 NRecordSamples, SInt32 NSendSamples);
 SInt32 MaximumSuche(SInt64 *AKkf,UInt32 StartValue, UInt32 EndValue);
 SInt32 sweepGen(SInt32 *Tptr);
 Float64 GetSample(SInt32 KKFSample, SInt32 Samples, AudioTimeStamp *timeTags);
