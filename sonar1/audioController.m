@@ -137,6 +137,7 @@ SInt16 frameLen = 0;
 
     SInt32 shift = 0;
     SInt32 size = 22528;
+
     testSweep->buf = (SInt32*)malloc(size*sizeof(SInt32));
     
     sweepGen((testSweep->buf)+shift);
@@ -228,6 +229,12 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
         count[0]++;
         ioData->mBuffers[0].mData = audioUnit->mute->buf;
         audioUnit->play->pos -= inNumberFrames;
+
+    }
+    else
+    {
+        //client:
+        //send timestamp to communicator.m sendtimeTags[0].mSampleTime;
     }
 
     frameLen = inNumberFrames;
@@ -729,7 +736,8 @@ static OSStatus recordingCallback(void *inRefCon,
     
     UInt32 RingKKFPeak=MaximumSuche(AKkf2, 0, 2*play->len+record.len);
     NSLog(@"RingKKFPeak bei %li",RingKKFPeak);
-    
+
+       
     NSString *outStr = [[NSString alloc] init];
     
     [com open];
