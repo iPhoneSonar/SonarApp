@@ -218,6 +218,7 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
                                                      cfdAddr,
                                                      -1);
 
+<<<<<<< HEAD
     if (status != kCFSocketSuccess)
     {
         NSLog(@"error CFSocketConnectToAddress");
