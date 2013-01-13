@@ -223,6 +223,11 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
         NSLog(@"error CFSocketConnectToAddress");
         CFRelease(pSock);
         return -1;
+    NSData *address = [ NSData dataWithBytes: &addr length: sizeof(addr) ];
+    if (CFSocketSetAddress(pSock, (CFDataRef) &addr) != kCFSocketSuccess) {
+        fprintf(stderr, "CFSocketSetAddress() failed\n");
+        //CFRelease(TCPServer);
+        return EXIT_FAILURE;
     }
 
     CFRunLoopSourceRef sourceRef =
