@@ -22,6 +22,7 @@
 @synthesize tf2;
 @synthesize tfIp;
 @synthesize btnConnect;
+@synthesize btnNetMode;
 
 - (void)didReceiveMemoryWarning
 {
@@ -51,6 +52,7 @@
     [btnProcess release];
     [tfIp release];
     [btnConnect release];
+    [btnNetMode release];
     [super dealloc];
 }
 
@@ -63,6 +65,7 @@
     [self setBtnProcess:nil];
     [self setTfIp:nil];
     [self setBtnConnect:nil];
+    [self setBtnNetMode:nil];
     [super viewDidUnload];
     // Release any retained subviews of the main view.
     // e.g. self.myOutlet = nil;
@@ -101,24 +104,8 @@
 }
 
 - (IBAction)start:(id)sender {
-    //can be added to backgroundTouched
-    NSString *strRecordLen = self.tf1.text;
-    NSCharacterSet *decimalSet = [NSCharacterSet decimalDigitCharacterSet];
-    NSString *temp = [strRecordLen stringByTrimmingCharactersInSet:decimalSet];
-    if (temp.length == 0)
-    {
-        UInt16 value = [strRecordLen intValue];
-        if (value > 0)
-        {
-            //Init Buffer with Frame length insertet in tb1
-            //[audioController recordBufferInit:value];            
-        }
-        else
-        {
-            //Init Buffer with length of send Signal
-            [audioController recordBufferInitSamples];
-        }
-    }
+
+    [audioController recordBufferInitSamples];
     [audioController start];
     self.tf2.text = @"start";
 }
@@ -128,7 +115,7 @@
     self.tf2.text = @"stop";
 }
 
-- (IBAction)testOutput:(id)sender {
+- (IBAction)testOutput:(id)sender { //process button
     [audioController testOutput];
     self.tf2.text = @"test out";
 }
@@ -136,8 +123,24 @@
 
 - (IBAction)connect:(id)sender
 {
-    [[audioController com ]setHost: (CFStringRef)self.tfIp.text];
-    [[audioController com ]initNetworkCom];
+    NSLog(@"selected %d", btnNetMode.selected);
+    if ([[audioController com ] pSock])
+    {
+        [[audioController com] close];
+        NSLog(@"close socket");
+    }
+    if (btnNetMode.selected == YES) //server
+    {
+        NSLog(@"btnNetMode YES");
+        [[audioController com ] serverStart];
+    }
+    else
+    { //must be client
+        NSLog(@"btnNetMode NO");
+        [[audioController com ]setHost: (CFStringRef)self.tfIp.text];
+        NSLog(@"server ip = %@",[[audioController com]host]);
+        [[audioController com ] clientConnect];
+    }
 }
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField
@@ -145,6 +148,22 @@
     if (textField == tf1)
         [tf1 resignFirstResponder];
     return NO;
+}
+
+- (IBAction)netMode:(UIButton*)sender
+{
+    //NSLog(@"btnNetMode.selected %d", self.btnNetMode.selected);
+
+    if (self.btnNetMode.selected == YES)
+    {
+        self.btnNetMode.selected = NO;
+        self.tfIp.hidden = NO;
+    }
+    else
+    {
+        self.btnNetMode.selected = YES;
+        self.tfIp.hidden = YES;
+    }
 }
 
 @end

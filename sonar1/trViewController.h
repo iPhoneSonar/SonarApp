@@ -17,6 +17,7 @@
     UIButton *btnStart;
     UIButton *btnStop;
     UIButton *btnProcess;
+    UIButton *btnNetMode;
     UITextField *tf1;
     UITextField *tf2;
 }
@@ -33,11 +34,14 @@
 @property (retain, nonatomic) IBOutlet UITextField *tfIp;
 @property (retain, nonatomic) IBOutlet UIButton *btnConnect;
 
+@property (retain, nonatomic) IBOutlet UIButton *btnNetMode;
+
 - (IBAction)connect:(id)sender;
 - (IBAction)backgroundTouched:(id)sender;
 - (IBAction)start:(id)sender;
 - (IBAction)stop:(id)sender;
 - (IBAction)testOutput:(id)sender;
+- (IBAction)netMode:(id)sender;
 
 
 @end
