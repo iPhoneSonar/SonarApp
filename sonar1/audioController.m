@@ -138,7 +138,6 @@ SInt16 frameLen = 0;
     SInt32 shift = 0;
     SInt32 size = 22528;
 
->>>>>>> origin/GuI
     testSweep->buf = (SInt32*)malloc(size*sizeof(SInt32));
     
     sweepGen((testSweep->buf)+shift);

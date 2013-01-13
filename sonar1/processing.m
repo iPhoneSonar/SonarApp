@@ -40,6 +40,7 @@ void KKF(SInt32 *ARecord,SInt32 *ASend,SInt64 *AKkf,SInt32 Nsamples)
     NSLog(@"Berechnung der KKF durchgeführt");
 }
 
+/*
 void FastKKF(SInt32 *ARecord,SInt32 *ASend,SInt64 *AKkf,SInt32 NRecordSamples, SInt32 NSendSamples)
 {
     SInt32 KKFLen=2*NRecordSamples;
@@ -70,7 +71,7 @@ void FastKKF(SInt32 *ARecord,SInt32 *ASend,SInt64 *AKkf,SInt32 NRecordSamples, S
     }
     NSLog(@"Berechnung der KKF durchgeführt");
 }
-
+*/
 
 SInt32 MaximumSuche(SInt64 *AKkf, UInt32 StartValue, UInt32 EndValue)
 {

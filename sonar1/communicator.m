@@ -99,7 +99,7 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
             time_t siTimestamp = time(NULL);
             sprintf(sBuf, "%ld", siTimestamp);
             send(pNativeSock, sBuf, strlen(sBuf), 0);
-            NSLog(@"timestamp send: %s",sBuf);
+            NSLog(@"send: %s",sBuf);
             break;
         }
         case kCFSocketWriteCallBack:
@@ -111,13 +111,6 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
 
 - (SInt16)serverStart
 {
-    //it makes no sence to combine callbacktypes as thay have special consequences
-    //CFOptionFlags callBackTypes = kCFSocketReadCallBack |
-    //                              kCFSocketAcceptCallBack |
-    //                              kCFSocketDataCallBack |
-    //                              kCFSocketConnectCallBack |
-    //                              kCFSocketWriteCallBack;
-
     const CFSocketContext *context = NULL;
     
     CFSocketRef pSockListen = CFSocketCreate(kCFAllocatorDefault,
@@ -154,7 +147,8 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
     CFDataRef cfdAddr = CFDataCreate(NULL, (UInt8 *)&addr, sizeof(struct sockaddr_in));
 
     // NSData *address = [ NSData dataWithBytes: &addr length: sizeof(addr) ];
-    if (CFSocketSetAddress(pSockListen, cfdAddr) != kCFSocketSuccess) {
+    if (CFSocketSetAddress(pSockListen, cfdAddr) != kCFSocketSuccess)
+    {
         NSLog(@"error CFSocketSetAddress");
         CFRelease(pSockListen);
         return -1;
@@ -174,13 +168,7 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
 
 - (SInt16)clientConnect
 {
-    //activate all available callbacks
-    //kCFSocketReadCallBack |
-    //kCFSocketAcceptCallBack |
-    //kCFSocketDataCallBack |
-    //kCFSocketConnectCallBack |
-    //kCFSocketWriteCallBack;
-
+    
     const CFSocketContext *context = NULL;
 
     pSock = CFSocketCreate(kCFAllocatorDefault,
@@ -218,17 +206,12 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
                                                      cfdAddr,
                                                      -1);
 
-<<<<<<< HEAD
+
     if (status != kCFSocketSuccess)
     {
         NSLog(@"error CFSocketConnectToAddress");
         CFRelease(pSock);
         return -1;
-    NSData *address = [ NSData dataWithBytes: &addr length: sizeof(addr) ];
-    if (CFSocketSetAddress(pSock, (CFDataRef) &addr) != kCFSocketSuccess) {
-        fprintf(stderr, "CFSocketSetAddress() failed\n");
-        //CFRelease(TCPServer);
-        return EXIT_FAILURE;
     }
 
     CFRunLoopSourceRef sourceRef =
@@ -294,4 +277,5 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
     CFSocketInvalidate(pSock);
     NSLog(@"socket closed");
 }
+
 @end
