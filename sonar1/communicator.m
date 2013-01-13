@@ -56,6 +56,7 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
             break;
         case kCFSocketAcceptCallBack:
         {
+            //server
             NSLog(@"kCFSocketAcceptCallBack");
             int pNativeSock = *(CFSocketNativeHandle*)data;
             const UInt16 BUFSIZE = 15;
@@ -75,6 +76,13 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
             memset(sBuf, 0, BUFSIZE);
             recv(pNativeSock, sBuf, BUFSIZE, 0);
             NSLog(@"recv = %s",sBuf);
+
+            siTimestamp = time(NULL);
+            sprintf(sBuf, "%ld", siTimestamp);
+            //on connect send the timestamp
+            send(pNativeSock, sBuf, strlen(sBuf), 0);
+            NSLog(@"send = %s",sBuf);
+            
             break;
         }
         case kCFSocketDataCallBack:
@@ -100,6 +108,10 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
             sprintf(sBuf, "%ld", siTimestamp);
             send(pNativeSock, sBuf, strlen(sBuf), 0);
             NSLog(@"send: %s",sBuf);
+
+            recv(pNativeSock, sBuf, BUFSIZE, 0);
+            NSLog(@"recv: %s",sBuf);
+            
             break;
         }
         case kCFSocketWriteCallBack:
