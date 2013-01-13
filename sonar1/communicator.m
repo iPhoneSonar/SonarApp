@@ -49,30 +49,24 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
     switch(type)
     {
         case kCFSocketNoCallBack:
-        {
             NSLog(@"kCFSocketNoCallBack");
             break;
-        }
         case kCFSocketReadCallBack:
             NSLog(@"kCFSocketReadCallBack");
             break;
         case kCFSocketAcceptCallBack:
         {
             NSLog(@"kCFSocketAcceptCallBack");
-
-            time_t siTimestamp = time(NULL);
-
-            const UInt16 BUFSIZE = 15;
-            char sTimestamp[BUFSIZE];
-            sprintf(sTimestamp, "%ld", siTimestamp);
-            NSLog(@"timestamp %s",sTimestamp);
-            
             int pNativeSock = *(CFSocketNativeHandle*)data;
-            //char sBuf[] = "1234567890";
-            char *sBuf;
-            sBuf = sTimestamp;
+            const UInt16 BUFSIZE = 15;
+            char sBuf[BUFSIZE];
+            
+            time_t siTimestamp = time(NULL);
+            sprintf(sBuf, "%ld", siTimestamp);
             //on connect send the timestamp
             send(pNativeSock, sBuf, strlen(sBuf), 0);
+            NSLog(@"send = %s",sBuf);
+            
             //wait max 30 seconds for an answer
             struct timeval tv;
             memset(&tv, 0, sizeof(struct timeval));
@@ -80,21 +74,34 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
             setsockopt(pNativeSock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(struct timeval));
             memset(sBuf, 0, BUFSIZE);
             recv(pNativeSock, sBuf, BUFSIZE, 0);
-            NSLog(@"recv: %s",sBuf);
+            NSLog(@"recv = %s",sBuf);
             break;
         }
         case kCFSocketDataCallBack:
-        {
             NSLog(@"kCFSocketDataCallBack");
-            CFDataRef dataRef = (CFDataRef) data;
-            Byte *array = new Byte[CFDataGetLength(dataRef)]; // Or use a fixed length
-            CFDataGetBytes(dataRef, CFRangeMake(0, CFDataGetLength(dataRef)), array);
-            NSLog(@"%ld bytes received", CFDataGetLength(dataRef));
+            break;
+        case kCFSocketConnectCallBack:
+        {
+            NSLog(@"kCFSocketConnectCallBack");
+            int pNativeSock = CFSocketGetNative(s);
+            const UInt16 BUFSIZE = 15;
+            char sBuf[BUFSIZE];
+            memset(sBuf,0,BUFSIZE);
+            struct timeval tv;
+            memset(&tv, 0, sizeof(struct timeval));
+            tv.tv_sec = 30;
+            setsockopt(pNativeSock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(struct timeval));
+            //recv the timestamp
+            recv(pNativeSock, sBuf, BUFSIZE, 0);
+            NSLog(@"recv: %s",sBuf);
+            //send one back
+            memset(&tv, 0, sizeof(struct timeval));
+            time_t siTimestamp = time(NULL);
+            sprintf(sBuf, "%ld", siTimestamp);
+            send(pNativeSock, sBuf, strlen(sBuf), 0);
+            NSLog(@"timestamp send: %s",sBuf);
             break;
         }
-        case kCFSocketConnectCallBack:
-            NSLog(@"kCFSocketConnectCallBack");
-            break;
         case kCFSocketWriteCallBack:
             NSLog(@"kCFSocketWriteCallBack");
             break;
@@ -168,11 +175,11 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
 - (SInt16)clientConnect
 {
     //activate all available callbacks
-    CFOptionFlags callBackTypes = kCFSocketReadCallBack |
-    kCFSocketAcceptCallBack |
-    kCFSocketDataCallBack |
-    kCFSocketConnectCallBack |
-    kCFSocketWriteCallBack;
+    //kCFSocketReadCallBack |
+    //kCFSocketAcceptCallBack |
+    //kCFSocketDataCallBack |
+    //kCFSocketConnectCallBack |
+    //kCFSocketWriteCallBack;
 
     const CFSocketContext *context = NULL;
 
@@ -180,7 +187,7 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
                                        AF_INET,
                                        SOCK_STREAM,
                                        IPPROTO_TCP,
-                                       callBackTypes,
+                                       kCFSocketConnectCallBack,
                                        callout, context);
 
     NSLog(@"socket %ld", (SInt32)pSock);
