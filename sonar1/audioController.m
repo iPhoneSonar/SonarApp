@@ -11,6 +11,10 @@
 
 #import "audioController.h"
 
+AudioTimeStamp sendtimeTags[100000];
+AudioTimeStamp receivetimeTags[100000];
+SInt32 count[2];
+
 const Float64 SAMPLERATE = 48000.0;
 const SInt16 FRAMESIZE = 1024;
 const SInt16 SAMPLES_PER_PERIOD = 48;
@@ -18,12 +22,6 @@ SInt16 muteFlag = 0;
 char test[1000];
 int testIndex = 0;
 //AudioTimeStamp timeTags[RECORDLEN];
-
-AudioTimeStamp sendtimeTags[100000];
-AudioTimeStamp receivetimeTags[100000];
-SInt32 count[2];
-
-
 
 SInt16 sin1KHz[] = {0,3916,7765,11481,15000,18263,21213,23801,
                     25981,27716,28978,29743,30000,29743,28978,27716,
@@ -42,6 +40,7 @@ SInt16 frameLen = 0;
 @synthesize audioUnit;
 @synthesize recordingBufferList;
 @synthesize com;
+@synthesize proc;
 
 
 // Clean up memory
@@ -225,10 +224,17 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
 
     if (audioUnit->play->pos + inNumberFrames > audioUnit->play->len)
     {
+        [audioUnit.proc SetTimeTag:@"send" To:*inTimeStamp];
         memcpy(&(sendtimeTags[count[0]]),inTimeStamp,sizeof(AudioTimeStamp));
         count[0]++;
         ioData->mBuffers[0].mData = audioUnit->mute->buf;
         audioUnit->play->pos -= inNumberFrames;
+
+    }
+    else
+    {
+        //client:
+        //send timestamp to communicator.m sendtimeTags[0].mSampleTime;
     }
 
     frameLen = inNumberFrames;
@@ -240,7 +246,8 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
     [self sessionInit];
     //bring up the communication channel
     com = [[communicator alloc] init];
-
+    proc = [[processing alloc] init];
+    [proc InitializeArrays];
 
     //prepare an empty frame to mute
     [self muteSigInit];
@@ -672,6 +679,7 @@ static OSStatus recordingCallback(void *inRefCon,
 
     if (ru->record.pos+inNumberFrames <= ru->record.len)
     {
+        [ru.proc SetTimeTag:@"receive" To:*inTimeStamp];
         memcpy(&(receivetimeTags[count[1]]),inTimeStamp,sizeof(AudioTimeStamp));
         count[1]++;
         bufferList->mBuffers[0].mData = ru->record.buf+ru->record.pos;
@@ -723,7 +731,18 @@ static OSStatus recordingCallback(void *inRefCon,
     Float64 SecondPeakSample;
     SecondPeakSample=GetSample(SecondPeak,record.len, receivetimeTags);
     NSLog(@"Empfangsstart des ersten Signales bei Sample: %f", SecondPeakSample);
+
+    SInt64* AKkf2;
+    AKkf2 = (SInt64*)malloc((2*play->len+record.len)*sizeof(SInt64));
     
+    UInt32 RingKKFPeak=MaximumSuche(AKkf2, 0, 2*play->len+record.len);
+    NSLog(@"RingKKFPeak bei %li",RingKKFPeak);
+
+    [proc GetPointerReceive:record.buf Send:play->buf Len:play->len];
+    [proc SetLatency:[proc GetTimeTag:@"send" at:1]];
+    [proc CalculateDistance:[proc GetTimeTag:@"send" at:0]];
+    
+       
     NSString *outStr = [[NSString alloc] init];
     
     [com open];
@@ -806,7 +825,46 @@ static OSStatus recordingCallback(void *inRefCon,
     }
     [com send:@"fileEnd\n"];
     NSLog(@"com fileEnd send");
-    
+
+
+
+    [com send:@"fileName:RingKKF_2k_6k_6k_10k_.txt\n"];
+    len = 0;
+    memset(sOut,0,2000);
+    sOutPtr=sOut;
+    for (int i=0; i< 2*play->len+record.len; i++)
+    {
+        sprintf(sOutPtr,"%lli,",AKkf2[i]);
+        len += strlen(sOutPtr);
+        sOutPtr = sOut + len;
+        // to package the frame data check the  size of the outStr
+        if (len > 1990)
+        {
+            if (com.host) //short test assumes that the network is initialized
+            {
+                sOutPtr[len] = 0;
+                outStr = [NSString stringWithFormat:@"%s\n",sOut];
+                [com send:outStr];
+                sOutPtr = sOut;
+                len = 0;
+                memset(sOut,0,2000);
+            }
+        }
+    }
+    //send the rest of the content if there is
+    if (len > 0)
+    {
+        if (com.host) //short test assumes that the network is initialized
+        {
+            //remove the last ','
+            sOut[len] = 0;
+            outStr = [NSString stringWithFormat:@"%s\n",sOut];
+            [com send:outStr];
+            NSLog(@"com send");
+        }
+    }
+    [com send:@"fileEnd\n"];
+    NSLog(@"com fileEnd send");
     
     [com send:@"fileName:KKF_2k_6k_6k_10k_.txt\n"];
     len = 0;
