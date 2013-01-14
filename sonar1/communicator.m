@@ -18,7 +18,6 @@ const SInt16 PORT = 2000;
 @synthesize host;
 @synthesize pSock;
 
-
 -(void)dealloc
 {
     CFRelease(inputStream);
@@ -263,9 +262,7 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
     }
     if (flagWasOpen == false)
     {
-        [self close];
-        //NSLog(@"close stream");
-        
+        [self close];        
     }
 }
 

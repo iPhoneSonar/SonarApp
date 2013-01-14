@@ -1,5 +1,157 @@
 #import "processing.h"
 
+@implementation processing
+
+@synthesize sendTimeTags;
+@synthesize receiveTimeTags;
+@synthesize count;
+@synthesize PRecord;
+@synthesize PSend;
+@synthesize Latency;
+@synthesize SigLen;
+
+-(void)InitializeArrays
+{
+    count = (SInt32*)malloc(2*sizeof(SInt32));
+    count[0]=0;
+    count[1]=0;
+    sendTimeTags = (AudioTimeStamp*)malloc(10000*sizeof(AudioTimeStamp));
+    receiveTimeTags = (AudioTimeStamp*)malloc(10000*sizeof(AudioTimeStamp));
+}
+
+- (int)IncreaseCount:(NSString*)Type
+{
+    int retval;
+    if (Type==@"receive")
+    {
+        count[1]++;
+        retval=0;
+    }
+    else
+    {
+        if(Type==@"send")
+        {
+            count[0]++;
+            retval =0;
+        }
+        else
+        {
+            retval=-1;
+            NSLog(@"error at IncreaseCount");
+        }
+    }
+    return retval;
+}
+
+- (SInt32)GetCount:(NSString*)Type;
+{
+    SInt32 retval;
+    if (Type==@"receive")
+    {
+        retval=count[1];
+    }
+    else
+    {
+        if(Type==@"send")
+        {
+            retval=count[0];
+        }
+        else
+        {
+            retval=-1;
+            NSLog(@"error at GetCount");
+        }
+    }
+    return retval;
+}
+
+- (int)SetTimeTag:(NSString*)Type To:(AudioTimeStamp)TimeStamp;
+{
+    int retval;
+    if (Type==@"receive")
+    {
+        receiveTimeTags[count[1]]=TimeStamp;
+        retval=[self IncreaseCount:Type];
+    }
+    else
+    {
+        if(Type==@"send")
+        {
+            sendTimeTags[count[0]]=TimeStamp;
+            retval=[self IncreaseCount:Type];
+        }
+        else
+        {
+            retval=-1;
+            NSLog(@"error at setTimeTags");
+        }
+    }
+    return retval;
+}
+
+- (Float64)GetTimeTag:(NSString*)Type at:(SInt32)Frame
+{
+    Float64 retval;
+    if (Type==@"receive")
+    {
+        retval=receiveTimeTags[Frame].mSampleTime;
+    }
+    else
+    {
+        if(Type==@"send")
+        {
+            retval=sendTimeTags[Frame].mSampleTime;
+        }
+        else
+        {
+            retval=-1;
+            NSLog(@"error at GetTimeTag");
+        }
+    }
+    return retval;
+}
+
+- (void)GetPointerReceive:(SInt32*)ARecord Send:(SInt32*)ASend Len:(SInt32)Len;
+{
+    PRecord=ARecord;
+    PSend=ASend;
+    SigLen=Len;
+}
+
+- (void)SetLatency:(Float64)SendTime
+{
+    SInt64 AKkf[SigLen+2*100];
+    RingKKF(PRecord, PSend, AKkf, SigLen, 100);
+
+    SInt32 KKFSample;
+    KKFSample=MaximumSuche(AKkf, 0, SigLen);
+
+    Float64 receiveTime;
+    receiveTime=GetSample(KKFSample, 100, receiveTimeTags);
+    Latency=receiveTime-SendTime;
+    NSLog(@"latency: %f",Latency);
+}
+
+- (void)CalculateDistance:(Float64)SendTime
+{
+    SInt32 KKFSize=SigLen+2*4800;
+    SInt64 AKKf[KKFSize];
+
+    SInt32 KKFSample;
+    KKFSample=MaximumSuche(AKKf, 0, SigLen);
+
+    Float64 receiveTime;
+    receiveTime=GetSample(KKFSample, 4800, receiveTimeTags);
+    
+    SInt32 SignalTime;
+    SignalTime=(SInt32)(receiveTime-SendTime-Latency);
+
+    float Distance;
+    Distance=GetDistance(SignalTime);
+    NSLog(@"Distance: %f",Distance);
+}
+@end
+
 void KKF(SInt32 *ARecord,SInt32 *ASend,SInt64 *AKkf,SInt32 Nsamples)
 {
     SInt32 KKFSize=2*Nsamples;
@@ -216,8 +368,6 @@ Float64 GetLatency(Float64 SendStart, Float64 ReceiveStart)
     Float64 Latency=ReceiveStart-SendStart;
     return Latency;
 }
-
-
 
 float GetDistance(SInt32 Samples)
 {

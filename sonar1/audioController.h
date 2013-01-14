@@ -5,12 +5,10 @@
 //  Created by lion on 10/6/12.
 //  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
 //
-
+#ifndef audioControllerH
+#define audioControllerH
 #import <Foundation/Foundation.h>
-#ifndef AudioToolbox
 #import <AudioToolbox/AudioToolbox.h>
-#define AudioToolbox
-#endif
 #import "CAStreamBasicDescription.h"
 #import "processing.h"
 #import "communicator.h"
@@ -45,12 +43,14 @@ typedef struct recordBuffer recordBuffer;
     sig *play;
     sig *testSweep;
     communicator *com;
+    processing *proc;
 }
 
 @property(nonatomic) int frequency;
 @property(nonatomic) AudioComponentInstance audioUnit;
 @property(nonatomic) AudioBufferList *recordingBufferList;
 @property(nonatomic,retain) communicator *com;
+@property(nonatomic) processing *proc;
 
 
 - (void)setFrequency:(int) value;
@@ -66,3 +66,4 @@ typedef struct recordBuffer recordBuffer;
 - (void)muteSigInit;
 
 @end
+#endif
