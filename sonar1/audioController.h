@@ -50,7 +50,7 @@ typedef struct recordBuffer recordBuffer;
 @property(nonatomic) AudioComponentInstance audioUnit;
 @property(nonatomic) AudioBufferList *recordingBufferList;
 @property(nonatomic,retain) communicator *com;
-@property(nonatomic) processing *proc;
+@property(nonatomic,retain) processing *proc;
 
 
 - (void)setFrequency:(int) value;
