@@ -125,6 +125,7 @@
 
     SInt32 KKFSample;
     KKFSample=MaximumSuche(AKkf, 0, SigLen);
+    NSLog(@"KKFSample: %li",KKFSample);
 
     Float64 receiveTime;
     receiveTime=GetSample(KKFSample, 100, receiveTimeTags);

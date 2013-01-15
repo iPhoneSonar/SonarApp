@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		328602C7165A61F00006F91E /* communicator.m in Sources */ = {isa = PBXBuildFile; fileRef = 328602C6165A61F00006F91E /* communicator.m */; };
 		32C218BF16527FC30024E731 /* processing.m in Sources */ = {isa = PBXBuildFile; fileRef = 32C218BE16527FC30024E731 /* processing.m */; };
+		32CC656F16A5895E004628AF /* MeasurementView.m in Sources */ = {isa = PBXBuildFile; fileRef = 32CC656D16A5895E004628AF /* MeasurementView.m */; };
+		32CC657016A5895E004628AF /* MeasurementView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 32CC656E16A5895E004628AF /* MeasurementView.xib */; };
 		32D352E4164D8CF600364CF9 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 32D352E3164D8CF600364CF9 /* Default-568h@2x.png */; };
 		32D352E7164D8E4C00364CF9 /* CAStreamBasicDescription.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D352E6164D8E4C00364CF9 /* CAStreamBasicDescription.cpp */; };
 		32EDB67E169F26B7003EC2AA /* IconiPhoneNonHD.png in Resources */ = {isa = PBXBuildFile; fileRef = 32EDB67D169F26B7003EC2AA /* IconiPhoneNonHD.png */; };
@@ -36,6 +38,9 @@
 		328602C6165A61F00006F91E /* communicator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = communicator.m; sourceTree = "<group>"; };
 		32C218BD16527FC30024E731 /* processing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = processing.h; sourceTree = "<group>"; };
 		32C218BE16527FC30024E731 /* processing.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = processing.m; sourceTree = "<group>"; };
+		32CC656C16A5895E004628AF /* MeasurementView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MeasurementView.h; sourceTree = "<group>"; };
+		32CC656D16A5895E004628AF /* MeasurementView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MeasurementView.m; sourceTree = "<group>"; };
+		32CC656E16A5895E004628AF /* MeasurementView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MeasurementView.xib; sourceTree = "<group>"; };
 		32D352E3164D8CF600364CF9 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
 		32D352E6164D8E4C00364CF9 /* CAStreamBasicDescription.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CAStreamBasicDescription.cpp; path = "../../../../../../Volumes/secondHd/audio tools/CoreAudio/PublicUtility/CAStreamBasicDescription.cpp"; sourceTree = "<group>"; };
 		32D352E8164D8E5600364CF9 /* CAStreamBasicDescription.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CAStreamBasicDescription.h; path = "../../../../../../Volumes/secondHd/audio tools/CoreAudio/PublicUtility/CAStreamBasicDescription.h"; sourceTree = "<group>"; };
@@ -130,9 +135,9 @@
 			children = (
 				328602C5165A61F00006F91E /* communicator.h */,
 				328602C6165A61F00006F91E /* communicator.m */,
-				B4BA4ACC162056B300520207 /* trAppDelegate.h */,
 				32C218BD16527FC30024E731 /* processing.h */,
 				32C218BE16527FC30024E731 /* processing.m */,
+				B4BA4ACC162056B300520207 /* trAppDelegate.h */,
 				B4BA4ACD162056B300520207 /* trAppDelegate.m */,
 				B4BA4ADA1620571400520207 /* audioController.h */,
 				B4BA4ADB1620571400520207 /* audioController.m */,
@@ -140,6 +145,9 @@
 				B4BA4AD0162056B300520207 /* trViewController.m */,
 				B4BA4AD2162056B300520207 /* trViewController.xib */,
 				B4BA4AC4162056B200520207 /* Supporting Files */,
+				32CC656C16A5895E004628AF /* MeasurementView.h */,
+				32CC656D16A5895E004628AF /* MeasurementView.m */,
+				32CC656E16A5895E004628AF /* MeasurementView.xib */,
 			);
 			path = sonar1;
 			sourceTree = "<group>";
@@ -218,6 +226,7 @@
 				32EDB68D169F281F003EC2AA /* Default-Portrait@2x~ipad.png in Resources */,
 				32EDB68E169F2917003EC2AA /* Default.png in Resources */,
 				32EDB68F169F2A10003EC2AA /* Default@2x.png in Resources */,
+				32CC657016A5895E004628AF /* MeasurementView.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -235,6 +244,7 @@
 				32D352E7164D8E4C00364CF9 /* CAStreamBasicDescription.cpp in Sources */,
 				32C218BF16527FC30024E731 /* processing.m in Sources */,
 				328602C7165A61F00006F91E /* communicator.m in Sources */,
+				32CC656F16A5895E004628AF /* MeasurementView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
