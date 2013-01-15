@@ -739,7 +739,7 @@ static OSStatus recordingCallback(void *inRefCon,
     NSLog(@"RingKKFPeak bei %li",RingKKFPeak);
 
     [proc GetPointerReceive:record.buf Send:play->buf Len:play->len];
-    [proc SetLatency:[proc GetTimeTag:@"send" at:1]];
+    [proc SetLatency:[proc GetTimeTag:@"send" at:0]];
     [proc CalculateDistance:[proc GetTimeTag:@"send" at:0]];
     
        
