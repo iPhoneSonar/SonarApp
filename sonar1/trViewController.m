@@ -10,7 +10,6 @@
 #endif
 
 #import "trViewController.h"
-#import "MeasurementView.h"
 
 @implementation trViewController
 
@@ -24,12 +23,6 @@
 @synthesize tfIp;
 @synthesize btnConnect;
 @synthesize btnNetMode;
-
-- (IBAction)switchToMeasurementView:(id)sender
-{
-    MeasurementView *MView=[[MeasurementView alloc] initWithNibName:nil bundle:nil];
-    [self presentModalViewController:MView animated:NO];
-}
 
 - (void)didReceiveMemoryWarning
 {
@@ -123,6 +116,7 @@
     [audioController testOutput];
     self.tf2.text = @"test out";
 }
+
 
 - (IBAction)connect:(id)sender
 {
