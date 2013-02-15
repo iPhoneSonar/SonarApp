@@ -11,6 +11,7 @@
 
 @implementation MeasurementView
 
+@synthesize audioController;
 @synthesize tf1;
 
 - (IBAction)switchToConfigView:(id)sender
@@ -32,6 +33,7 @@
 {
     [super viewDidLoad];
     // Do any additional setup after loading the view from its nib.
+    [audioController audioUnitInit];
 }
 
 - (void)didReceiveMemoryWarning
@@ -42,6 +44,8 @@
 
 - (IBAction)startMeasurement:(id)sender
 {
+    [audioController recordBufferInitSamples];
+    [audioController start];
     self.tf1.text = @"started";
 }
 

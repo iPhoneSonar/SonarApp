@@ -7,11 +7,15 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "AudioController.h"
+#import "processing.h"
 
 @interface MeasurementView : UIViewController <UITextFieldDelegate>{
     UILabel *tf1;
+    audioController *audioController;
 
 }
+@property (readonly, nonatomic) IBOutlet audioController *audioController;
 @property (retain, nonatomic) IBOutlet UILabel *tf1;
 
 - (IBAction)switchToConfigView:(id)sender;
