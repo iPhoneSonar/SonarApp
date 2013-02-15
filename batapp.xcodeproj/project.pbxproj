@@ -8,9 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		328602C7165A61F00006F91E /* communicator.m in Sources */ = {isa = PBXBuildFile; fileRef = 328602C6165A61F00006F91E /* communicator.m */; };
+		32C1C14916CEA4DB00D0A9D8 /* trViewController~iphone.xib in Resources */ = {isa = PBXBuildFile; fileRef = 32C1C14616CEA4DB00D0A9D8 /* trViewController~iphone.xib */; };
+		32C1C14C16CEA6A100D0A9D8 /* trViewController~ipad.xib in Resources */ = {isa = PBXBuildFile; fileRef = 32C1C14A16CEA6A100D0A9D8 /* trViewController~ipad.xib */; };
+		32C1C14E16CEA83C00D0A9D8 /* MeasurementView~ipad.xib in Resources */ = {isa = PBXBuildFile; fileRef = 32C1C14D16CEA83C00D0A9D8 /* MeasurementView~ipad.xib */; };
+		32C1C15016CEA84400D0A9D8 /* MeasurementView~iphone.xib in Resources */ = {isa = PBXBuildFile; fileRef = 32C1C14F16CEA84400D0A9D8 /* MeasurementView~iphone.xib */; };
 		32C218BF16527FC30024E731 /* processing.m in Sources */ = {isa = PBXBuildFile; fileRef = 32C218BE16527FC30024E731 /* processing.m */; };
 		32CC656F16A5895E004628AF /* MeasurementView.m in Sources */ = {isa = PBXBuildFile; fileRef = 32CC656D16A5895E004628AF /* MeasurementView.m */; };
-		32CC657016A5895E004628AF /* MeasurementView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 32CC656E16A5895E004628AF /* MeasurementView.xib */; };
 		32D352E4164D8CF600364CF9 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 32D352E3164D8CF600364CF9 /* Default-568h@2x.png */; };
 		32D352E7164D8E4C00364CF9 /* CAStreamBasicDescription.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D352E6164D8E4C00364CF9 /* CAStreamBasicDescription.cpp */; };
 		32EDB67E169F26B7003EC2AA /* IconiPhoneNonHD.png in Resources */ = {isa = PBXBuildFile; fileRef = 32EDB67D169F26B7003EC2AA /* IconiPhoneNonHD.png */; };
@@ -28,7 +31,6 @@
 		B4BA4ACA162056B300520207 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = B4BA4AC9162056B300520207 /* main.m */; };
 		B4BA4ACE162056B300520207 /* trAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = B4BA4ACD162056B300520207 /* trAppDelegate.m */; };
 		B4BA4AD1162056B300520207 /* trViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B4BA4AD0162056B300520207 /* trViewController.m */; };
-		B4BA4AD4162056B300520207 /* trViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = B4BA4AD2162056B300520207 /* trViewController.xib */; };
 		B4BA4ADC1620571500520207 /* audioController.m in Sources */ = {isa = PBXBuildFile; fileRef = B4BA4ADB1620571400520207 /* audioController.m */; };
 		B4BA4AE11620617600520207 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B4BA4AE01620617600520207 /* AudioToolbox.framework */; };
 /* End PBXBuildFile section */
@@ -36,11 +38,14 @@
 /* Begin PBXFileReference section */
 		328602C5165A61F00006F91E /* communicator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = communicator.h; sourceTree = "<group>"; };
 		328602C6165A61F00006F91E /* communicator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = communicator.m; sourceTree = "<group>"; };
+		32C1C14716CEA4DB00D0A9D8 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = "en.lproj/trViewController~iphone.xib"; sourceTree = "<group>"; };
+		32C1C14B16CEA6A100D0A9D8 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = "en.lproj/trViewController~ipad.xib"; sourceTree = "<group>"; };
+		32C1C14D16CEA83C00D0A9D8 /* MeasurementView~ipad.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = "MeasurementView~ipad.xib"; sourceTree = "<group>"; };
+		32C1C14F16CEA84400D0A9D8 /* MeasurementView~iphone.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = "MeasurementView~iphone.xib"; sourceTree = "<group>"; };
 		32C218BD16527FC30024E731 /* processing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = processing.h; sourceTree = "<group>"; };
 		32C218BE16527FC30024E731 /* processing.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = processing.m; sourceTree = "<group>"; };
 		32CC656C16A5895E004628AF /* MeasurementView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MeasurementView.h; sourceTree = "<group>"; };
 		32CC656D16A5895E004628AF /* MeasurementView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MeasurementView.m; sourceTree = "<group>"; };
-		32CC656E16A5895E004628AF /* MeasurementView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MeasurementView.xib; sourceTree = "<group>"; };
 		32D352E3164D8CF600364CF9 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
 		32D352E6164D8E4C00364CF9 /* CAStreamBasicDescription.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CAStreamBasicDescription.cpp; path = "../../../../../../Volumes/secondHd/audio tools/CoreAudio/PublicUtility/CAStreamBasicDescription.cpp"; sourceTree = "<group>"; };
 		32D352E8164D8E5600364CF9 /* CAStreamBasicDescription.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CAStreamBasicDescription.h; path = "../../../../../../Volumes/secondHd/audio tools/CoreAudio/PublicUtility/CAStreamBasicDescription.h"; sourceTree = "<group>"; };
@@ -64,7 +69,6 @@
 		B4BA4ACD162056B300520207 /* trAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = trAppDelegate.m; sourceTree = "<group>"; };
 		B4BA4ACF162056B300520207 /* trViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = trViewController.h; sourceTree = "<group>"; };
 		B4BA4AD0162056B300520207 /* trViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = trViewController.m; sourceTree = "<group>"; };
-		B4BA4AD3162056B300520207 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/trViewController.xib; sourceTree = "<group>"; };
 		B4BA4ADA1620571400520207 /* audioController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = audioController.h; sourceTree = "<group>"; };
 		B4BA4ADB1620571400520207 /* audioController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = audioController.m; sourceTree = "<group>"; };
 		B4BA4AE01620617600520207 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
@@ -143,10 +147,12 @@
 				B4BA4ADB1620571400520207 /* audioController.m */,
 				B4BA4ACF162056B300520207 /* trViewController.h */,
 				B4BA4AD0162056B300520207 /* trViewController.m */,
-				B4BA4AD2162056B300520207 /* trViewController.xib */,
+				32C1C14A16CEA6A100D0A9D8 /* trViewController~ipad.xib */,
+				32C1C14616CEA4DB00D0A9D8 /* trViewController~iphone.xib */,
 				32CC656C16A5895E004628AF /* MeasurementView.h */,
 				32CC656D16A5895E004628AF /* MeasurementView.m */,
-				32CC656E16A5895E004628AF /* MeasurementView.xib */,
+				32C1C14F16CEA84400D0A9D8 /* MeasurementView~iphone.xib */,
+				32C1C14D16CEA83C00D0A9D8 /* MeasurementView~ipad.xib */,
 				B4BA4AC4162056B200520207 /* Supporting Files */,
 			);
 			path = sonar1;
@@ -216,7 +222,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				B4BA4AC8162056B300520207 /* InfoPlist.strings in Resources */,
-				B4BA4AD4162056B300520207 /* trViewController.xib in Resources */,
 				32D352E4164D8CF600364CF9 /* Default-568h@2x.png in Resources */,
 				32EDB67E169F26B7003EC2AA /* IconiPhoneNonHD.png in Resources */,
 				32EDB681169F26BC003EC2AA /* IconiPhoneHD.png in Resources */,
@@ -226,7 +231,10 @@
 				32EDB68D169F281F003EC2AA /* Default-Portrait@2x~ipad.png in Resources */,
 				32EDB68E169F2917003EC2AA /* Default.png in Resources */,
 				32EDB68F169F2A10003EC2AA /* Default@2x.png in Resources */,
-				32CC657016A5895E004628AF /* MeasurementView.xib in Resources */,
+				32C1C14916CEA4DB00D0A9D8 /* trViewController~iphone.xib in Resources */,
+				32C1C14C16CEA6A100D0A9D8 /* trViewController~ipad.xib in Resources */,
+				32C1C14E16CEA83C00D0A9D8 /* MeasurementView~ipad.xib in Resources */,
+				32C1C15016CEA84400D0A9D8 /* MeasurementView~iphone.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -251,20 +259,28 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
+		32C1C14616CEA4DB00D0A9D8 /* trViewController~iphone.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				32C1C14716CEA4DB00D0A9D8 /* en */,
+			);
+			name = "trViewController~iphone.xib";
+			sourceTree = "<group>";
+		};
+		32C1C14A16CEA6A100D0A9D8 /* trViewController~ipad.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				32C1C14B16CEA6A100D0A9D8 /* en */,
+			);
+			name = "trViewController~ipad.xib";
+			sourceTree = "<group>";
+		};
 		B4BA4AC6162056B300520207 /* InfoPlist.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
 				B4BA4AC7162056B300520207 /* en */,
 			);
 			name = InfoPlist.strings;
-			sourceTree = "<group>";
-		};
-		B4BA4AD2162056B300520207 /* trViewController.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				B4BA4AD3162056B300520207 /* en */,
-			);
-			name = trViewController.xib;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
@@ -296,6 +312,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -320,6 +337,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -337,6 +355,7 @@
 				);
 				PRODUCT_NAME = batapp;
 				PROVISIONING_PROFILE = "";
+				SEPARATE_STRIP = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
 			};
@@ -356,6 +375,7 @@
 				);
 				PRODUCT_NAME = batapp;
 				PROVISIONING_PROFILE = "";
+				SEPARATE_STRIP = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
 			};

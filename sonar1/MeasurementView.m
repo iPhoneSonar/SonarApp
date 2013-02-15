@@ -42,7 +42,7 @@
 
 - (IBAction)startMeasurement:(id)sender
 {
-    self.tf1.text = @"startet";
+    self.tf1.text = @"started";
 }
 
 - (void)dealloc {
