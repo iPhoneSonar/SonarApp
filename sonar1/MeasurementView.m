@@ -11,6 +11,8 @@
 
 @implementation MeasurementView
 
+@synthesize tf1;
+
 - (IBAction)switchToConfigView:(id)sender
 {
     trViewController *trView=[[trViewController alloc] initWithNibName:nil bundle:nil];
@@ -38,4 +40,17 @@
     // Dispose of any resources that can be recreated.
 }
 
+- (IBAction)startMeasurement:(id)sender
+{
+    self.tf1.text = @"startet";
+}
+
+- (void)dealloc {
+    [tf1 release];
+    [super dealloc];
+}
+- (void)viewDidUnload {
+    [self setTf1:nil];
+    [super viewDidUnload];
+}
 @end

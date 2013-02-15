@@ -923,13 +923,13 @@ static OSStatus recordingCallback(void *inRefCon,
 -(OSStatus)start
 {
     play->pos = 0;
-    OSStatus status;
+    OSStatus status = 0;
     if (recordingBufferList)
     {
         record.pos = 0;
         recordingBufferList->mBuffers[0].mData = record.buf;
-        NSLog(@"audioUnit started status = %ld", status);
         status = AudioOutputUnitStart(audioUnit);
+        NSLog(@"audioUnit started status = %ld", status);
     }
     else
     {
