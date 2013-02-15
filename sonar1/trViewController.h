@@ -8,7 +8,7 @@
 
 #import <UIKit/UIKit.h>
 #import "AudioController.h"
-#import "processing.h"
+//#import "processing.h"
 
 @interface trViewController : UIViewController <UITextFieldDelegate>{
     
@@ -43,5 +43,6 @@
 - (IBAction)testOutput:(id)sender;
 - (IBAction)netMode:(id)sender;
 
+- (void)setText:()
 
 @end

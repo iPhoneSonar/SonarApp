@@ -271,7 +271,7 @@ SInt32 MaximumSuche(SInt64 *AKkf, UInt32 StartValue, UInt32 EndValue)
     return max_t;
 }
 
-SInt32 sweepGen(SInt32 *Tptr)
+SInt32 sendSigGen(SInt32 *Tptr)
 {
     SInt32 *T = NULL;
     T = Tptr;

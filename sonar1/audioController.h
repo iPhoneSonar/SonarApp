@@ -17,16 +17,9 @@ struct sig{
     SInt32 *buf;
     SInt32 pos;
     SInt32 len;
-    SInt32 shift;
-    SInt32 samplesPerPeriod;
 };
 typedef struct sig sig;
 
-struct recordBuffer{
-    SInt32 *buf;
-    SInt32 pos;
-    SInt32 len;
-};
 typedef struct recordBuffer recordBuffer;
 
 @interface audioController : NSObject
@@ -37,20 +30,21 @@ typedef struct recordBuffer recordBuffer;
     //recording unit
     AudioComponentInstance audioUnit;
     AudioBufferList *recordingBufferList;
-    sig *sine;
-    sig *mute;
-    recordBuffer record;
+    sig recordBuf;
     sig *play;
-    sig *testSweep;
+    sig *sendSig;
+    sig *zeroSig;
     communicator *com;
     processing *proc;
+
+    UITextField *tfOutput;
 }
 
 @property(nonatomic) int frequency;
 @property(nonatomic) AudioComponentInstance audioUnit;
 @property(nonatomic) AudioBufferList *recordingBufferList;
 @property(nonatomic,retain) communicator *com;
-@property(nonatomic) processing *proc;
+@property(nonatomic, retain) processing *proc;
 
 
 - (void)setFrequency:(int) value;
@@ -59,11 +53,13 @@ typedef struct recordBuffer recordBuffer;
 - (OSStatus)start;
 - (OSStatus)stop;
 - (void)testOutput;
-- (void)mute:(UInt32)flag;
-- (void)sineSigInit;
-- (void)recordBufferInit:(SInt32)len;
-- (void)recordBufferInitSamples;
-- (void)muteSigInit;
+- (SInt16)sendSigInit;
+- (SInt16)recordBufferInitSamples;
+- (SInt16)zeroSigInit;
+
+-(SInt16)initClient;
+-(SInt16)initServer;
+-(SInt16)initHeadphone;
 
 @end
 #endif

@@ -124,22 +124,18 @@
 - (IBAction)connect:(id)sender
 {
     NSLog(@"selected %d", btnNetMode.selected);
-    if ([[audioController com ] pSock])
-    {
-        [[audioController com] close];
-        NSLog(@"close socket");
-    }
+    
     if (btnNetMode.selected == YES) //server
     {
         NSLog(@"btnNetMode YES");
-        [[audioController com ] serverStart];
+        [audioController initServer];
     }
     else
     { //must be client
         NSLog(@"btnNetMode NO");
         [[audioController com ]setHost: (CFStringRef)self.tfIp.text];
         NSLog(@"server ip = %@",[[audioController com]host]);
-        [[audioController com ] clientConnect];
+        [audioController initClient];
     }
 }
 
