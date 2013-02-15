@@ -36,7 +36,6 @@
 @property (retain, nonatomic) IBOutlet UIButton *btnProcess;
 @property (retain, nonatomic) IBOutlet UITextField *tfIp;
 @property (retain, nonatomic) IBOutlet UIButton *btnConnect;
-
 @property (retain, nonatomic) IBOutlet UIButton *btnNetMode;
 
 - (IBAction)connect:(id)sender;
@@ -45,6 +44,7 @@
 - (IBAction)stop:(id)sender;
 - (IBAction)testOutput:(id)sender;
 - (IBAction)netMode:(id)sender;
+- (IBAction)switchToMeasurementView:(id)sender;
 
 @end
 
