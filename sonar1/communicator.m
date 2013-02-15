@@ -73,10 +73,11 @@ static void socketCallbackClient(CFSocketRef s, CFSocketCallBackType type, CFDat
 
             NSLog(@"recv: %s",sBuf);
             //send one back
+            struct timeval tv;
             memset(&tv, 0, sizeof(struct timeval));
             time_t siTimestamp = time(NULL);
             sprintf(sBuf, "%ld", siTimestamp);
-            send(pNativeSock, sBuf, strlen(sBuf), 0);
+            send(localCom.pNativeSock, sBuf, strlen(sBuf), 0);
             NSLog(@"send: %s",sBuf);
             break;
         }
@@ -247,10 +248,10 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
 }
 
 
-- (SInt16)clientConnect
+- (SInt16)clientConnect:(CFStringRef)strHostIp
 {
     
-    CFSocketContext context;
+    CFSocketContext clientContext = { 0,self,NULL,NULL,NULL};
     //typedef struct {
     //    CFIndex	version;
     //    void *	info;
@@ -258,7 +259,6 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
     //    void	(*release)(const void *info);
     //    CFStringRef	(*copyDescription)(const void *info);
     //} CFSocketContext;
-    context = {0,self,NULL,NULL,NULL};
 
     //kCFSocketNoCallBack = 0,
     //kCFSocketReadCallBack = 1,
@@ -275,7 +275,7 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
                                        IPPROTO_TCP,
                                        callBackTypes,
                                        socketCallbackClient,
-                                        &context);
+                                        &clientContext);
 
     NSLog(@"socket %ld", (SInt32)pSock);
 
@@ -296,7 +296,7 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
     // Set the port and address we want to listen on
     char sAddr[16];
     memset(sAddr,0,16);
-    CFStringGetCString(host, sAddr, 16, kCFStringEncodingUTF8);
+    CFStringGetCString(strHostIp, sAddr, 16, kCFStringEncodingUTF8);
 
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
@@ -347,10 +347,9 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
 
 - (SInt16)recvNew: (char*)sBuf : (UInt16*)uiLen
 {
-    SInt16 iRet = 0;
+    size_t iRet = 0;
     if (connectionState)
     {
-        size_t
         iRet = recv(pNativeSock, sBuf, *uiLen, 0);
     }
     

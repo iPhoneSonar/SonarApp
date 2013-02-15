@@ -5,6 +5,8 @@
 //  Created by lion on 10/6/12.
 //  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
 //
+#ifndef trAppDelegateH
+#define trAppDelegateH
 
 #import <UIKit/UIKit.h>
 
@@ -17,3 +19,4 @@
 @property (strong, nonatomic) trViewController *viewController;
 
 @end
+#endif

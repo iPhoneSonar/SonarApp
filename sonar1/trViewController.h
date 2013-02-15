@@ -5,10 +5,13 @@
 //  Created by lion on 10/6/12.
 //  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
 //
+#ifndef trViewControllerH
+#define trViewControllerH
 
 #import <UIKit/UIKit.h>
 #import "AudioController.h"
 //#import "processing.h"
+#import "communicator.h"
 
 @interface trViewController : UIViewController <UITextFieldDelegate>{
     
@@ -43,6 +46,6 @@
 - (IBAction)testOutput:(id)sender;
 - (IBAction)netMode:(id)sender;
 
-- (void)setText:()
-
 @end
+
+#endif

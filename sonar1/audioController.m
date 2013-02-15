@@ -43,26 +43,32 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
 
 -(SInt16)initClient
 {
-    if([com clientConnect])
-    {
-        return -1;
-    }
-           
+    //if([communicator clientConnect])
+    //{
+    //    return -1;
+    //}
     if([self sendSigInit])
     {
         return -1;
     }
-    play = sendSig;
+    if([self zeroSigInit])
+    {
+        return -1;
+    }
     if([self recordBufferInitSamples])
     {
         return -1;
     }
 
+    [self sessionInit];
+    [self audioUnitInit];
+
+
     //send chirp on gui screen click -> button event (on start button)
     //tcp transmitt timestamp -> send in playing callback
-    //wait for tcp transmitted distance -> handled in 
+    //wait for tcp transmitted distance -> handled in
     //show distance
-    return -1;
+    return 0;
 }
 
 
@@ -73,22 +79,22 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
     //playingcallback mute
     //init ringbuffer
     //wait for timestamp
-
-        //calibration
-        //save latency
-        //gui show ready
-
-        //calcDistance
-        //gui show distance
-        //tcp tansmitt distance
+    //calibration
+    //save latency
+    //gui show ready
+    //calcDistance
+    //gui show distance
+    //tcp tansmitt distance
     return -1;
 }
+
 
 -(SInt16)initHeadphone
 {
     //init send and receive signal
     return -1;
 }
+
 
 -(SInt16)sendSigInit
 {
@@ -101,31 +107,33 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
         }
         free(sendSig);
     }
-
+    
     sendSig = (sig*)malloc(sizeof(sig));
     if (sendSig == NULL)
     {
         NSLog(@"error sendSigInit");
         return -1;
     }
-    memset(&sendSig,0,sizeof(sig));
+    memset(sendSig,0,sizeof(struct sig));
 
 
     SInt32 shift = 0;
     SInt32 len = 22528;
 
-    sendSig->buf = (SInt32*)malloc(len*sizeof(SInt32));
+    sendSig->buf = (SInt32*)malloc((len+shift)*sizeof(SInt32));
     if (sendSig == NULL)
     {
         NSLog(@"error sendSigInit");
         return -1;
     }
-    memset(&sendSig,0,len*sizeof(SInt32));
+    memset(sendSig->buf,0,(len+shift)*sizeof(SInt32));
     
     sendSigGen((sendSig->buf)+shift);
     
     sendSig->len = len;
     sendSig->pos = 0;
+
+    play = sendSig;
 
     NSLog(@"Sendesignal Länge: %li Samples",sendSig->len);
     return 0;
@@ -143,7 +151,7 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
     }
 
     zeroSig = (sig*)malloc(sizeof(sig));
-    memset(&zeroSig,0,sizeof(sig));
+    memset(zeroSig,0,sizeof(sig));
 
     SInt32 len = 1024;
 
@@ -153,7 +161,7 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
         NSLog(@"error zeroSigInit");
         return -1;
     }
-    memset(&sendSig,0,len*sizeof(SInt32));
+    memset(zeroSig->buf,0,len*sizeof(SInt32));
     zeroSig->len = len;
     
     return 0;
@@ -162,8 +170,20 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
 -(SInt16)recordBufferInitSamples
 {
     //check to avoid memory leaks
+    if (recordBuf)
+    {
+        if(recordBuf->buf)
+        {
+            free(recordBuf->buf);
+        }
+        free(recordBuf);
+    }
+
+    recordBuf = (sig*)malloc(sizeof(sig));
+    memset(recordBuf,0,sizeof(sig));
+
     UInt32 uiExtention = 2*1024;
-    if(sendSig)
+    if(sendSig == NULL)
     {
         NSLog(@"error sendSig undefined");
         return -1;
@@ -171,46 +191,24 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
 
     SInt32 len = sendSig->len + uiExtention;
 
-    if(recordBuf.buf)
-    {
-        free(recordBuf.buf);
-    }
-    memset(&recordBuf, 0, sizeof(sig));
-    
-    recordBuf.buf = (SInt32*)malloc(len*sizeof(SInt32)); //SInt16 = 2 Bytes
-    if (recordBuf.buf == NULL)
+    recordBuf->buf = (SInt32*)malloc(len*sizeof(SInt32)); //SInt16 = 2 Bytes
+    if (recordBuf->buf == NULL)
     {
         NSLog(@"error recordBufferInitSamples");
         return -1;
     }
-    memset(recordBuf.buf,0,len*sizeof(SInt32));
-    recordBuf.len = len;
-    //NSLog(@"Empfangssignal Länge: %li Samples",recordBuf.len);
-    
+    memset(recordBuf->buf,0,len*sizeof(SInt32));
+    recordBuf->len = len;
+    //NSLog(@"Empfangssignal Länge: %li Samples",recordBuf->len);
+
+    //make the connections between our buffer and the buffer representaion of the callback function
+    recordingBufferList = (AudioBufferList*)malloc(sizeof(AudioBufferList)) ;
+    recordingBufferList->mNumberBuffers = 1;
+    recordingBufferList->mBuffers[0].mData = recordBuf->buf;
+    recordingBufferList->mBuffers[0].mNumberChannels = 2;
+
     return 0;
 }
-
-/*
- not used any more
--(void)recordBufferInit:(SInt32)len
-{
-    //check to avoid memory leaks
-    if(len !=record.len)
-    {
-        record.len = len*1024;
-        if(record.buf)
-        {
-            free(record.buf);
-            record.buf = NULL;
-        }
-        record.buf = (SInt32*)malloc(record.len*sizeof(SInt32)); //SInt16 = 2 Bytes
-    }
-    memset(record.buf,0,record.len*2);
-
-    record.pos = 0;
-}
-*/
-
 
 // audio render procedure, don't allocate memory, don't take any locks, don't waste time
 static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioActionFlags, const AudioTimeStamp *inTimeStamp, UInt32 inBusNumber, UInt32 inNumberFrames, AudioBufferList *ioData)
@@ -249,16 +247,11 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
 
 -(OSStatus)audioUnitInit
 {
-    [self sessionInit];
     //bring up the communication channel
-    com = [[communicator alloc] init];
     proc = [[processing alloc] init];
     [proc InitializeArrays];
 
     //prepare an empty frame to mute
-
-    //[self sineSigInit];
-    [self sendSigInit];
     
     int kOutputBus = 0;
     int kInputBus = 1;
@@ -398,14 +391,6 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
     
     //NSLog(@"set no allocate status=%ld",status);
 
- 
-    //use the defined record[] as buffer
-
-    recordingBufferList = (AudioBufferList*)malloc(sizeof(AudioBufferList)) ;
-    recordingBufferList->mNumberBuffers = 1;
-    recordingBufferList->mBuffers[0].mData = recordBuf.buf;
-    recordingBufferList->mBuffers[0].mNumberChannels = 2;
-    
     return status;
 }
 
@@ -413,8 +398,8 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
 {
     OSStatus status;
     UInt32 uiDataSize;
-    timeTagIndex[0]=0;
-    timeTagIndex[1]=0;
+    //timeTagIndex[0]=0;
+    //timeTagIndex[1]=0;
     
     status = AudioSessionInitialize(NULL, NULL, NULL, self);
     //NSLog(@"session init = %ld",status);
@@ -683,19 +668,19 @@ static OSStatus recordingCallback(void *inRefCon,
             return -1;
         }
 
-        if (ac->recordBuf.pos+inNumberFrames > ac->recordBuf.len)
+        if (ac->recordBuf->pos+inNumberFrames > ac->recordBuf->len)
         {
-            ac->recordBuf.pos = 0; //ringbuffer
+            ac->recordBuf->pos = 0; //ringbuffer
         }
 
-        bufferList->mBuffers[0].mData = ac->recordBuf.buf+ac->recordBuf.pos;
+        bufferList->mBuffers[0].mData = ac->recordBuf->buf+ac->recordBuf->pos;
         status = AudioUnitRender(ac.audioUnit,
                                  ioActionFlags,
                                  inTimeStamp,
                                  inBusNumber,
                                  inNumberFrames,
                                  bufferList);
-        ac->recordBuf.pos += inNumberFrames;
+        ac->recordBuf->pos += inNumberFrames;
 
         [ac.proc SetTimeTag:@"receive" To:*inTimeStamp];
     
@@ -719,11 +704,11 @@ static OSStatus recordingCallback(void *inRefCon,
             return -1;
         }
 
-        if (ac->recordBuf.pos+inNumberFrames <= ac->recordBuf.len)
+        if (ac->recordBuf->pos+inNumberFrames <= ac->recordBuf->len)
         {
             [ac.proc SetTimeTag:@"receive" To:*inTimeStamp];
 
-            bufferList->mBuffers[0].mData = ac->recordBuf.buf+ac->recordBuf.pos;
+            bufferList->mBuffers[0].mData = ac->recordBuf->buf+ac->recordBuf->pos;
             //AudioUnitRenderActionFlags ioActionFlags;
             status = AudioUnitRender(ac.audioUnit,
                                      ioActionFlags,
@@ -731,10 +716,11 @@ static OSStatus recordingCallback(void *inRefCon,
                                      inBusNumber,
                                      inNumberFrames,
                                      bufferList);
-            ac->recordBuf.pos += inNumberFrames;
+            ac->recordBuf->pos += inNumberFrames;
 
-            if (ac->recordBuf.pos+inNumberFrames > ac->recordBuf.len)
+            if (ac->recordBuf->pos+inNumberFrames > ac->recordBuf->len)
             {
+                [ac stop];
                 NSLog(@"recording stoped");
             }
         }
@@ -749,7 +735,7 @@ static OSStatus recordingCallback(void *inRefCon,
     SInt32 KKFSize=2*play->len;
     SInt64* AKkf;
     AKkf = (SInt64*)malloc(KKFSize*sizeof(SInt64));
-    KKF(recordBuf.buf, play->buf, AKkf, play->len);
+    KKF(recordBuf->buf, play->buf, AKkf, play->len);
 
     UInt32 FirstPeak=MaximumSuche(AKkf, 0, KKFSize);
     NSLog(@"erster Peak bei %li, entspricht NRL bei 1 Geräte System",FirstPeak);
@@ -760,12 +746,12 @@ static OSStatus recordingCallback(void *inRefCon,
     NSLog(@"zweiter Peak bei %li, entspricht Ziel bei 1 Geräte System (offset für Mindestentfernung %li Samples)",SecondPeak,Offset);
 
     SInt64* AKkf2;
-    AKkf2 = (SInt64*)malloc((2*play->len+recordBuf.len)*sizeof(SInt64));
+    AKkf2 = (SInt64*)malloc((2*play->len+recordBuf->len)*sizeof(SInt64));
     
-    UInt32 RingKKFPeak=MaximumSuche(AKkf2, 0, 2*play->len+recordBuf.len);
+    UInt32 RingKKFPeak=MaximumSuche(AKkf2, 0, 2*play->len+recordBuf->len);
     NSLog(@"RingKKFPeak bei %li",RingKKFPeak);
 
-    [proc GetPointerReceive:recordBuf.buf Send:play->buf Len:play->len];
+    [proc GetPointerReceive:recordBuf->buf Send:play->buf Len:play->len];
     [proc SetLatency:[proc GetTimeTag:@"send" at:1]];
     [proc CalculateDistance:[proc GetTimeTag:@"send" at:0]];
     
@@ -777,10 +763,10 @@ static OSStatus recordingCallback(void *inRefCon,
     char *sOut = (char*)malloc(2000);
     char *sOutPtr = sOut;
     int len = 0;
-    for (int i=0; i< recordBuf.len; i++)
+    for (int i=0; i< recordBuf->len; i++)
     {
         SInt16 TMP;
-        TMP = ((SInt16*)recordBuf.buf)[2*i+1];
+        TMP = ((SInt16*)recordBuf->buf)[2*i+1];
         sprintf(sOutPtr,"%i,",TMP);
         len += strlen(sOutPtr);
         sOutPtr = sOut + len;
@@ -859,7 +845,7 @@ static OSStatus recordingCallback(void *inRefCon,
     len = 0;
     memset(sOut,0,2000);
     sOutPtr=sOut;
-    for (int i=0; i< 2*play->len+recordBuf.len; i++)
+    for (int i=0; i< 2*play->len+recordBuf->len; i++)
     {
         sprintf(sOutPtr,"%lli,",AKkf2[i]);
         len += strlen(sOutPtr);
@@ -941,8 +927,8 @@ static OSStatus recordingCallback(void *inRefCon,
     OSStatus status;
     if (recordingBufferList)
     {
-        recordBuf.pos = 0;
-        recordingBufferList->mBuffers[0].mData = recordBuf.buf;
+        recordBuf->pos = 0;
+        recordingBufferList->mBuffers[0].mData = recordBuf->buf;
         NSLog(@"audioUnit started status = %ld", status);
         status = AudioOutputUnitStart(audioUnit);
     }
@@ -950,6 +936,8 @@ static OSStatus recordingCallback(void *inRefCon,
     {
         NSLog(@"audioUnit start error = %ld", status);
     }
+    tfOutput.text = @"start";
+
     return status;
 }
 
@@ -957,8 +945,16 @@ static OSStatus recordingCallback(void *inRefCon,
 {
     OSStatus status;
     status = AudioOutputUnitStop(audioUnit);
+    tfOutput.text = @"stop";
     NSLog(@"audioUnit stoped status = %ld", status);
     return status;
 }
+
+- (SInt16)setOutput:(UITextField**)tf
+{
+    tfOutput = *tf;
+    return 0;
+}
+
 
 @end

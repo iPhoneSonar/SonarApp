@@ -36,10 +36,8 @@
 {
     [super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
-    [audioController audioUnitInit];
-       
-    //[audioController initializeAUGraph];
-
+    [audioController initClient];
+    [audioController setOutput:(&tf2)];
 }
 
 - (void)dealloc {
@@ -107,7 +105,6 @@
 
     [audioController recordBufferInitSamples];
     [audioController start];
-    self.tf2.text = @"start";
 }
 
 - (IBAction)stop:(id)sender {
@@ -124,7 +121,7 @@
 - (IBAction)connect:(id)sender
 {
     NSLog(@"selected %d", btnNetMode.selected);
-    
+
     if (btnNetMode.selected == YES) //server
     {
         NSLog(@"btnNetMode YES");
@@ -144,6 +141,12 @@
     if (textField == tf1)
         [tf1 resignFirstResponder];
     return NO;
+}
+
+- (void)setText:(NSString*)sValue
+{
+    self.tf2.text = sValue;
+    return;
 }
 
 - (IBAction)netMode:(UIButton*)sender

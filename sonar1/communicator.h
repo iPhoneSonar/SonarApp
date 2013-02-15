@@ -5,6 +5,8 @@
 //  Created by lio 123 on 19/11/2012.
 //
 //
+#ifndef communicatorH
+#define communicatorH
 
 #import <Foundation/Foundation.h>
 
@@ -13,7 +15,6 @@
 #import <netinet/in.h>
 #import <time.h>
 #import <arpa/inet.h>
-
 
 enum ConnectionState {
     CS_DISCONNECTED = 0,
@@ -54,3 +55,4 @@ ConnectionState connectionState;
 static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address, const void *data, void *info);
 
 @end
+#endif
