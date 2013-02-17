@@ -30,6 +30,13 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
     [super dealloc];
 }
 
+- (audioController*)init
+{
+    com = [communicator alloc];
+    proc = [processing alloc];
+    return self;
+}
+
 - (void)setFrequency:(int) value
 {
     frequency = value;
@@ -43,10 +50,10 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
 
 -(SInt16)initClient
 {
-    //if([communicator clientConnect])
-    //{
-    //    return -1;
-    //}
+    if([com clientConnect])
+    {
+        return -1;
+    }
     if([self sendSigInit])
     {
         return -1;
@@ -68,6 +75,28 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
     //tcp transmitt timestamp -> send in playing callback
     //wait for tcp transmitted distance -> handled in
     //show distance
+    return 0;
+}
+
+-(SInt16)initDebug
+{
+    if([self sendSigInit])
+    {
+        return -1;
+    }
+    if([self zeroSigInit])
+    {
+        return -1;
+    }
+    if([self recordBufferInitSamples])
+    {
+        return -1;
+    }
+
+    [self sessionInit];
+    [self audioUnitInit];
+    
+    [com initNetworkCom];
     return 0;
 }
 
@@ -221,8 +250,13 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
         AudioOutputUnitStop(ac.audioUnit);
         return noErr;
     }
+    //server does no play back
+    if([[ac com]connectionState] == CS_SERVER)
+    {
 
-    
+    }
+
+
 	ioData->mBuffers[0].mData = (ac->play->buf + ac->play->pos);
 
     ac->play->pos += inNumberFrames;
@@ -477,8 +511,8 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
                 //kAudioSessionOutputRoute_HDMI
                 //kAudioSessionOutputRoute_AirPlay
                 
-                //UInt32 cfsRouteOverwrite = kAudioSessionOverrideAudioRoute_Speaker;
-                UInt32 cfsRouteOverwrite = kAudioSessionOverrideAudioRoute_None;
+                UInt32 cfsRouteOverwrite = kAudioSessionOverrideAudioRoute_Speaker;
+                //UInt32 cfsRouteOverwrite = kAudioSessionOverrideAudioRoute_None;
                 
                 uiDataSize = sizeof(UInt32);
                 status = AudioSessionSetProperty(kAudioSessionProperty_OverrideAudioRoute,
@@ -929,12 +963,12 @@ static OSStatus recordingCallback(void *inRefCon,
     {
         recordBuf->pos = 0;
         recordingBufferList->mBuffers[0].mData = recordBuf->buf;
-        NSLog(@"audioUnit started status = %ld", status);
         status = AudioOutputUnitStart(audioUnit);
+        NSLog(@"audioUnit started status = %ld", status);
     }
     else
     {
-        NSLog(@"audioUnit start error = %ld", status);
+        NSLog(@"recordingBufferList not initialized");
     }
     tfOutput.text = @"start";
 

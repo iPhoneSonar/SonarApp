@@ -320,6 +320,8 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
         pSock = NULL;
         return -1;
     }
+
+    connectionState = CS_ClIENT;
     
     //client socket is blocking
     //CFRunLoopSourceRef sourceRef =

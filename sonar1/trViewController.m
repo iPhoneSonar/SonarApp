@@ -108,6 +108,7 @@
 - (IBAction)backgroundTouched:(id)sender
 {
     [tf1 resignFirstResponder];
+    [tfIp resignFirstResponder];
     //insert start here for start at Background touch
 }
 
@@ -146,7 +147,7 @@
         NSLog(@"btnNetMode NO");
         [[audioController com ]setHost: (CFStringRef)self.tfIp.text];
         NSLog(@"server ip = %@",[[audioController com]host]);
-        [[audioController com ] clientConnect];
+        [audioController initClient];
     }
 }
 

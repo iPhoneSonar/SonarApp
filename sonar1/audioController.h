@@ -64,6 +64,7 @@ typedef struct recordBuffer recordBuffer;
 - (SInt16)initClient;
 - (SInt16)initServer;
 - (SInt16)initHeadphone;
+- (SInt16)initDebug;
 
 - (SInt16)setOutput:(UITextField**)tf;
 
