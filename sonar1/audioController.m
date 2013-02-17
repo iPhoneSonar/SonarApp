@@ -924,7 +924,7 @@ static OSStatus recordingCallback(void *inRefCon,
 -(OSStatus)start
 {
     play->pos = 0;
-    OSStatus status;
+    OSStatus status = 0;
     if (recordingBufferList)
     {
         recordBuf->pos = 0;

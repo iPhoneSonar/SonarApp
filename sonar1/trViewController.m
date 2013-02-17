@@ -11,6 +11,7 @@
 
 #import "trViewController.h"
 #import "MeasurementView.h"
+#import "trAppDelegate.h"
 
 @implementation trViewController
 

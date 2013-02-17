@@ -8,6 +8,7 @@
 
 #import "MeasurementView.h"
 #import "trViewController.h"
+#import "trAppDelegate.h"
 
 @implementation MeasurementView
 

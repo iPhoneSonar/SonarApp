@@ -22,14 +22,14 @@
 - (int)IncreaseCount:(NSString*)Type
 {
     int retval;
-    if (Type==@"receive")
+    if ([Type isEqualToString:@"receive"])
     {
         count[1]++;
         retval=0;
     }
     else
     {
-        if(Type==@"send")
+        if([Type isEqualToString:@"send"])
         {
             count[0]++;
             retval =0;
@@ -46,13 +46,13 @@
 - (SInt32)GetCount:(NSString*)Type;
 {
     SInt32 retval;
-    if (Type==@"receive")
+    if ([Type isEqualToString:@"receive"])
     {
         retval=count[1];
     }
     else
     {
-        if(Type==@"send")
+        if([Type isEqualToString:@"send"])
         {
             retval=count[0];
         }
@@ -68,14 +68,14 @@
 - (int)SetTimeTag:(NSString*)Type To:(AudioTimeStamp)TimeStamp;
 {
     int retval;
-    if (Type==@"receive")
+    if ([Type isEqualToString:@"receive"])
     {
         receiveTimeTags[count[1]]=TimeStamp;
         retval=[self IncreaseCount:Type];
     }
     else
     {
-        if(Type==@"send")
+        if([Type isEqualToString:@"send"])
         {
             sendTimeTags[count[0]]=TimeStamp;
             retval=[self IncreaseCount:Type];
@@ -92,13 +92,13 @@
 - (Float64)GetTimeTag:(NSString*)Type at:(SInt32)Frame
 {
     Float64 retval;
-    if (Type==@"receive")
+    if ([Type isEqualToString:@"receive"])
     {
         retval=receiveTimeTags[Frame].mSampleTime;
     }
     else
     {
-        if(Type==@"send")
+        if([Type isEqualToString:@"send"])
         {
             retval=sendTimeTags[Frame].mSampleTime;
         }
