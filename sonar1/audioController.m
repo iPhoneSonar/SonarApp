@@ -251,10 +251,10 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
         return noErr;
     }
     //server does no play back
-    if([[ac com]connectionState] == CS_SERVER)
+    /*if([[ac com]connectionState] == CS_SERVER)
     {
 
-    }
+    }*/
 
 
 	ioData->mBuffers[0].mData = (ac->play->buf + ac->play->pos);

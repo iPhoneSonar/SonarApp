@@ -16,7 +16,6 @@
 @implementation trViewController
 
 @synthesize audioController;
-
 @synthesize btnStart;
 @synthesize btnStop;
 @synthesize btnProcess;
@@ -29,6 +28,7 @@
 - (IBAction)switchToMeasurementView:(id)sender
 {
     MeasurementView *MView=[[MeasurementView alloc] initWithNibName:nil bundle:nil];
+    MView.audioController=self.audioController;
     [self presentModalViewController:MView animated:NO];
 }
 
@@ -44,15 +44,11 @@
 {
     [super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
-    [audioController audioUnitInit];
-       
-    //[audioController initializeAUGraph];
-
 }
 
 - (void)dealloc {
 	[audioController release];
-    
+
     [btnStart release];
     [btnStop release];
     [tf1 release];

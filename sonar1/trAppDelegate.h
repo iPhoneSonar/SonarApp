@@ -16,10 +16,13 @@
     audioController *paC;
 
 }
+
 @property (readonly, nonatomic) audioController *paC;
 
 @property (strong, nonatomic) UIWindow *window;
 
 @property (strong, nonatomic) trViewController *viewController;
+
+-(audioController*)returnAudioControllerPointer;
 
 @end

@@ -28,12 +28,16 @@
     self.window = [[[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]] autorelease];
     // Override point for customization after application launch.
     self.viewController = [[[trViewController alloc] initWithNibName:@"trViewController" bundle:nil] autorelease];
-    paC=[audioController alloc];
-    [paC initClient];
-    [paC testOutput];
+    paC=[[audioController alloc] init];
+    [paC initDebug];
+    self.viewController.audioController=paC;
     self.window.rootViewController = self.viewController;
     [self.window makeKeyAndVisible];
     return YES;
+}
+-(audioController*)returnAudioControllerPointer
+{
+    return paC;
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application

@@ -22,7 +22,7 @@
     UITextField *tf2;
 }
 
-@property (readonly, nonatomic) IBOutlet audioController *audioController;
+@property (retain, nonatomic) IBOutlet audioController *audioController;
 
 @property (retain, nonatomic) IBOutlet UITextField *tf1;
 

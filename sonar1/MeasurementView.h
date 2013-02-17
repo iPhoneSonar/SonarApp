@@ -15,7 +15,7 @@
     audioController *audioController;
 
 }
-@property (readonly, nonatomic) IBOutlet audioController *audioController;
+@property (retain, nonatomic) IBOutlet audioController *audioController;
 @property (retain, nonatomic) IBOutlet UILabel *tf1;
 
 - (IBAction)switchToConfigView:(id)sender;
