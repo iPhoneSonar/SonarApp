@@ -36,7 +36,6 @@
 {
     [super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
-    [audioController initClient];
     [audioController setOutput:(&tf2)];
 }
 
@@ -130,7 +129,9 @@
     else
     { //must be client
         NSLog(@"btnNetMode NO");
-        [[audioController com ]setHost: (CFStringRef)self.tfIp.text];
+        [[audioController com] dummy];
+        [[audioController com ]setHost1: (CFStringRef)@"hallo"];
+        [[audioController com]setHost:(CFStringRef)@"hallo"];
         NSLog(@"server ip = %@",[[audioController com]host]);
         [audioController initClient];
     }
@@ -143,11 +144,6 @@
     return NO;
 }
 
-- (void)setText:(NSString*)sValue
-{
-    self.tf2.text = sValue;
-    return;
-}
 
 - (IBAction)netMode:(UIButton*)sender
 {

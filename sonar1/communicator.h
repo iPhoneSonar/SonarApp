@@ -41,7 +41,7 @@ ConnectionState connectionState;
 @property(nonatomic) ConnectionState connectionState;
 
 - (void)initNetworkCom;
-- (void)setHost: (CFStringRef)ip;
+- (void)setHost1: (CFStringRef)ip;
 - (void)send:(NSString*)msg;
 - (void)send:(NSString*)fileStr :(NSString*)fileName;
 - (void)open;
@@ -50,6 +50,8 @@ ConnectionState connectionState;
 - (SInt16)serverStart;
 - (SInt16)recvNew: (char*)sBuf : (UInt16*)uiLen;
 - (SInt16)sendNew: (char*)msg;
+
+- (void)dummy;
 
 
 static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address, const void *data, void *info);

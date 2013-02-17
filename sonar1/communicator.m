@@ -248,7 +248,7 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
 }
 
 
-- (SInt16)clientConnect:(CFStringRef)strHostIp
+- (SInt16)clientConnect
 {
     
     CFSocketContext clientContext = { 0,self,NULL,NULL,NULL};
@@ -296,7 +296,7 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
     // Set the port and address we want to listen on
     char sAddr[16];
     memset(sAddr,0,16);
-    CFStringGetCString(strHostIp, sAddr, 16, kCFStringEncodingUTF8);
+    CFStringGetCString(host, sAddr, 16, kCFStringEncodingUTF8);
 
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
@@ -366,10 +366,15 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
 
 
 
-- (void)setHost: (CFStringRef)ip
+- (void)setHost1: (CFStringRef)ip
 {
     NSLog(@"set ip");
     host = ip;
+}
+
+- (void)dummy
+{
+    NSLog(@"dummy");
 }
 
 
