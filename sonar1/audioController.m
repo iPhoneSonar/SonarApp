@@ -11,28 +11,9 @@
 
 #import "audioController.h"
 
-AudioTimeStamp sendtimeTags[100000];
-AudioTimeStamp receivetimeTags[100000];
-SInt32 count[2];
-
 const Float64 SAMPLERATE = 48000.0;
 const SInt16 FRAMESIZE = 1024;
 const SInt16 SAMPLES_PER_PERIOD = 48;
-SInt16 muteFlag = 0;
-char test[1000];
-int testIndex = 0;
-//AudioTimeStamp timeTags[RECORDLEN];
-
-SInt16 sin1KHz[] = {0,3916,7765,11481,15000,18263,21213,23801,
-                    25981,27716,28978,29743,30000,29743,28978,27716,
-                    25981,23801,21213,18263,15000,11481,7765,3916,0,
-                    -3916,-7765,-11481,-15000,-18263,-21213,-23801,-25981,
-                    -27716,-28978,-29743,-30000,-29743,-28978,-27716,-25981,
-                    -23801,-21213,-18263,-15000,-11481,-7765,-3916};
-
-SInt16 sin12kHz[] = {15000,15000,-15000,-15000};
-SInt16 sin6kHz[] = {0,21213,30000,21213,0,-21213,-30000,-21213};
-SInt16 frameLen = 0;
 
 @implementation audioController
 
@@ -59,201 +40,218 @@ SInt16 frameLen = 0;
     *value = frequency;
 }
 
--(void)sineSigInit
+
+-(SInt16)initClient
 {
-    //check to avoid memory leaks
-    if (sine)
+    //if([communicator clientConnect])
+    //{
+    //    return -1;
+    //}
+    if([self sendSigInit])
     {
-        if(sine->buf) free(sine->buf);
-        free(sine); 
+        return -1;
+    }
+    if([self zeroSigInit])
+    {
+        return -1;
+    }
+    if([self recordBufferInitSamples])
+    {
+        return -1;
     }
 
-    sine = (sig*)malloc(sizeof(sig));
+    [self sessionInit];
+    [self audioUnitInit];
 
-    sine->len = (1024+48);
-    sine->pos = 0;
-    sine->samplesPerPeriod = 48;
-    sine->shift = 32;
-    
-    sine->buf = (SInt32*)malloc(sine->len*sizeof(SInt32)); // SInt16 = 2 bytes
 
-    int index = 0;
-    for (int i=0; i<sine->len; i++)
-    {
-        sine->buf[i] = sin1KHz[index];
-        index = (index+1)%48;
-    }
-
-    //very important
-    //set the sig play to the sine
-    play = sine;
-
-    NSLog(@"sineSigInit");
+    //send chirp on gui screen click -> button event (on start button)
+    //tcp transmitt timestamp -> send in playing callback
+    //wait for tcp transmitted distance -> handled in
+    //show distance
+    return 0;
 }
 
--(void)PulseSigInit
+
+-(SInt16)initServer
 {
-    //check to avoid memory leaks
-    if (sine)
-    {
-        if(sine->buf) free(sine->buf);
-        free(sine);
-    }
-    
-    sine = (sig*)malloc(sizeof(sig));
-    
-    sine->len = 5*(1024);
-    sine->pos = 0;
-    sine->samplesPerPeriod = 0;
-    sine->shift = 0;
-    
-    sine->buf = (SInt32*)malloc(sine->len*sizeof(SInt32)); // SInt16 = 2 bytes
-    for (int j=0; j<1;j++)
-    {
-    for (int i=0; i<4; i++)
-    {
-        sine->buf[j*4+i] = sin12kHz[i];
-    }
-    }
-    
-    //very important
-    //set the sig play to the sine
-    play = sine;
-    
-    NSLog(@"PulseSigInit");
+    //tcp server starten
+    //prepare chirp
+    //playingcallback mute
+    //init ringbuffer
+    //wait for timestamp
+    //calibration
+    //save latency
+    //gui show ready
+    //calcDistance
+    //gui show distance
+    //tcp tansmitt distance
+    return -1;
 }
 
--(void)testSweepSigInit
+
+-(SInt16)initHeadphone
+{
+    //init send and receive signal
+    return -1;
+}
+
+
+-(SInt16)sendSigInit
 {
     //check to avoid memory leaks
-    if (testSweep)
+    if (sendSig)
     {
-        if(testSweep->buf) free(testSweep->buf);
-        free(testSweep);
+        if(sendSig->buf)
+        {
+            free(sendSig->buf);
+        }
+        free(sendSig);
     }
+    
+    sendSig = (sig*)malloc(sizeof(sig));
+    if (sendSig == NULL)
+    {
+        NSLog(@"error sendSigInit");
+        return -1;
+    }
+    memset(sendSig,0,sizeof(struct sig));
 
-    testSweep = (sig*)malloc(sizeof(sig));
 
     SInt32 shift = 0;
-    SInt32 size = 22528;
+    SInt32 len = 22528;
 
-    testSweep->buf = (SInt32*)malloc(size*sizeof(SInt32));
+    sendSig->buf = (SInt32*)malloc((len+shift)*sizeof(SInt32));
+    if (sendSig == NULL)
+    {
+        NSLog(@"error sendSigInit");
+        return -1;
+    }
+    memset(sendSig->buf,0,(len+shift)*sizeof(SInt32));
     
-    sweepGen((testSweep->buf)+shift);
+    sendSigGen((sendSig->buf)+shift);
     
-    testSweep->len = size;
-    testSweep->pos = 0;
-    testSweep->samplesPerPeriod = size;
-    testSweep->shift = 0;
-    NSLog(@"Sendesignal Länge: %li Samples",testSweep->len);
-    play = testSweep;
+    sendSig->len = len;
+    sendSig->pos = 0;
+
+    play = sendSig;
+
+    NSLog(@"Sendesignal Länge: %li Samples",sendSig->len);
+    return 0;
 }
 
--(void)recordBufferInitSamples
+-(SInt16)zeroSigInit
+{
+    if (zeroSig)
+    {
+        if(zeroSig->buf)
+        {
+            free(zeroSig->buf);
+        }
+        free(zeroSig);
+    }
+
+    zeroSig = (sig*)malloc(sizeof(sig));
+    memset(zeroSig,0,sizeof(sig));
+
+    SInt32 len = 1024;
+
+    zeroSig->buf = (SInt32*)malloc(len*sizeof(SInt32));
+    if (zeroSig->buf == NULL)
+    {
+        NSLog(@"error zeroSigInit");
+        return -1;
+    }
+    memset(zeroSig->buf,0,len*sizeof(SInt32));
+    zeroSig->len = len;
+    
+    return 0;
+}
+
+-(SInt16)recordBufferInitSamples
 {
     //check to avoid memory leaks
+    if (recordBuf)
+    {
+        if(recordBuf->buf)
+        {
+            free(recordBuf->buf);
+        }
+        free(recordBuf);
+    }
+
+    recordBuf = (sig*)malloc(sizeof(sig));
+    memset(recordBuf,0,sizeof(sig));
+
     UInt32 uiExtention = 2*1024;
-    if(play->len !=record.len - uiExtention)
+    if(sendSig == NULL)
     {
-        record.len = play->len + uiExtention;
-        if(record.buf)
-        {
-            free(record.buf);
-            record.buf = NULL;
-        }
-        record.buf = (SInt32*)malloc(record.len*sizeof(SInt32)); //SInt16 = 2 Bytes
+        NSLog(@"error sendSig undefined");
+        return -1;
     }
-    memset(record.buf,0,record.len*sizeof(SInt32));
-    NSLog(@"Empfangssignal Länge: %li Samples",record.len);
-    record.pos = 0;
-}
 
--(void)recordBufferInit:(SInt32)len
-{
-    //check to avoid memory leaks
-    if(len !=record.len)
+    SInt32 len = sendSig->len + uiExtention;
+
+    recordBuf->buf = (SInt32*)malloc(len*sizeof(SInt32)); //SInt16 = 2 Bytes
+    if (recordBuf->buf == NULL)
     {
-        record.len = len*1024;
-        if(record.buf)
-        {
-            free(record.buf);
-            record.buf = NULL;
-        }
-        record.buf = (SInt32*)malloc(record.len*sizeof(SInt32)); //SInt16 = 2 Bytes
+        NSLog(@"error recordBufferInitSamples");
+        return -1;
     }
-    memset(record.buf,0,record.len*2);
+    memset(recordBuf->buf,0,len*sizeof(SInt32));
+    recordBuf->len = len;
+    //NSLog(@"Empfangssignal Länge: %li Samples",recordBuf->len);
 
-    record.pos = 0;
-}
+    //make the connections between our buffer and the buffer representaion of the callback function
+    recordingBufferList = (AudioBufferList*)malloc(sizeof(AudioBufferList)) ;
+    recordingBufferList->mNumberBuffers = 1;
+    recordingBufferList->mBuffers[0].mData = recordBuf->buf;
+    recordingBufferList->mBuffers[0].mNumberChannels = 2;
 
--(void)muteSigInit
-{
-    //check to avoid memory leaks
-    if(mute)
-    {
-        if(mute->buf) free(mute->buf);
-        free(mute);
-    }
-    mute= (sig*)malloc(sizeof(sig));
-
-    mute->len = mute->samplesPerPeriod = 1024;
-    mute->buf = (SInt32*)malloc(mute->len*sizeof(SInt32)); //SInt16 = 2 Bytes
-    memset(mute->buf, 0,mute->len*sizeof(SInt32));
-    mute->pos = 0;
-    mute->shift = 0;
+    return 0;
 }
 
 // audio render procedure, don't allocate memory, don't take any locks, don't waste time
 static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioActionFlags, const AudioTimeStamp *inTimeStamp, UInt32 inBusNumber, UInt32 inNumberFrames, AudioBufferList *ioData)
 {
-    test[testIndex] = 'p';
-    testIndex ++;
-    audioController* audioUnit = (audioController*)inRefCon;
-    
+    audioController* ac = (audioController*)inRefCon;
+
     if (inNumberFrames > FRAMESIZE)
     {
         NSLog(@"inNumberFrames = %ld",inNumberFrames);
-        AudioOutputUnitStop(audioUnit.audioUnit);
+        AudioOutputUnitStop(ac.audioUnit);
         return noErr;
     }
 
     
-	ioData->mBuffers[0].mData = (audioUnit->play->buf + audioUnit->play->pos);
+	ioData->mBuffers[0].mData = (ac->play->buf + ac->play->pos);
 
-    audioUnit->play->pos += inNumberFrames;
+    ac->play->pos += inNumberFrames;
 
-    if (audioUnit->play->pos + inNumberFrames > audioUnit->play->len)
+    if (ac->play->pos + inNumberFrames > ac->play->len)
     {
-        [audioUnit.proc SetTimeTag:@"send" To:*inTimeStamp];
-        memcpy(&(sendtimeTags[count[0]]),inTimeStamp,sizeof(AudioTimeStamp));
-        count[0]++;
-        ioData->mBuffers[0].mData = audioUnit->mute->buf;
-        audioUnit->play->pos -= inNumberFrames;
+        ioData->mBuffers[0].mData = ac->zeroSig->buf;
+        ac->play->pos -= inNumberFrames; //just to prevent an overflow
 
-    }
-    else
-    {
-        //client:
-        //send timestamp to communicator.m sendtimeTags[0].mSampleTime;
+        if([[ac com]connectionState] == CS_ClIENT)
+        {
+            AudioOutputUnitStop(ac.audioUnit);
+            char sTimeStamp[15];
+            sprintf(sTimeStamp,"%f",inTimeStamp->mSampleTime);
+            [[ac com] sendNew:sTimeStamp];
+            NSLog(@"cs");
+        }
     }
 
-    frameLen = inNumberFrames;
     return noErr;
 }
 
 -(OSStatus)audioUnitInit
 {
-    [self sessionInit];
     //bring up the communication channel
-    com = [[communicator alloc] init];
     proc = [[processing alloc] init];
     [proc InitializeArrays];
 
     //prepare an empty frame to mute
-    [self muteSigInit];
-    [self recordBufferInit: 10];
-    //[self sineSigInit];
-    [self testSweepSigInit];
     
     int kOutputBus = 0;
     int kInputBus = 1;
@@ -281,7 +279,7 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
                                   kOutputBus,
                                   &flag, sizeof(flag));
 
-    NSLog(@"output enable io status=%ld",status);
+    //NSLog(@"output enable io status=%ld",status);
     
     //enable recording io
     flag = 1;
@@ -291,7 +289,7 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
                                   kInputBus,
                                   &flag, sizeof(flag));
     
-    NSLog(@"input enable io status=%ld",status);
+    //NSLog(@"input enable io status=%ld",status);
     
     
     AudioStreamBasicDescription audioFormat;
@@ -315,7 +313,7 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
                                   kInputBus,
                                   &audioFormat, sizeof(audioFormat));
 
-    NSLog(@"audioFormat bus =%d, status=%ld",kInputBus,status);
+    //NSLog(@"audioFormat bus =%d, status=%ld",kInputBus,status);
 
     status = AudioUnitSetProperty(audioUnit ,
                                   kAudioUnitProperty_StreamFormat,
@@ -323,7 +321,7 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
                                   kOutputBus,
                                   &audioFormat, sizeof(audioFormat));
     
-    NSLog(@"audioFormat bus =%d, status=%ld",kOutputBus,status);
+    //NSLog(@"audioFormat bus =%d, status=%ld",kOutputBus,status);
 
     status = AudioUnitGetProperty(audioUnit ,
                                   kAudioUnitProperty_StreamFormat,
@@ -331,15 +329,15 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
                                   kInputBus,
                                   &audioFormat, &uiSize);
 
-    NSLog(@"AudioUnitGetPorperty Bus =%d", kInputBus);
-    NSLog(@"mSampleRate =%f", audioFormat.mSampleRate);
-    NSLog(@"mFormatID = %ld", audioFormat.mFormatID);
-    NSLog(@"mFormatFlags =%ld", audioFormat.mFormatFlags);
-    NSLog(@"mBytesPerPacket =%ld", audioFormat.mBytesPerPacket);
-    NSLog(@"mFramesPerPacket =%ld", audioFormat.mFramesPerPacket);
-    NSLog(@"mChannelsPerFrame =%ld", audioFormat.mChannelsPerFrame);
-    NSLog(@"mBitsPerChannel =%ld", audioFormat.mBitsPerChannel);
-    NSLog(@"mReserved =%ld", audioFormat.mReserved);
+    //NSLog(@"AudioUnitGetPorperty Bus =%d", kInputBus);
+    //NSLog(@"mSampleRate =%f", audioFormat.mSampleRate);
+    //NSLog(@"mFormatID = %ld", audioFormat.mFormatID);
+    //NSLog(@"mFormatFlags =%ld", audioFormat.mFormatFlags);
+    //NSLog(@"mBytesPerPacket =%ld", audioFormat.mBytesPerPacket);
+    //NSLog(@"mFramesPerPacket =%ld", audioFormat.mFramesPerPacket);
+    //NSLog(@"mChannelsPerFrame =%ld", audioFormat.mChannelsPerFrame);
+    //NSLog(@"mBitsPerChannel =%ld", audioFormat.mBitsPerChannel);
+    //NSLog(@"mReserved =%ld", audioFormat.mReserved);
 
 
     status = AudioUnitGetProperty(audioUnit ,
@@ -349,15 +347,15 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
                                   &audioFormat, &uiSize);
 
 
-    NSLog(@"AudioUnitGetPorperty Bus =%d", kOutputBus);
-    NSLog(@"mSampleRate =%f", audioFormat.mSampleRate);
-    NSLog(@"mFormatID = %ld", audioFormat.mFormatID);
-    NSLog(@"mFormatFlags =%ld", audioFormat.mFormatFlags);
-    NSLog(@"mBytesPerPacket =%ld", audioFormat.mBytesPerPacket);
-    NSLog(@"mFramesPerPacket =%ld", audioFormat.mFramesPerPacket);
-    NSLog(@"mChannelsPerFrame =%ld", audioFormat.mChannelsPerFrame);
-    NSLog(@"mBitsPerChannel =%ld", audioFormat.mBitsPerChannel);
-    NSLog(@"mReserved =%ld", audioFormat.mReserved);
+    //NSLog(@"AudioUnitGetPorperty Bus =%d", kOutputBus);
+    //NSLog(@"mSampleRate =%f", audioFormat.mSampleRate);
+    //NSLog(@"mFormatID = %ld", audioFormat.mFormatID);
+    //NSLog(@"mFormatFlags =%ld", audioFormat.mFormatFlags);
+    //NSLog(@"mBytesPerPacket =%ld", audioFormat.mBytesPerPacket);
+    //NSLog(@"mFramesPerPacket =%ld", audioFormat.mFramesPerPacket);
+    //NSLog(@"mChannelsPerFrame =%ld", audioFormat.mChannelsPerFrame);
+    //NSLog(@"mBitsPerChannel =%ld", audioFormat.mBitsPerChannel);
+    //NSLog(@"mReserved =%ld", audioFormat.mReserved);
     
     AURenderCallbackStruct callbackStruct;
     callbackStruct.inputProc = &recordingCallback;
@@ -369,7 +367,7 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
                                   kInputBus,
                                   &callbackStruct, sizeof(callbackStruct));
 
-    NSLog(@"set recordingCallback status=%ld",status);
+    //NSLog(@"set recordingCallback status=%ld",status);
 
     
     callbackStruct.inputProc = &playingCallback;
@@ -381,7 +379,7 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
                                   kOutputBus,
                                   &callbackStruct, sizeof(callbackStruct));
    
-    NSLog(@"set playingCallback status=%ld",status);
+    //NSLog(@"set playingCallback status=%ld",status);
 
 
     flag = 0;
@@ -391,16 +389,8 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
                                   kInputBus,
                                   &flag, sizeof(flag));
     
-    NSLog(@"set no allocate status=%ld",status);
+    //NSLog(@"set no allocate status=%ld",status);
 
- 
-    //use the defined record[] as buffer
-
-    recordingBufferList = (AudioBufferList*)malloc(sizeof(AudioBufferList)) ;
-    recordingBufferList->mNumberBuffers = 1;
-    recordingBufferList->mBuffers[0].mData = record.buf;
-    recordingBufferList->mBuffers[0].mNumberChannels = 2;
-    
     return status;
 }
 
@@ -408,18 +398,18 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
 {
     OSStatus status;
     UInt32 uiDataSize;
-    count[0]=0;
-    count[1]=0;
+    //timeTagIndex[0]=0;
+    //timeTagIndex[1]=0;
     
     status = AudioSessionInitialize(NULL, NULL, NULL, self);
-    NSLog(@"session init = %ld",status);
+    //NSLog(@"session init = %ld",status);
  
     UInt32 uiSessionCategory = kAudioSessionCategory_PlayAndRecord;
     status = AudioSessionSetProperty(kAudioSessionProperty_AudioCategory,
                                      sizeof(UInt32),
                                      &uiSessionCategory);
 
-    NSLog(@"set category = %ld",status);
+    //NSLog(@"set category = %ld",status);
      
     UInt32 uiSessionMode = kAudioSessionMode_Measurement;
     //UInt32 uiSessionMode = kAudioSessionMode_Default;
@@ -428,7 +418,7 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
                                      sizeof(UInt32),
                                      &uiSessionMode);
     
-    NSLog(@"set mode = %ld",status);
+    //NSLog(@"set mode = %ld",status);
 
 
     UInt32 uiDefaultSpeaker = kAudioSessionOverrideAudioRoute_Speaker;
@@ -436,7 +426,7 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
                                      sizeof(UInt32),
                                      &uiDefaultSpeaker);
 
-    NSLog(@"set mode = %ld",status);
+    //NSLog(@"set mode = %ld",status);
     
 
 
@@ -460,7 +450,7 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
     CFDictionaryRef cfdRouteDesc;
     uiDataSize = sizeof(CFDictionaryRef);
     status = AudioSessionGetProperty(kAudioSessionProperty_AudioRouteDescription, &uiDataSize, &cfdRouteDesc);
-    NSLog(@"route desc = %ld",status);
+    //NSLog(@"route desc = %ld",status);
     //returns an output and an input array containing dictionarys with route infos
     //if (CFIndex n = CFDictionaryGetCount(cfdRouteDesc))
     if (CFDictionaryGetCount(cfdRouteDesc))
@@ -472,7 +462,7 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
             CFDictionaryRef cfdItem = (CFDictionaryRef)CFArrayGetValueAtIndex(cfaOutputs, i);
             CFStringRef cfsDevice = (CFStringRef)CFDictionaryGetValue(cfdItem, kAudioSession_AudioRouteKey_Type);
             
-            NSLog(@"output device: %@",(NSString*)cfsDevice);
+            //NSLog(@"output device: %@",(NSString*)cfsDevice);
             
             if(!CFStringCompare(cfsDevice, kAudioSessionOutputRoute_BuiltInReceiver, kCFCompareCaseInsensitive))
             {
@@ -495,29 +485,29 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
                                                  uiDataSize,
                                                  &cfsRouteOverwrite);
                 
-                NSLog(@"route overwrite = %ld",status);
+                //NSLog(@"route overwrite = %ld",status);
 
 
                 //kAudioSessionProperty_InputSource
                 
             }
         }
-        CFArrayRef cfaInputs = (CFArrayRef)CFDictionaryGetValue(cfdRouteDesc, kAudioSession_AudioRouteKey_Inputs);
+        //CFArrayRef cfaInputs = (CFArrayRef)CFDictionaryGetValue(cfdRouteDesc, kAudioSession_AudioRouteKey_Inputs);
         
-        for(CFIndex i = 0, c = CFArrayGetCount(cfaInputs); i < c; i++)
-        {
-            CFDictionaryRef cfdItem = (CFDictionaryRef)CFArrayGetValueAtIndex(cfaInputs, i);
-            CFStringRef cfsDevice = (CFStringRef)CFDictionaryGetValue(cfdItem, kAudioSession_AudioRouteKey_Type);
+        //for(CFIndex i = 0, c = CFArrayGetCount(cfaInputs); i < c; i++)
+        //{
+        //  CFDictionaryRef cfdItem = (CFDictionaryRef)CFArrayGetValueAtIndex(cfaInputs, i);
+        //    CFStringRef cfsDevice = (CFStringRef)CFDictionaryGetValue(cfdItem, kAudioSession_AudioRouteKey_Type);
             
-            NSLog(@"input device: %@",(NSString*)cfsDevice);
-        }
+            //NSLog(@"input device: %@",(NSString*)cfsDevice);
+        //}
     }
     
     CFArrayRef cfaOutputData;
     uiDataSize = sizeof(CFArrayRef);
     status = AudioSessionGetProperty(kAudioSessionProperty_OutputDestinations, &uiDataSize, &cfaOutputData);
    
-    NSLog(@"destinations get status = %ld = %4.4s",status,(char*)&status);
+    //NSLog(@"destinations get status = %ld = %4.4s",status,(char*)&status);
 
     if (status == noErr)
     {
@@ -532,12 +522,12 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
             status = CFNumberGetValue(cfnRouteId, kCFNumberSInt32Type, &siRouteId);
             if (status == noErr)
             {
-                NSLog(@"%ld, routeId = %ld",i,siRouteId);
+                //NSLog(@"%ld, routeId = %ld",i,siRouteId);
             }
             
-            CFStringRef cfsRouteDescription = (CFStringRef) CFDictionaryGetValue(cfdAudioOutput, kAudioSession_OutputDestinationKey_Description);
+            //CFStringRef cfsRouteDescription = (CFStringRef) CFDictionaryGetValue(cfdAudioOutput, kAudioSession_OutputDestinationKey_Description);
             
-            NSLog(@"%ld, description = %@",i,(NSString*)cfsRouteDescription);
+            //NSLog(@"%ld, description = %@",i,(NSString*)cfsRouteDescription);
         }
         
     
@@ -549,50 +539,50 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
     dData = SAMPLERATE;
     uiDataSize = sizeof(double);
     status = AudioSessionSetProperty(kAudioSessionProperty_PreferredHardwareSampleRate, uiDataSize, &dData);
-    NSLog(@"set perferred samplerate = %f, status = %ld = %4.4s\n",dData, status,(char*)&status);
+    //NSLog(@"set perferred samplerate = %f, status = %ld = %4.4s\n",dData, status,(char*)&status);
     
     
     dData = 0;
     uiDataSize = sizeof(double);
     status = AudioSessionGetProperty(kAudioSessionProperty_PreferredHardwareSampleRate, &uiDataSize, &dData);
-    NSLog(@"perferred samplerate = %f, status = %ld = %4.4s\n",dData, status,(char*)&status);
+    //NSLog(@"perferred samplerate = %f, status = %ld = %4.4s\n",dData, status,(char*)&status);
 
 /*
     fData = 0.022f;
     uiDataSize = sizeof(Float32);
     status = AudioSessionSetProperty(kAudioSessionProperty_PreferredHardwareIOBufferDuration, uiDataSize, &fData);
-    NSLog(@"set perferred buffer duration = %f, status = %ld = %4.4s\n",fData, status,(char*)&status);
+    //NSLog(@"set perferred buffer duration = %f, status = %ld = %4.4s\n",fData, status,(char*)&status);
   */  
 
     fData = 0;
     uiDataSize = sizeof(Float32);
     status = AudioSessionGetProperty(kAudioSessionProperty_PreferredHardwareIOBufferDuration, &uiDataSize, &fData);
-    NSLog(@"perferred buffer duration = %f, status = %ld = %4.4s\n",fData, status,(char*)&status);
+    //NSLog(@"perferred buffer duration = %f, status = %ld = %4.4s\n",fData, status,(char*)&status);
     
     dData = 0;
     uiDataSize = sizeof(double);
     status = AudioSessionGetProperty(kAudioSessionProperty_CurrentHardwareSampleRate, &uiDataSize, &dData);
-    NSLog(@"current hwd samplerate = %f, status = %ld = %4.4s\n",dData, status,(char*)&status);
+    //NSLog(@"current hwd samplerate = %f, status = %ld = %4.4s\n",dData, status,(char*)&status);
 
     fData = 0;
     uiDataSize = sizeof(Float32);
     status = AudioSessionGetProperty(kAudioSessionProperty_CurrentHardwareIOBufferDuration, &uiDataSize, &fData);
-    NSLog(@"current hwd buffer duration = %f, status = %ld = %4.4s\n",fData, status,(char*)&status);
+    //NSLog(@"current hwd buffer duration = %f, status = %ld = %4.4s\n",fData, status,(char*)&status);
    
     fData = 0;
     uiDataSize = sizeof(Float32);
     status = AudioSessionGetProperty(kAudioSessionProperty_InputGainScalar, &uiDataSize, &fData);
-    NSLog(@"input gain scalar = %f, status = %ld = %4.4s\n",fData, status,(char*)&status);
+    //NSLog(@"input gain scalar = %f, status = %ld = %4.4s\n",fData, status,(char*)&status);
 
     fData = 0;
     uiDataSize = sizeof(Float32);
     status = AudioSessionSetProperty(kAudioSessionProperty_InputGainScalar, uiDataSize, &fData);
-    NSLog(@"input gain scalar = %f, status = %ld = %4.4s\n",fData, status,(char*)&status);
+    //NSLog(@"input gain scalar = %f, status = %ld = %4.4s\n",fData, status,(char*)&status);
 
     UInt32 uiData = 0;
     uiDataSize = sizeof(UInt32);
     status = AudioSessionGetProperty(kAudioSessionProperty_InputGainAvailable, &uiDataSize, &uiData);
-    NSLog(@"input gain available = %ld, status = %ld = %4.4s\n",uiData, status,(char*)&status);
+    //NSLog(@"input gain available = %ld, status = %ld = %4.4s\n",uiData, status,(char*)&status);
     
     
     /*
@@ -630,17 +620,17 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
     uiData = 0;
     uiDataSize = sizeof(uiData);
     status = AudioSessionGetProperty(kAudioSessionProperty_AudioCategory, &uiDataSize, &uiData);
-    NSLog(@"category get status = %4.4s, data = %4.4s",(char*)&status,(char*)&uiData);
+    //NSLog(@"category get status = %4.4s, data = %4.4s",(char*)&status,(char*)&uiData);
 
     fData = 0;
     uiDataSize = sizeof(fData);
     status = AudioSessionGetProperty(kAudioSessionProperty_CurrentHardwareOutputLatency, &uiDataSize, &fData);
-    NSLog(@"hwd output latency status = %4.4s, data = %f",(char*)&status,fData);
+    //NSLog(@"hwd output latency status = %4.4s, data = %f",(char*)&status,fData);
 
     fData = 0;
     uiDataSize = sizeof(fData);
     status = AudioSessionGetProperty(kAudioSessionProperty_CurrentHardwareInputLatency, &uiDataSize, &fData);
-    NSLog(@"hwd input latency status = %4.4s, data = %f",(char*)&status,fData);
+    //NSLog(@"hwd input latency status = %4.4s, data = %f",(char*)&status,fData);
     
     status = AudioSessionSetActive(true);
     NSLog(@"set active = %ld",status);
@@ -653,58 +643,88 @@ static OSStatus recordingCallback(void *inRefCon,
                                   UInt32 inNumberFrames,
                                   AudioBufferList *ioData)
 {
-    test[testIndex] = 'r';
-    testIndex ++;
-    
-    UInt32 inBusNumberX = inBusNumber;
-    UInt32 inNumberFramesX = inNumberFrames;
 
+    audioController* ac = (audioController*)inRefCon;
 
-    int dataSize = inNumberFrames * sizeof(SInt32); // 16bit twice
-    //NSLog(@"recordingCallback");
-
-    OSStatus status;
-
-    audioController* ru = (audioController*)inRefCon;
-    
-    AudioBufferList *bufferList = ru.recordingBufferList;
-    bufferList->mBuffers[0].mDataByteSize = dataSize;
-
-    if (inNumberFrames > FRAMESIZE)
+    //CS_CLIENT does no recording
+    if ([[ac com]connectionState] == CS_ClIENT)
     {
-        NSLog(@"inNumberFrames = %ld",inNumberFrames);
-        AudioOutputUnitStop(ru.audioUnit);
         return noErr;
     }
-
-    if (ru->record.pos+inNumberFrames <= ru->record.len)
+    else if ([[ac com]connectionState] == CS_SERVER)
     {
-        [ru.proc SetTimeTag:@"receive" To:*inTimeStamp];
-        memcpy(&(receivetimeTags[count[1]]),inTimeStamp,sizeof(AudioTimeStamp));
-        count[1]++;
-        bufferList->mBuffers[0].mData = ru->record.buf+ru->record.pos;
-        //AudioUnitRenderActionFlags ioActionFlags;
-        status = AudioUnitRender(ru.audioUnit,
+        int dataSize = inNumberFrames * sizeof(SInt32); // 16bit twice
+        //NSLog(@"recordingCallback");
+
+        OSStatus status;
+
+        AudioBufferList *bufferList = ac.recordingBufferList;
+        bufferList->mBuffers[0].mDataByteSize = dataSize;
+
+        if (inNumberFrames > FRAMESIZE)
+        {
+            NSLog(@"error inNumberFrames = %ld",inNumberFrames);
+            AudioOutputUnitStop(ac.audioUnit);
+            return -1;
+        }
+
+        if (ac->recordBuf->pos+inNumberFrames > ac->recordBuf->len)
+        {
+            ac->recordBuf->pos = 0; //ringbuffer
+        }
+
+        bufferList->mBuffers[0].mData = ac->recordBuf->buf+ac->recordBuf->pos;
+        status = AudioUnitRender(ac.audioUnit,
                                  ioActionFlags,
                                  inTimeStamp,
                                  inBusNumber,
                                  inNumberFrames,
                                  bufferList);
-        ru->record.pos += inNumberFrames;
+        ac->recordBuf->pos += inNumberFrames;
+
+        [ac.proc SetTimeTag:@"receive" To:*inTimeStamp];
     
-        if (ru->record.pos+inNumberFrames > ru->record.len)
+
+
+    }
+    else //HEADPHONE
+    {
+        int dataSize = inNumberFrames * sizeof(SInt32); // 16bit twice
+        //NSLog(@"recordingCallback");
+
+        OSStatus status;
+
+        AudioBufferList *bufferList = ac.recordingBufferList;
+        bufferList->mBuffers[0].mDataByteSize = dataSize;
+
+        if (inNumberFrames > FRAMESIZE)
         {
-            NSLog(@"recording stoped");
-            NSLog(@"AudioUnitRender status = %ld",status);
-            NSLog(@"frame index = %ld",ru->record.pos);
-            NSLog(@"mDataByteSize = %ld",bufferList->mBuffers[0].mDataByteSize);
-            NSLog(@"mNumberChannels = %ld",bufferList->mBuffers[0].mNumberChannels);
-            NSLog(@"inNumberFramesX = %ld", inNumberFramesX);
-            NSLog(@"inBusNumberX = %ld", inBusNumberX);
-            NSLog(@"ioActionFlags = %ld",*ioActionFlags);
+            NSLog(@"error inNumberFrames = %ld",inNumberFrames);
+            AudioOutputUnitStop(ac.audioUnit);
+            return -1;
+        }
+
+        if (ac->recordBuf->pos+inNumberFrames <= ac->recordBuf->len)
+        {
+            [ac.proc SetTimeTag:@"receive" To:*inTimeStamp];
+
+            bufferList->mBuffers[0].mData = ac->recordBuf->buf+ac->recordBuf->pos;
+            //AudioUnitRenderActionFlags ioActionFlags;
+            status = AudioUnitRender(ac.audioUnit,
+                                     ioActionFlags,
+                                     inTimeStamp,
+                                     inBusNumber,
+                                     inNumberFrames,
+                                     bufferList);
+            ac->recordBuf->pos += inNumberFrames;
+
+            if (ac->recordBuf->pos+inNumberFrames > ac->recordBuf->len)
+            {
+                [ac stop];
+                NSLog(@"recording stoped");
+            }
         }
     }
-    frameLen = inNumberFrames;
     return noErr;
 }
 
@@ -715,31 +735,24 @@ static OSStatus recordingCallback(void *inRefCon,
     SInt32 KKFSize=2*play->len;
     SInt64* AKkf;
     AKkf = (SInt64*)malloc(KKFSize*sizeof(SInt64));
-    KKF(record.buf, play->buf, AKkf, play->len);
+    KKF(recordBuf->buf, play->buf, AKkf, play->len);
 
     UInt32 FirstPeak=MaximumSuche(AKkf, 0, KKFSize);
     NSLog(@"erster Peak bei %li, entspricht NRL bei 1 Geräte System",FirstPeak);
     
-    Float64 FirstPeakSample;
-    FirstPeakSample=GetSample(FirstPeak,record.len, receivetimeTags);
-    NSLog(@"Empfangsstart des ersten Signales bei Sample: %f", FirstPeakSample);
     
     UInt32 Offset=40;
     UInt32 SecondPeak=MaximumSuche(AKkf,FirstPeak+Offset,KKFSize);
     NSLog(@"zweiter Peak bei %li, entspricht Ziel bei 1 Geräte System (offset für Mindestentfernung %li Samples)",SecondPeak,Offset);
 
-    Float64 SecondPeakSample;
-    SecondPeakSample=GetSample(SecondPeak,record.len, receivetimeTags);
-    NSLog(@"Empfangsstart des ersten Signales bei Sample: %f", SecondPeakSample);
-
     SInt64* AKkf2;
-    AKkf2 = (SInt64*)malloc((2*play->len+record.len)*sizeof(SInt64));
+    AKkf2 = (SInt64*)malloc((2*play->len+recordBuf->len)*sizeof(SInt64));
     
-    UInt32 RingKKFPeak=MaximumSuche(AKkf2, 0, 2*play->len+record.len);
+    UInt32 RingKKFPeak=MaximumSuche(AKkf2, 0, 2*play->len+recordBuf->len);
     NSLog(@"RingKKFPeak bei %li",RingKKFPeak);
 
-    [proc GetPointerReceive:record.buf Send:play->buf Len:play->len];
-    [proc SetLatency:[proc GetTimeTag:@"send" at:0]];
+    [proc GetPointerReceive:recordBuf->buf Send:play->buf Len:play->len];
+    [proc SetLatency:[proc GetTimeTag:@"send" at:1]];
     [proc CalculateDistance:[proc GetTimeTag:@"send" at:0]];
     
        
@@ -750,10 +763,10 @@ static OSStatus recordingCallback(void *inRefCon,
     char *sOut = (char*)malloc(2000);
     char *sOutPtr = sOut;
     int len = 0;
-    for (int i=0; i< record.len; i++)
+    for (int i=0; i< recordBuf->len; i++)
     {
         SInt16 TMP;
-        TMP = ((SInt16*)record.buf)[2*i+1];
+        TMP = ((SInt16*)recordBuf->buf)[2*i+1];
         sprintf(sOutPtr,"%i,",TMP);
         len += strlen(sOutPtr);
         sOutPtr = sOut + len;
@@ -832,7 +845,7 @@ static OSStatus recordingCallback(void *inRefCon,
     len = 0;
     memset(sOut,0,2000);
     sOutPtr=sOut;
-    for (int i=0; i< 2*play->len+record.len; i++)
+    for (int i=0; i< 2*play->len+recordBuf->len; i++)
     {
         sprintf(sOutPtr,"%lli,",AKkf2[i]);
         len += strlen(sOutPtr);
@@ -907,34 +920,24 @@ static OSStatus recordingCallback(void *inRefCon,
 
 }
 
--(void)mute:(UInt32)flag
-{
-    if (flag == 0)
-    {
-        play = mute;
-    }
-    else
-    {
-        play = testSweep;
-    }
-    NSLog(@"flag = %ld",flag);
-}
 
 -(OSStatus)start
 {
     play->pos = 0;
-    OSStatus status = 0;
+    OSStatus status;
     if (recordingBufferList)
     {
-        record.pos = 0;
-        recordingBufferList->mBuffers[0].mData = record.buf;
-        status = AudioOutputUnitStart(audioUnit);
+        recordBuf->pos = 0;
+        recordingBufferList->mBuffers[0].mData = recordBuf->buf;
         NSLog(@"audioUnit started status = %ld", status);
+        status = AudioOutputUnitStart(audioUnit);
     }
     else
     {
         NSLog(@"audioUnit start error = %ld", status);
     }
+    tfOutput.text = @"start";
+
     return status;
 }
 
@@ -942,9 +945,16 @@ static OSStatus recordingCallback(void *inRefCon,
 {
     OSStatus status;
     status = AudioOutputUnitStop(audioUnit);
+    tfOutput.text = @"stop";
     NSLog(@"audioUnit stoped status = %ld", status);
-    NSLog(@"frameLen = %d",frameLen);
     return status;
 }
+
+- (SInt16)setOutput:(UITextField**)tf
+{
+    tfOutput = *tf;
+    return 0;
+}
+
 
 @end

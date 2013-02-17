@@ -17,6 +17,9 @@ const SInt16 PORT = 2000;
 @synthesize outputStream;
 @synthesize host;
 @synthesize pSock;
+@synthesize pNativeSock;
+@synthesize connectionState;
+
 
 -(void)dealloc
 {
@@ -37,8 +40,64 @@ const SInt16 PORT = 2000;
 
     [inputStream scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
     [outputStream scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+    
 
     NSLog(@"communicator started");
+}
+
+static void socketCallbackClient(CFSocketRef s, CFSocketCallBackType type, CFDataRef address, const void *data, void *info)
+{
+    NSLog(@"socketCallback %ld called", (SInt32)s);
+    //get the object pointer from the context
+    CFSocketContext cfSC;
+    CFSocketGetContext(s, &cfSC);
+    communicator *localCom = (communicator*)cfSC.info;
+
+    switch(type)
+    {
+        case kCFSocketReadCallBack:
+        {
+            NSLog(@"kCFSocketReadCallBack");
+            const UInt16 BUFSIZE = 15;
+            char sBuf[BUFSIZE];
+            memset(sBuf,0,BUFSIZE);
+            int iRet = 0;
+            iRet = recv(localCom.pNativeSock, sBuf, BUFSIZE, 0);
+            if (iRet == 0)
+            {
+                CFSocketInvalidate(s);
+                s = NULL;
+                NSLog(@"remote socket closed");
+                break;
+            }
+
+            NSLog(@"recv: %s",sBuf);
+            //send one back
+            struct timeval tv;
+            memset(&tv, 0, sizeof(struct timeval));
+            time_t siTimestamp = time(NULL);
+            sprintf(sBuf, "%ld", siTimestamp);
+            send(localCom.pNativeSock, sBuf, strlen(sBuf), 0);
+            NSLog(@"send: %s",sBuf);
+            break;
+        }
+        case kCFSocketNoCallBack:
+            NSLog(@"kCFSocketNoCallBack");
+            break;
+        case kCFSocketAcceptCallBack:
+            NSLog(@"kCFSocketAcceptCallBack");
+            break;
+        case kCFSocketDataCallBack:
+            NSLog(@"kCFSocketDataCallBack");
+            break;
+        case kCFSocketConnectCallBack:
+            NSLog(@"kCFSocketConnectCallBack");
+            break;
+        case kCFSocketWriteCallBack:
+            NSLog(@"kCFSocketWriteCallBack");
+            break;
+    };
+
 }
 
 
@@ -51,8 +110,34 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
             NSLog(@"kCFSocketNoCallBack");
             break;
         case kCFSocketReadCallBack:
+        {
             NSLog(@"kCFSocketReadCallBack");
+            int pNativeSock = CFSocketGetNative(s);
+            const UInt16 BUFSIZE = 15;
+            char sBuf[BUFSIZE];
+            memset(sBuf,0,BUFSIZE);
+            struct timeval tv;
+            memset(&tv, 0, sizeof(struct timeval));
+            tv.tv_sec = 30;
+            //recv the timestamp
+            recv(pNativeSock, sBuf, BUFSIZE, 0);
+            if (strlen(sBuf) == 0)
+            {
+                CFSocketInvalidate(s);
+                s = NULL;
+                NSLog(@"remote socket closed");
+                break;
+            }
+
+            NSLog(@"recv: %s",sBuf);
+            //send one back
+            memset(&tv, 0, sizeof(struct timeval));
+            time_t siTimestamp = time(NULL);
+            sprintf(sBuf, "%ld", siTimestamp);
+            send(pNativeSock, sBuf, strlen(sBuf), 0);
+            NSLog(@"send: %s",sBuf);
             break;
+        }
         case kCFSocketAcceptCallBack:
         {
             //server
@@ -75,12 +160,6 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
             memset(sBuf, 0, BUFSIZE);
             recv(pNativeSock, sBuf, BUFSIZE, 0);
             NSLog(@"recv = %s",sBuf);
-
-            siTimestamp = time(NULL);
-            sprintf(sBuf, "%ld", siTimestamp);
-            //on connect send the timestamp
-            send(pNativeSock, sBuf, strlen(sBuf), 0);
-            NSLog(@"send = %s",sBuf);
             
             break;
         }
@@ -90,27 +169,6 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
         case kCFSocketConnectCallBack:
         {
             NSLog(@"kCFSocketConnectCallBack");
-            int pNativeSock = CFSocketGetNative(s);
-            const UInt16 BUFSIZE = 15;
-            char sBuf[BUFSIZE];
-            memset(sBuf,0,BUFSIZE);
-            struct timeval tv;
-            memset(&tv, 0, sizeof(struct timeval));
-            tv.tv_sec = 30;
-            setsockopt(pNativeSock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(struct timeval));
-            //recv the timestamp
-            recv(pNativeSock, sBuf, BUFSIZE, 0);
-            NSLog(@"recv: %s",sBuf);
-            //send one back
-            memset(&tv, 0, sizeof(struct timeval));
-            time_t siTimestamp = time(NULL);
-            sprintf(sBuf, "%ld", siTimestamp);
-            send(pNativeSock, sBuf, strlen(sBuf), 0);
-            NSLog(@"send: %s",sBuf);
-
-            recv(pNativeSock, sBuf, BUFSIZE, 0);
-            NSLog(@"recv: %s",sBuf);
-            
             break;
         }
         case kCFSocketWriteCallBack:
@@ -123,12 +181,21 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
 - (SInt16)serverStart
 {
     const CFSocketContext *context = NULL;
-    
+
+    //kCFSocketNoCallBack = 0,
+    //kCFSocketReadCallBack = 1,
+    //kCFSocketAcceptCallBack = 2,
+    //kCFSocketDataCallBack = 3,
+    //kCFSocketConnectCallBack = 4,
+    //kCFSocketWriteCallBack = 8
+
+    CFOptionFlags callBackTypes = kCFSocketAcceptCallBack;
+
     CFSocketRef pSockListen = CFSocketCreate(kCFAllocatorDefault,
                                        AF_INET,
                                        SOCK_STREAM,
                                        IPPROTO_TCP,
-                                       kCFSocketAcceptCallBack,
+                                       callBackTypes,
                                        &callout,
                                        context);
 
@@ -147,6 +214,8 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
     setsockopt(CFSocketGetNative(pSockListen), SOL_SOCKET, SO_REUSEADDR,
                (void *)&flag, sizeof(flag));
 
+    
+
     // Set the port and address we want to listen on
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
@@ -162,6 +231,7 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
     {
         NSLog(@"error CFSocketSetAddress");
         CFRelease(pSockListen);
+        pSockListen = NULL;
         return -1;
     }
 
@@ -171,6 +241,7 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
     CFRunLoopAddSource(CFRunLoopGetCurrent(), sourceRef, kCFRunLoopCommonModes);
     CFRelease(sourceRef);
 
+    connectionState = CS_SERVER;
     NSLog(@"server started");
 
     return 0;
@@ -180,14 +251,31 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
 - (SInt16)clientConnect
 {
     
-    const CFSocketContext *context = NULL;
+    CFSocketContext clientContext = { 0,self,NULL,NULL,NULL};
+    //typedef struct {
+    //    CFIndex	version;
+    //    void *	info;
+    //    const void *(*retain)(const void *info);
+    //    void	(*release)(const void *info);
+    //    CFStringRef	(*copyDescription)(const void *info);
+    //} CFSocketContext;
 
+    //kCFSocketNoCallBack = 0,
+    //kCFSocketReadCallBack = 1,
+    //kCFSocketAcceptCallBack = 2,
+    //kCFSocketDataCallBack = 3,
+    //kCFSocketConnectCallBack = 4,
+    //kCFSocketWriteCallBack = 8
+
+    CFOptionFlags callBackTypes = kCFSocketReadCallBack;
+    
     pSock = CFSocketCreate(kCFAllocatorDefault,
                                        AF_INET,
                                        SOCK_STREAM,
                                        IPPROTO_TCP,
-                                       kCFSocketConnectCallBack,
-                                       callout, context);
+                                       callBackTypes,
+                                       socketCallbackClient,
+                                        &clientContext);
 
     NSLog(@"socket %ld", (SInt32)pSock);
 
@@ -198,6 +286,12 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
     }
 
     NSLog(@"socket created successfull");
+
+    pNativeSock = CFSocketGetNative(pSock);
+    struct timeval tv;
+    memset(&tv, 0, sizeof(struct timeval));
+    tv.tv_sec = 30;
+    setsockopt(pNativeSock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(struct timeval));
 
     // Set the port and address we want to listen on
     char sAddr[16];
@@ -212,34 +306,75 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
     addr.sin_addr.s_addr = inet_addr(sAddr);
                            
     CFDataRef cfdAddr = CFDataCreate(NULL, (UInt8 *)&addr, sizeof(struct sockaddr_in));
+    CFTimeInterval timeout = 30.0;
 
     CFSocketError status = CFSocketConnectToAddress (pSock,
                                                      cfdAddr,
-                                                     -1);
+                                                     timeout);
 
 
     if (status != kCFSocketSuccess)
     {
         NSLog(@"error CFSocketConnectToAddress");
         CFRelease(pSock);
+        pSock = NULL;
         return -1;
     }
-
-    CFRunLoopSourceRef sourceRef =
-    CFSocketCreateRunLoopSource(kCFAllocatorDefault, pSock, 0);
-
-    CFRunLoopAddSource(CFRunLoopGetCurrent(), sourceRef, kCFRunLoopCommonModes);
-    CFRelease(sourceRef);
+    
+    //client socket is blocking
+    //CFRunLoopSourceRef sourceRef =
+    //CFSocketCreateRunLoopSource(kCFAllocatorDefault, pSock, 0);
+    
+    //CFRunLoopAddSource(CFRunLoopGetCurrent(), sourceRef, kCFRunLoopCommonModes);
+    //CFRelease(sourceRef);
 
     return 0;
 }
 
+- (SInt16)sendNew: (char*)msg
+{
+    int iRet = 0;
+    if (connectionState)
+    {
+        iRet = send(pNativeSock, msg, strlen(msg), 0);
+    }
+    if (iRet > 0)
+    {
+        return 0;
+    }
+    return iRet;
+}
+
+- (SInt16)recvNew: (char*)sBuf : (UInt16*)uiLen
+{
+    size_t iRet = 0;
+    if (connectionState)
+    {
+        iRet = recv(pNativeSock, sBuf, *uiLen, 0);
+    }
+    
+    if (iRet > 0)
+    {
+        *uiLen = iRet;
+        return 0;
+    }
+
+    *uiLen = 0;
+    return iRet;
+}
 
 
-- (void)setHost: (CFStringRef)ip
+
+
+- (void)setHost1: (CFStringRef)ip
 {
     NSLog(@"set ip");
     host = ip;
+}
+
+- (void)dummy
+{
+    NSLog(@"dummy");
 }
 
 
@@ -284,6 +419,7 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
 - (void)close
 {
     CFSocketInvalidate(pSock);
+    pSock = NULL;
     NSLog(@"socket closed");
 }
 
