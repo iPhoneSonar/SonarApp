@@ -108,10 +108,7 @@
 - (IBAction)backgroundTouched:(id)sender
 {
     [tf1 resignFirstResponder];
-<<<<<<< HEAD
-=======
     [tf2 resignFirstResponder];
->>>>>>> added audiocontroller to appDelegate
     [tfIp resignFirstResponder];
     //insert start here for start at Background touch
 }
