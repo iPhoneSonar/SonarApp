@@ -18,6 +18,7 @@
 - (IBAction)switchToConfigView:(id)sender
 {
     trViewController *trView=[[trViewController alloc] initWithNibName:nil bundle:nil];
+    trView.audioController=self.audioController;
     [self presentModalViewController:trView animated:NO];
 }
 
@@ -34,7 +35,6 @@
 {
     [super viewDidLoad];
     // Do any additional setup after loading the view from its nib.
-    [audioController audioUnitInit];
 }
 
 - (void)didReceiveMemoryWarning
@@ -45,7 +45,6 @@
 
 - (IBAction)startMeasurement:(id)sender
 {
-    [audioController recordBufferInitSamples];
     [audioController start];
     self.tf1.text = @"started";
 }
@@ -54,6 +53,7 @@
     [tf1 release];
     [super dealloc];
 }
+
 - (void)viewDidUnload {
     [self setTf1:nil];
     [super viewDidUnload];
