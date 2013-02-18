@@ -787,15 +787,12 @@ static OSStatus recordingCallback(void *inRefCon,
         // to package the frame data check the  size of the outStr
         if (len > 1990)
         {
-            if (com.host) //short test assumes that the network is initialized
-            {
                 sOutPtr[len] = 0;
                 outStr = [NSString stringWithFormat:@"%s\n",sOut];
                 [com send:outStr];
                 sOutPtr = sOut;
                 len = 0;
                 memset(sOut,0,2000);
-            }
         }
     }
     //send the rest of the content if there is
@@ -827,15 +824,12 @@ static OSStatus recordingCallback(void *inRefCon,
         // to package the frame data check the  size of the outStr
         if (len > 1990)
         {
-            if (com.host) //short test assumes that the network is initialized
-            {
                 sOutPtr[len] = 0;
                 outStr = [NSString stringWithFormat:@"%s\n",sOut];
                 [com send:outStr];
                 sOutPtr = sOut;
                 len = 0;
                 memset(sOut,0,2000);
-            }
         }
     }
     //send the rest of the content if there is
@@ -867,15 +861,12 @@ static OSStatus recordingCallback(void *inRefCon,
         // to package the frame data check the  size of the outStr
         if (len > 1990)
         {
-            if (com.host) //short test assumes that the network is initialized
-            {
                 sOutPtr[len] = 0;
                 outStr = [NSString stringWithFormat:@"%s\n",sOut];
                 [com send:outStr];
                 sOutPtr = sOut;
                 len = 0;
                 memset(sOut,0,2000);
-            }
         }
     }
     //send the rest of the content if there is
@@ -905,15 +896,12 @@ static OSStatus recordingCallback(void *inRefCon,
         // to package the frame data check the  size of the outStr
         if (len > 1990)
         {
-            if (com.host) //short test assumes that the network is initialized
-            {
                 sOutPtr[len] = 0;
                 outStr = [NSString stringWithFormat:@"%s\n",sOut];
                 [com send:outStr];
                 sOutPtr = sOut;
                 len = 0;
                 memset(sOut,0,2000);
-            }
         }
     }
     //send the rest of the content if there is
