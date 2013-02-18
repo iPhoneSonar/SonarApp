@@ -10,6 +10,8 @@
 
 
 const SInt16 PORT = 2000;
+const SInt16 DEBUG_PORT = 2002;
+const CFStringRef DEBUG_HOST = (CFStringRef)@"192.168.173.1";
 
 @implementation communicator
 
@@ -21,6 +23,12 @@ const SInt16 PORT = 2000;
 @synthesize connectionState;
 
 
+-(communicator*)init
+{
+    connectionState = CS_DISCONNECTED;
+    return self;
+}
+
 -(void)dealloc
 {
     CFRelease(inputStream);
@@ -31,10 +39,10 @@ const SInt16 PORT = 2000;
 
 - (void)initNetworkCom
 {
-    NSLog(@"init network");
+    NSLog(@"init debug network");
     CFReadStreamRef readStream;
     CFWriteStreamRef writeStream;
-    CFStreamCreatePairWithSocketToHost(NULL, host, PORT, &readStream, &writeStream);
+    CFStreamCreatePairWithSocketToHost(NULL, DEBUG_HOST, DEBUG_PORT, &readStream, &writeStream);
     inputStream = (NSInputStream *)readStream;
     outputStream = (NSOutputStream *)writeStream;
 
@@ -65,20 +73,11 @@ static void socketCallbackClient(CFSocketRef s, CFSocketCallBackType type, CFDat
             iRet = recv(localCom.pNativeSock, sBuf, BUFSIZE, 0);
             if (iRet == 0)
             {
-                CFSocketInvalidate(s);
-                s = NULL;
-                NSLog(@"remote socket closed");
+                NSLog(@"iRet == 0");
                 break;
             }
 
             NSLog(@"recv: %s",sBuf);
-            //send one back
-            struct timeval tv;
-            memset(&tv, 0, sizeof(struct timeval));
-            time_t siTimestamp = time(NULL);
-            sprintf(sBuf, "%ld", siTimestamp);
-            send(localCom.pNativeSock, sBuf, strlen(sBuf), 0);
-            NSLog(@"send: %s",sBuf);
             break;
         }
         case kCFSocketNoCallBack:
@@ -324,12 +323,13 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
     connectionState = CS_ClIENT;
     
     //client socket is blocking
-    //CFRunLoopSourceRef sourceRef =
-    //CFSocketCreateRunLoopSource(kCFAllocatorDefault, pSock, 0);
+    CFRunLoopSourceRef sourceRef =
+    CFSocketCreateRunLoopSource(kCFAllocatorDefault, pSock, 0);
     
-    //CFRunLoopAddSource(CFRunLoopGetCurrent(), sourceRef, kCFRunLoopCommonModes);
-    //CFRelease(sourceRef);
+    CFRunLoopAddSource(CFRunLoopGetCurrent(), sourceRef, kCFRunLoopCommonModes);
+    CFRelease(sourceRef);
 
+    NSLog(@"clientConnected");
     return 0;
 }
 
@@ -374,12 +374,6 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
     host = ip;
 }
 
-- (void)dummy
-{
-    NSLog(@"dummy");
-}
-
-
 - (void)send:(NSString*)msg
 {
     bool flagWasOpen = true;
@@ -419,6 +413,13 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
 }
 
 - (void)close
+{
+    [inputStream close];
+    [outputStream close];
+    NSLog(@"stream closed");
+}
+
+- (void)closeNew
 {
     CFSocketInvalidate(pSock);
     pSock = NULL;

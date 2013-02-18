@@ -32,8 +32,26 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
 
 - (audioController*)init
 {
-    com = [communicator alloc];
+    com = [[communicator alloc] init];
     proc = [processing alloc];
+
+
+    if([self sendSigInit])
+    {
+        NSLog(@"error sendSigInit");
+    }
+    if([self zeroSigInit])
+    {
+         NSLog(@"error zeroSigInit");
+    }
+    if([self recordBufferInitSamples])
+    {
+         NSLog(@"error recordBufferInitSamples");;
+    }
+
+    [self sessionInit];
+    [self audioUnitInit];
+    
     return self;
 }
 
@@ -50,27 +68,12 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
 
 -(SInt16)initClient
 {
+    NSLog(@"initClient");
     if([com clientConnect])
     {
         return -1;
     }
-    if([self sendSigInit])
-    {
-        return -1;
-    }
-    if([self zeroSigInit])
-    {
-        return -1;
-    }
-    if([self recordBufferInitSamples])
-    {
-        return -1;
-    }
-
-    [self sessionInit];
-    [self audioUnitInit];
-
-
+    
     //send chirp on gui screen click -> button event (on start button)
     //tcp transmitt timestamp -> send in playing callback
     //wait for tcp transmitted distance -> handled in
@@ -78,49 +81,26 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
     return 0;
 }
 
--(SInt16)initDebug
-{
-    if([self sendSigInit])
-    {
-        return -1;
-    }
-    if([self zeroSigInit])
-    {
-        return -1;
-    }
-    if([self recordBufferInitSamples])
-    {
-        return -1;
-    }
-
-    [self sessionInit];
-    [self audioUnitInit];
-    
-    [com initNetworkCom];
-    return 0;
-}
-
-
 -(SInt16)initServer
 {
+    NSLog(@"initServer");
+    if([com serverStart])
+    {
+        return -1;
+    }    
+
     //tcp server starten
-    //prepare chirp
-    //playingcallback mute
-    //init ringbuffer
-    //wait for timestamp
+
+    //playingcallback mute <- done by decition in playingCallback
+    //init ringbuffer <- pointer returning pointer on overflow in recordingCallback
+    //wait for timestamp <- done in acceptcallback
+
     //calibration
     //save latency
     //gui show ready
     //calcDistance
     //gui show distance
     //tcp tansmitt distance
-    return -1;
-}
-
-
--(SInt16)initHeadphone
-{
-    //init send and receive signal
     return -1;
 }
 
@@ -250,30 +230,41 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
         AudioOutputUnitStop(ac.audioUnit);
         return noErr;
     }
-    //server does no play back
-    if([[ac com]connectionState] == CS_SERVER)
-    {
-
-    }
-
 
 	ioData->mBuffers[0].mData = (ac->play->buf + ac->play->pos);
 
-    ac->play->pos += inNumberFrames;
-
-    if (ac->play->pos + inNumberFrames > ac->play->len)
+    //server does no play back
+    if([[ac com]connectionState] == CS_SERVER)
     {
-        ioData->mBuffers[0].mData = ac->zeroSig->buf;
-        ac->play->pos -= inNumberFrames; //just to prevent an overflow
-
-        if([[ac com]connectionState] == CS_ClIENT)
+        return  noErr;
+    }
+    //client plays the buffer content once
+    else if([[ac com]connectionState] == CS_ClIENT)
+    {
+        ac->play->pos += inNumberFrames;
+        //if all frames are send the client work is completed
+        if (ac->play->pos + inNumberFrames > ac->play->len)
         {
-            AudioOutputUnitStop(ac.audioUnit);
+            [ac stop];
             char sTimeStamp[15];
             sprintf(sTimeStamp,"%f",inTimeStamp->mSampleTime);
             [[ac com] sendNew:sTimeStamp];
-            NSLog(@"cs");
+            NSLog(@"ac stoped");
         }
+    }
+    //assume that without network one device with headphones is used
+    //playing and recording
+    else if([[ac com]connectionState] == CS_DISCONNECTED)
+    {
+        ac->play->pos += inNumberFrames;
+        //if all frames are send the client work is completed
+        if (ac->play->pos + inNumberFrames > ac->play->len)
+        {
+            //nothing more to send, but audio unit need to run for recording
+            ioData->mBuffers[0].mData = ac->zeroSig->buf;
+            ac->play->pos -= inNumberFrames; //to prevent an overflow
+        }
+
     }
 
     return noErr;
@@ -685,22 +676,25 @@ static OSStatus recordingCallback(void *inRefCon,
     {
         return noErr;
     }
-    else if ([[ac com]connectionState] == CS_SERVER)
+
+    int dataSize = inNumberFrames * sizeof(SInt32); // 16bit twice
+    //NSLog(@"recordingCallback");
+
+    OSStatus status;
+
+    AudioBufferList *bufferList = ac.recordingBufferList;
+    bufferList->mBuffers[0].mDataByteSize = dataSize;
+
+    if (inNumberFrames > FRAMESIZE)
     {
-        int dataSize = inNumberFrames * sizeof(SInt32); // 16bit twice
-        //NSLog(@"recordingCallback");
-
-        OSStatus status;
-
-        AudioBufferList *bufferList = ac.recordingBufferList;
-        bufferList->mBuffers[0].mDataByteSize = dataSize;
-
-        if (inNumberFrames > FRAMESIZE)
-        {
-            NSLog(@"error inNumberFrames = %ld",inNumberFrames);
-            AudioOutputUnitStop(ac.audioUnit);
-            return -1;
-        }
+        NSLog(@"error inNumberFrames = %ld",inNumberFrames);
+        AudioOutputUnitStop(ac.audioUnit);
+        return -1;
+    }
+    //the server is ready if it got the message from the client,
+    //till that it records in cyles into the buffer
+    if ([[ac com]connectionState] == CS_SERVER)
+    {
 
         if (ac->recordBuf->pos+inNumberFrames > ac->recordBuf->len)
         {
@@ -721,42 +715,26 @@ static OSStatus recordingCallback(void *inRefCon,
 
 
     }
-    else //HEADPHONE
+    //assume that without network one device with headphones is used
+    //playing and recording
+    //once the buffer is full, we are done
+    else if ([[ac com]connectionState] == CS_DISCONNECTED)
     {
-        int dataSize = inNumberFrames * sizeof(SInt32); // 16bit twice
-        //NSLog(@"recordingCallback");
+        [ac.proc SetTimeTag:@"receive" To:*inTimeStamp];
+        bufferList->mBuffers[0].mData = ac->recordBuf->buf+ac->recordBuf->pos;
+        //AudioUnitRenderActionFlags ioActionFlags;
+        status = AudioUnitRender(ac.audioUnit,
+                                 ioActionFlags,
+                                 inTimeStamp,
+                                 inBusNumber,
+                                 inNumberFrames,
+                                 bufferList);
+        ac->recordBuf->pos += inNumberFrames;
 
-        OSStatus status;
-
-        AudioBufferList *bufferList = ac.recordingBufferList;
-        bufferList->mBuffers[0].mDataByteSize = dataSize;
-
-        if (inNumberFrames > FRAMESIZE)
+        if (ac->recordBuf->pos+inNumberFrames > ac->recordBuf->len)
         {
-            NSLog(@"error inNumberFrames = %ld",inNumberFrames);
-            AudioOutputUnitStop(ac.audioUnit);
-            return -1;
-        }
-
-        if (ac->recordBuf->pos+inNumberFrames <= ac->recordBuf->len)
-        {
-            [ac.proc SetTimeTag:@"receive" To:*inTimeStamp];
-
-            bufferList->mBuffers[0].mData = ac->recordBuf->buf+ac->recordBuf->pos;
-            //AudioUnitRenderActionFlags ioActionFlags;
-            status = AudioUnitRender(ac.audioUnit,
-                                     ioActionFlags,
-                                     inTimeStamp,
-                                     inBusNumber,
-                                     inNumberFrames,
-                                     bufferList);
-            ac->recordBuf->pos += inNumberFrames;
-
-            if (ac->recordBuf->pos+inNumberFrames > ac->recordBuf->len)
-            {
-                [ac stop];
-                NSLog(@"recording stoped");
-            }
+            [ac stop];
+            NSLog(@"recording stoped");
         }
     }
     return noErr;
@@ -766,6 +744,8 @@ static OSStatus recordingCallback(void *inRefCon,
 -(void)testOutput
 {
     NSLog(@"testOutput started");
+    [com initNetworkCom];
+    
     SInt32 KKFSize=2*play->len;
     SInt64* AKkf;
     AKkf = (SInt64*)malloc(KKFSize*sizeof(SInt64));

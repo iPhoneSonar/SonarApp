@@ -19,7 +19,7 @@
 enum ConnectionState {
     CS_DISCONNECTED = 0,
     CS_ClIENT = 1,
-    CS_SERVER = 2,
+    CS_SERVER = 2
 };
 
 
@@ -50,8 +50,8 @@ ConnectionState connectionState;
 - (SInt16)serverStart;
 - (SInt16)recvNew: (char*)sBuf : (UInt16*)uiLen;
 - (SInt16)sendNew: (char*)msg;
+- (void)closeNew;
 
-- (void)dummy;
 
 
 static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address, const void *data, void *info);

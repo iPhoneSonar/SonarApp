@@ -6,7 +6,7 @@
 //  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
 //
 #ifndef DEBUG
-#define NSLog(...)
+//#define NSLog(...)
 #endif
 
 #import "trViewController.h"
