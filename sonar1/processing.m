@@ -9,6 +9,7 @@
 @synthesize PSend;
 @synthesize Latency;
 @synthesize SigLen;
+@synthesize isCalibrated;
 
 -(void)InitializeArrays
 {
