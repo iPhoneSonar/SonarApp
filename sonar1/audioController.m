@@ -769,20 +769,20 @@ static OSStatus recordingCallback(void *inRefCon,
     SInt32 KKFSize=2*play->len;
     SInt64* AKkf;
     AKkf = (SInt64*)malloc(KKFSize*sizeof(SInt64));
-    KKF(recordBuf->buf, play->buf, AKkf, play->len);
+    [proc CalcKKF:AKkf WithRecordSig:recordBuf->buf AndSendSig:play->buf AndNumberOfSamples:play->len];
 
-    UInt32 FirstPeak=MaximumSuche(AKkf, 0, KKFSize);
+    UInt32 FirstPeak=[proc MaximumSearchInKKF:AKkf atStartValue:0 withEndValue:KKFSize];
     NSLog(@"erster Peak bei %li, entspricht NRL bei 1 Geräte System",FirstPeak);
     
     
     UInt32 Offset=40;
-    UInt32 SecondPeak=MaximumSuche(AKkf,FirstPeak+Offset,KKFSize);
+    UInt32 SecondPeak=[proc MaximumSearchInKKF:AKkf atStartValue:FirstPeak+Offset withEndValue:KKFSize];
     NSLog(@"zweiter Peak bei %li, entspricht Ziel bei 1 Geräte System (offset für Mindestentfernung %li Samples)",SecondPeak,Offset);
 
     SInt64* AKkf2;
     AKkf2 = (SInt64*)malloc((2*play->len+recordBuf->len)*sizeof(SInt64));
-    
-    UInt32 RingKKFPeak=MaximumSuche(AKkf2, 0, 2*play->len+recordBuf->len);
+
+    UInt32 RingKKFPeak=[proc MaximumSearchInKKF:AKkf2 atStartValue:0 withEndValue:2*play->len+recordBuf->len];
     NSLog(@"RingKKFPeak bei %li",RingKKFPeak);
 
     [proc GetPointerReceive:recordBuf->buf Send:play->buf Len:play->len];

@@ -121,15 +121,21 @@
 - (void)SetLatency:(Float64)SendTime
 {
     SInt64 AKkf[SigLen+2*100];
-    RingKKF(PRecord, PSend, AKkf, SigLen, 100);
+    [self RingKKF:AKkf ofRecord:PRecord AndSend:PSend RecSamples:SigLen SendSamples:100];
 
     SInt32 KKFSample;
-    KKFSample=MaximumSuche(AKkf, 0, SigLen);
+    KKFSample=[self MaximumSearchInKKF:AKkf atStartValue:0 withEndValue:SigLen];
 
     Float64 receiveTime;
-    receiveTime=GetSample(KKFSample, 100, receiveTimeTags);
+    receiveTime=[self GetSampleOfKKFSample:KKFSample ofSamples:100 withTimeStamp:receiveTimeTags];
     Latency=receiveTime-SendTime;
     NSLog(@"latency: %f",Latency);
+}
+
+-(Float64)GetLatencyOfSendStart:(Float64)SendStart atReceiveStart:(Float64)ReceiveStart;
+{
+    Float64 LocalLatency=ReceiveStart-SendStart;
+    return LocalLatency;
 }
 
 - (void)CalculateDistance:(Float64)SendTime
@@ -138,21 +144,27 @@
     SInt64 AKKf[KKFSize];
 
     SInt32 KKFSample;
-    KKFSample=MaximumSuche(AKKf, 0, SigLen);
+    KKFSample=[self MaximumSearchInKKF:AKKf atStartValue:0 withEndValue:SigLen];
 
     Float64 receiveTime;
-    receiveTime=GetSample(KKFSample, 4800, receiveTimeTags);
+    receiveTime=[self GetSampleOfKKFSample:KKFSample ofSamples:4800 withTimeStamp:receiveTimeTags];
     
     SInt32 SignalTime;
     SignalTime=(SInt32)(receiveTime-SendTime-Latency);
 
     float Distance;
-    Distance=GetDistance(SignalTime);
+    Distance=[self GetDistance:SignalTime];
     NSLog(@"Distance: %f",Distance);
 }
-@end
 
-void KKF(SInt32 *ARecord,SInt32 *ASend,SInt64 *AKkf,SInt32 Nsamples)
+-(float)GetDistance:(SInt32) Samples
+{
+    float Distance;
+    Distance=((float)Samples)*343.0f/48000.0f;
+    return Distance;
+}
+
+- (void)CalcKKF:(SInt64*)AKkf WithRecordSig:(SInt32*)ARecord AndSendSig:(SInt32*)ASend AndNumberOfSamples:(SInt32)Nsamples;
 {
     SInt32 KKFSize=2*Nsamples;
     //Nullen aller AKkf Werte
@@ -161,16 +173,16 @@ void KKF(SInt32 *ARecord,SInt32 *ASend,SInt64 *AKkf,SInt32 Nsamples)
     int j=0;
     int endJ=0;
     /*int startJ=0;
-    //für erste Hälfte (nicht nötig, da keine kausale aussage möglich ist)
-    for (i=0; i<Nsamples; i++)
-    {
-        startJ=Nsamples-i;
-        for(j=startJ;j<Nsamples;j++)
-        {
-            AKkf[i]=AKkf[i]+ASend[j]*ARecord[j+i-Nsamples];
-        }
-    }*/
-    
+     //für erste Hälfte (nicht nötig, da keine kausale aussage möglich ist)
+     for (i=0; i<Nsamples; i++)
+     {
+     startJ=Nsamples-i;
+     for(j=startJ;j<Nsamples;j++)
+     {
+     AKkf[i]=AKkf[i]+ASend[j]*ARecord[j+i-Nsamples];
+     }
+     }*/
+
     //zweite Hälfte, ab hier kausale Aussage möglich.
     //Berechnung um 2048 Werte später als Mitte, da das Empfangssignal um etwas mehr als 2 Frames verzögert ist
     //for (i=Nsamples+2048;i<KKFSize;i++)
@@ -188,19 +200,19 @@ void KKF(SInt32 *ARecord,SInt32 *ASend,SInt64 *AKkf,SInt32 Nsamples)
     NSLog(@"Berechnung der KKF durchgeführt");
 }
 
-void RingKKF(SInt32 *ARecord,SInt32 *ASend,SInt64 *AKkf,SInt32 NRecordSamples, SInt32 NSendSamples)
+- (void)RingKKF:(SInt64*)AKkf ofRecord:(SInt32*)ARecord AndSend:(SInt32*)ASend RecSamples:(SInt32)NRecordSamples SendSamples:(SInt32)NSendSamples
 {
     NSLog(@"Start der RingKKF berechnung");
     SInt32 startJ, endJ;
     SInt32 i, j;
-    
+
     for(i=0; i<NSendSamples;i++)
     {
         startJ=NSendSamples-i;
         for(j=startJ;j<NSendSamples;j++)
         {
             AKkf[i]=AKkf[i]+(SInt16)ASend[j]*(SInt16)ARecord[i+j-NSendSamples];
-        }            
+        }
     }
     for(i=NSendSamples;i<NRecordSamples;i++)
     {
@@ -217,7 +229,7 @@ void RingKKF(SInt32 *ARecord,SInt32 *ASend,SInt64 *AKkf,SInt32 NRecordSamples, S
             AKkf[i]=AKkf[i]+(SInt16)ASend[j]*(SInt16)ARecord[i+j-NSendSamples];
         }
     }
-    
+
     for(i=0;i<NSendSamples;i++)
     {
         AKkf[i]=AKkf[i]+AKkf[NRecordSamples-i];
@@ -226,8 +238,7 @@ void RingKKF(SInt32 *ARecord,SInt32 *ASend,SInt64 *AKkf,SInt32 NRecordSamples, S
     NSLog(@"Berechnung der RingKKF durchgeführt");
 }
 
-
-SInt32 MaximumSuche(SInt64 *AKkf, UInt32 StartValue, UInt32 EndValue)
+- (SInt32)MaximumSearchInKKF:(SInt64*)AKkf atStartValue:(UInt32)StartValue withEndValue:(UInt32)EndValue;
 {
     UInt64 max=0;
     SInt64 pmax=0;
@@ -270,6 +281,17 @@ SInt32 MaximumSuche(SInt64 *AKkf, UInt32 StartValue, UInt32 EndValue)
     NSLog(@"start = %ld, end = %ld, max = %lld",StartValue, EndValue, max);
     return max_t;
 }
+
+- (Float64) GetSampleOfKKFSample:(SInt32)KKFSample ofSamples:(SInt32)Samples withTimeStamp:(AudioTimeStamp*)timeTags;
+{
+    SInt32 Start=KKFSample-Samples;
+    SInt32 Frame=Start/1024;
+    Float64 Sample=timeTags[Frame].mSampleTime+(Float64)(Start%1024);
+    NSLog(@"Vergleich: Empfangsframe: %f Darin Abtastwert: %li, Entspricht Sample: %f",timeTags[Frame].mSampleTime,Start%1024,Sample);
+    return Sample;
+}
+
+@end
 
 SInt32 sendSigGen(SInt32 *Tptr)
 {
@@ -352,26 +374,4 @@ SInt32 sendSigGen(SInt32 *Tptr)
         *(pT--) = -T[x+shift];
     }
     return 1; //it was meant to allocate the memory in the function an return the size
-}
-
-Float64 GetSample(SInt32 KKFSample, SInt32 Samples, AudioTimeStamp *timeTags)
-{
-    SInt32 Start=KKFSample-Samples;
-    SInt32 Frame=Start/1024;
-    Float64 Sample=timeTags[Frame].mSampleTime+(Float64)(Start%1024);
-    NSLog(@"Vergleich: Empfangsframe: %f Darin Abtastwert: %li, Entspricht Sample: %f",timeTags[Frame].mSampleTime,Start%1024,Sample);
-    return Sample;
-}
-
-Float64 GetLatency(Float64 SendStart, Float64 ReceiveStart)
-{
-    Float64 Latency=ReceiveStart-SendStart;
-    return Latency;
-}
-
-float GetDistance(SInt32 Samples)
-{
-    float Distance;
-    Distance=((float)Samples)*343.0f/48000.0f;
-    return Distance;
 }

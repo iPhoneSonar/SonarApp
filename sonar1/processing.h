@@ -29,16 +29,15 @@
 - (int)SetTimeTag:(NSString*)Type To:(AudioTimeStamp)TimeStamp;
 - (Float64)GetTimeTag:(NSString*)Type at:(SInt32)Frame;
 - (void)SetLatency:(Float64)SendTime; //call by server
+- (Float64)GetLatencyOfSendStart:(Float64)SendStart atReceiveStart:(Float64) ReceiveStart;
 - (void)GetPointerReceive:(SInt32*)ARecord Send:(SInt32*)ASend Len:(SInt32)Len;
 - (void)CalculateDistance:(Float64)SendTime; //call by server
-
+- (float)GetDistance:(SInt32)Samples;
+- (void)CalcKKF:(SInt64*)AKkf WithRecordSig:(SInt32*)ARecord AndSendSig:(SInt32*)ASend AndNumberOfSamples:(SInt32)Nsamples;
+- (void)RingKKF:(SInt64*)AKkf ofRecord:(SInt32*)ARecord AndSend:(SInt32*)ASend RecSamples:(SInt32)NRecordSamples SendSamples:(SInt32)NSendSamples;
+- (SInt32)MaximumSearchInKKF:(SInt64*)AKkf atStartValue:(UInt32)StartValue withEndValue:(UInt32)EndValue;
+- (Float64) GetSampleOfKKFSample:(SInt32)KKFSample ofSamples:(SInt32)Samples withTimeStamp:(AudioTimeStamp*)timeTags;
 @end
 
-void KKF(SInt32 *ARecord, SInt32 *ASend, SInt64 *AKkf,SInt32 Nsamples);
-void RingKKF(SInt32 *ARecord,SInt32 *ASend,SInt64 *AKkf,SInt32 NRecordSamples, SInt32 NSendSamples);
-SInt32 MaximumSuche(SInt64 *AKkf,UInt32 StartValue, UInt32 EndValue);
 SInt32 sendSigGen(SInt32 *Tptr);
-Float64 GetSample(SInt32 KKFSample, SInt32 Samples, AudioTimeStamp *timeTags);
-Float64 GetLatency(Float64 SendStart, Float64 ReceiveStart);
-float GetDistance(SInt32 Samples);
 #endif
