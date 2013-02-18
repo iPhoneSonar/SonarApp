@@ -48,8 +48,6 @@ typedef struct recordBuffer recordBuffer;
 @property(nonatomic, retain) processing *proc;
 
 
-- (void)setFrequency:(int) value;
-- (void)getFrequency:(int*) value;
 - (OSStatus)audioUnitInit;
 - (void)sessionInit;
 - (OSStatus)start;

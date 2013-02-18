@@ -100,7 +100,7 @@ static void socketCallbackClient(CFSocketRef s, CFSocketCallBackType type, CFDat
 }
 
 
-static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address, const void *data, void *info)
+static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDataRef address, const void *data, void *info)
 {
     NSLog(@"socketCallback %ld called", (SInt32)s);
     switch(type)
@@ -141,6 +141,13 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
         {
             //server
             NSLog(@"kCFSocketAcceptCallBack");
+            //received the timestamp
+            //imitialy stop the recording
+            //cyclicKkf
+            //latency, distance calc
+            
+
+            /*
             int pNativeSock = *(CFSocketNativeHandle*)data;
             const UInt16 BUFSIZE = 15;
             char sBuf[BUFSIZE];
@@ -159,7 +166,7 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
             memset(sBuf, 0, BUFSIZE);
             recv(pNativeSock, sBuf, BUFSIZE, 0);
             NSLog(@"recv = %s",sBuf);
-            
+            */
             break;
         }
         case kCFSocketDataCallBack:
@@ -179,6 +186,7 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
 
 - (SInt16)serverStart
 {
+    //close socket if open
     const CFSocketContext *context = NULL;
 
     //kCFSocketNoCallBack = 0,
@@ -249,7 +257,7 @@ static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
 
 - (SInt16)clientConnect
 {
-    
+    //close socket if open
     CFSocketContext clientContext = { 0,self,NULL,NULL,NULL};
     //typedef struct {
     //    CFIndex	version;

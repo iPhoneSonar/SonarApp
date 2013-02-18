@@ -13,6 +13,7 @@
     SInt32 *PRecord;
     SInt32 *PSend;
     Float64 Latency;
+    bool isCalibrated;
 }
 
 @property(nonatomic) AudioTimeStamp *sendTimeTags;
@@ -22,6 +23,7 @@
 @property(nonatomic) SInt32 *PSend;
 @property(nonatomic) Float64 Latency;
 @property(nonatomic) SInt32 SigLen;
+@property(nonatomic) bool isCalibrated;
 
 - (void)InitializeArrays;
 - (int)IncreaseCount:(NSString*)Type;

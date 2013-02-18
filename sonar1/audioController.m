@@ -49,22 +49,13 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
          NSLog(@"error recordBufferInitSamples");;
     }
 
-    [self sessionInit];
-    [self audioUnitInit];
-    
+    [self sessionInit]; //return values
+    [self audioUnitInit]; //return values
+
+    //if no headphone is connected we know its a server
+    //[self initServer];
     return self;
 }
-
-- (void)setFrequency:(int) value
-{
-    frequency = value;
-}
-
-- (void)getFrequency:(int*) value
-{
-    *value = frequency;
-}
-
 
 -(SInt16)initClient
 {
@@ -95,12 +86,16 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
     //init ringbuffer <- pointer returning pointer on overflow in recordingCallback
     //wait for timestamp <- done in acceptcallback
 
-    //calibration
-    //save latency
-    //gui show ready
-    //calcDistance
-    //gui show distance
-    //tcp tansmitt distance
+    //if no headphone is connected calibration follows (neasurement  view
+    //display waiting for calibration
+    //  wait for signal
+    //  process signal
+    //  response calibration successful ???
+    // (1) wait again for signal (display waiting for measurement //next/ distance, waiting for newe
+    //      measurement)
+    //  process
+    //  response and display distance
+    //  back to (1) 
     return -1;
 }
 
@@ -696,6 +691,23 @@ static OSStatus recordingCallback(void *inRefCon,
     if ([[ac com]connectionState] == CS_SERVER)
     {
 
+        if ([[ac com]timestampReceived])
+        {
+            //stop ac
+            //timestampReceived = false
+            //processing
+            if ([[ac proc]isCalibrated])
+            {
+                //calc distance
+                //display distance
+            }
+            else
+            {
+                //calc latency
+                //display measurement
+            }
+            //restart listening
+        }
         if (ac->recordBuf->pos+inNumberFrames > ac->recordBuf->len)
         {
             ac->recordBuf->pos = 0; //ringbuffer
@@ -712,7 +724,6 @@ static OSStatus recordingCallback(void *inRefCon,
 
         [ac.proc SetTimeTag:@"receive" To:*inTimeStamp];
     
-
 
     }
     //assume that without network one device with headphones is used
@@ -735,6 +746,9 @@ static OSStatus recordingCallback(void *inRefCon,
         {
             [ac stop];
             NSLog(@"recording stoped");
+            //calc distance
+            //display
+            // !!! restarted by tap, check init values
         }
     }
     return noErr;

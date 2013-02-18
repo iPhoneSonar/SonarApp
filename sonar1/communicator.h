@@ -30,6 +30,7 @@ CFStringRef host;
 CFSocketRef	pSock;
 int pNativeSock;
 ConnectionState connectionState;
+bool timestampReceived;
 }
 
 
@@ -39,6 +40,7 @@ ConnectionState connectionState;
 @property(nonatomic) CFSocketRef pSock;
 @property(nonatomic) int pNativeSock;
 @property(nonatomic) ConnectionState connectionState;
+@property(nonatomic) bool timestampReceived;
 
 - (void)initNetworkCom;
 - (void)setHost1: (CFStringRef)ip;

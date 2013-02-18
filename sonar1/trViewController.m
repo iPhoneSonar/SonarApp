@@ -145,6 +145,7 @@
         [[audioController com ]setHost: (CFStringRef)self.tfIp.text];
         NSLog(@"server ip = %@",[[audioController com]host]);
         [audioController initClient];
+        [audioController start];
     }
 }
 
