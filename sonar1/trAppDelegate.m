@@ -29,7 +29,6 @@
     // Override point for customization after application launch.
     self.viewController = [[[trViewController alloc] initWithNibName:@"trViewController" bundle:nil] autorelease];
     paC=[[audioController alloc] init];
-    [paC initDebug];
     self.viewController.audioController=paC;
     self.window.rootViewController = self.viewController;
     [self.window makeKeyAndVisible];
