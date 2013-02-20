@@ -16,6 +16,8 @@
 #import <time.h>
 #import <arpa/inet.h>
 
+typedef SInt16 (^fpComReturn)(NSString*);
+
 enum ConnectionState {
     CS_DISCONNECTED = 0,
     CS_ClIENT = 1,
@@ -24,26 +26,28 @@ enum ConnectionState {
 
 
 @interface communicator : NSObject {
-NSInputStream *inputStream;
-NSOutputStream *outputStream;
+NSInputStream* inputStream;
+NSOutputStream* outputStream;
 CFStringRef host;
 CFSocketRef	pSock;
 int pNativeSock;
 ConnectionState connectionState;
 bool timestampReceived;
+void* pComReturn;
+SInt16 (^comRet) (NSString*); //returnvalue (^functionname) (parameter)
 }
 
 
-@property(nonatomic,readonly) NSInputStream *inputStream;
-@property(nonatomic,retain) NSOutputStream *outputStream;
+@property(nonatomic,readonly) NSInputStream* inputStream;
+@property(nonatomic,retain) NSOutputStream* outputStream;
 @property(nonatomic) CFStringRef host;
 @property(nonatomic) CFSocketRef pSock;
 @property(nonatomic) int pNativeSock;
 @property(nonatomic) ConnectionState connectionState;
 @property(nonatomic) bool timestampReceived;
+@property(nonatomic) void* pComReturn;
 
 - (void)initNetworkCom;
-- (void)setHost1: (CFStringRef)ip;
 - (void)send:(NSString*)msg;
 - (void)send:(NSString*)fileStr :(NSString*)fileName;
 - (void)open;
@@ -56,7 +60,7 @@ bool timestampReceived;
 
 
 
-static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address, const void *data, void *info);
+//static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address, const void *data, void *info);
 
 @end
 #endif

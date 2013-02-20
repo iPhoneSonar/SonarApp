@@ -9,6 +9,7 @@
 #import "communicator.h"
 
 
+
 const SInt16 PORT = 2000;
 const SInt16 DEBUG_PORT = 2002;
 const CFStringRef DEBUG_HOST = (CFStringRef)@"192.168.173.1";
@@ -21,11 +22,12 @@ const CFStringRef DEBUG_HOST = (CFStringRef)@"192.168.173.1";
 @synthesize pSock;
 @synthesize pNativeSock;
 @synthesize connectionState;
-
+@synthesize pComReturn;
 
 -(communicator*)init
 {
     connectionState = CS_DISCONNECTED;
+    comRet = NULL;
     return self;
 }
 
@@ -74,10 +76,29 @@ static void socketCallbackClient(CFSocketRef s, CFSocketCallBackType type, CFDat
             if (iRet == 0)
             {
                 NSLog(@"iRet == 0");
+                //indication for remote closed socket
+                [localCom closeNew];
                 break;
             }
-
             NSLog(@"recv: %s",sBuf);
+            //#001<distance>#
+            if (strncmp(sBuf,"#001",4))
+            {
+                //strDistance
+                //[localCom displayMsg:];
+            }
+            //#002calibration
+            else if(strncmp(sBuf,"002",4))
+            {
+                        
+            }
+            else
+            {
+                NSString *strMsg = [NSString stringWithFormat:@"communicator %s",sBuf];
+                localCom->comRet = (SInt16 (^)(NSString*))localCom->pComReturn;
+                NSLog(@"ret = %d.\n",localCom->comRet(strMsg));
+            }
+                
             break;
         }
         case kCFSocketNoCallBack:
@@ -203,7 +224,7 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
                                        SOCK_STREAM,
                                        IPPROTO_TCP,
                                        callBackTypes,
-                                       &callout,
+                                       &socketCallbackServer,
                                        context);
 
     NSLog(@"socket %ld", (SInt32)pSockListen);
@@ -257,6 +278,12 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
 
 - (SInt16)clientConnect
 {
+    //fpComReturn comReturn = (fpComReturn) pComReturn;
+    //comReturn(@"hello from clientConnect");
+    SInt16 (^myblock) (NSString*); //returnvalue (^functionname) (parameter)
+    myblock = (SInt16 (^)(NSString*))pComReturn;
+    NSLog(@"ret = %d.\n",myblock(@"communicator"));
+    
     //close socket if open
     CFSocketContext clientContext = { 0,self,NULL,NULL,NULL};
     //typedef struct {
@@ -430,6 +457,7 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
 - (void)closeNew
 {
     CFSocketInvalidate(pSock);
+    pNativeSock = NULL;
     pSock = NULL;
     NSLog(@"socket closed");
 }

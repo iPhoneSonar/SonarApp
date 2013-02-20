@@ -29,13 +29,17 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
     
     [super dealloc];
 }
-
+//^^^^^^^^^^
 - (audioController*)init
 {
     com = [[communicator alloc] init];
     proc = [processing alloc];
+    
+    //returnvalue (parametertype parameter) {implementation}
+    comRet = ^ SInt16 (NSString* strTest){ NSLog(@"hello from %@",strTest); return 0;};
 
-
+    [com setPComReturn:(void*)comRet];
+    
     if([self sendSigInit])
     {
         NSLog(@"error sendSigInit");
@@ -55,6 +59,14 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
     //if no headphone is connected we know its a server
     //[self initServer];
     return self;
+}
+
+- (SInt16)comRet: (NSString*) retStr
+{
+    NSString* dummy = @"dummy called";
+    NSLog(@"%@",dummy);
+    NSLog(@"retStr:%@.\n",retStr);
+    return 0;
 }
 
 -(SInt16)initClient
@@ -80,10 +92,8 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
         return -1;
     }    
 
-    //tcp server starten
-
     //playingcallback mute <- done by decition in playingCallback
-    //init ringbuffer <- pointer returning pointer on overflow in recordingCallback
+    //init ringbuffer <- returning pointer on overflow in recordingCallback
     //wait for timestamp <- done in acceptcallback
 
     //if no headphone is connected calibration follows (neasurement  view

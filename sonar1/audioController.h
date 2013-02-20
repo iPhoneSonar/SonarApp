@@ -39,6 +39,8 @@ typedef struct recordBuffer recordBuffer;
     processing *proc;
 
     UITextField *tfOutput;
+    //returnvalue (^functionname) (parameter)
+    SInt16 (^comRet) (NSString*);
 }
 
 @property(nonatomic) int frequency;
@@ -63,6 +65,7 @@ typedef struct recordBuffer recordBuffer;
 - (SInt16)initServer;
 
 - (SInt16)setOutput:(UITextField**)tf;
+
 
 @end
 #endif
