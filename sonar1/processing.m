@@ -288,6 +288,21 @@
     return Sample;
 }
 
+- (float)CalculateDistanceHeadphone
+{
+    SInt32 KKFSize=SigLen+2*4800;
+    SInt64 AKKf[KKFSize];
+
+    [self CalcKKF:AKKf WithRecordSig:PRecord AndSendSig:PSend AndNumberOfSamples:SigLen];
+    SInt32 Samples=[self MaximumSearchInKKF:AKKf atStartValue:SigLen withEndValue:KKFSize];
+
+    float Distance;
+    Distance=((float)Samples)*343.0f/48000.0f;
+    
+    NSLog(@"Distance: %f",Distance);
+    return Distance;
+}
+
 @end
 
 SInt32 sendSigGen(SInt32 *Tptr)

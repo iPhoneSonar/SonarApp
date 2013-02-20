@@ -35,6 +35,8 @@
 - (float)CalculateDistanceServerWithTimestamp:(Float64)SendTime; //call by server
 - (void)CalcKKF:(SInt64*)AKkf WithRecordSig:(SInt32*)ARecord AndSendSig:(SInt32*)ASend AndNumberOfSamples:(SInt32)Nsamples;
 - (void)RingKKF:(SInt64*)AKkf ofRecord:(SInt32*)ARecord AndSend:(SInt32*)ASend RecSamples:(SInt32)NRecordSamples SendSamples:(SInt32)NSendSamples;
+- (float)CalculateDistanceHeadphone;
+
 @end
 
 SInt32 sendSigGen(SInt32 *Tptr);

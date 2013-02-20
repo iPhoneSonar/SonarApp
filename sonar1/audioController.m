@@ -709,7 +709,6 @@ static OSStatus recordingCallback(void *inRefCon,
                 //display distance
                 [Output initWithFormat:@"Distance: %f meters\nwaiting for new measurement",Distance];
                 ac->LabelOutput.text=Output;
-                
             }
             else
             {
@@ -738,8 +737,6 @@ static OSStatus recordingCallback(void *inRefCon,
         ac->recordBuf->pos += inNumberFrames;
 
         [ac.proc SetTimeTag:@"receive" To:*inTimeStamp];
-    
-
     }
 
     //assume that without network one device with headphones is used
@@ -762,9 +759,15 @@ static OSStatus recordingCallback(void *inRefCon,
         {
             [ac stop];
             NSLog(@"recording stoped");
+            [[ac proc]GetPointerReceive:ac->recordBuf->buf Send:ac->play->buf Len:ac->play->len];
+
             //calc distance
+
+            float Distance=[[ac proc]CalculateDistanceHeadphone];
             //display
-            // !!! restarted by tap, check init values
+            NSString *Output=[[NSString alloc]init];
+            [Output initWithFormat:@"Distance: %f meters\nwaiting for new measurement",Distance];
+            ac->LabelOutput.text=Output;
         }
     }
     return noErr;
