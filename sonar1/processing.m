@@ -134,13 +134,7 @@
     NSLog(@"latency: %f",Latency);
 }
 
--(Float64)GetLatencyOfSendStart:(Float64)SendStart atReceiveStart:(Float64)ReceiveStart;
-{
-    Float64 LocalLatency=ReceiveStart-SendStart;
-    return LocalLatency;
-}
-
-- (float)CalculateDistance:(Float64)SendTime
+- (float)CalculateDistanceServerWithTimestamp:(Float64)SendTime
 {
     SInt32 KKFSize=SigLen+2*4800;
     SInt64 AKKf[KKFSize];
