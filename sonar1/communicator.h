@@ -54,9 +54,5 @@ bool timestampReceived;
 - (SInt16)sendNew: (char*)msg;
 - (void)closeNew;
 
-
-
-static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address, const void *data, void *info);
-
 @end
 #endif

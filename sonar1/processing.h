@@ -33,7 +33,7 @@
 - (void)SetLatency:(Float64)SendTime; //call by server
 - (Float64)GetLatencyOfSendStart:(Float64)SendStart atReceiveStart:(Float64) ReceiveStart;
 - (void)GetPointerReceive:(SInt32*)ARecord Send:(SInt32*)ASend Len:(SInt32)Len;
-- (void)CalculateDistance:(Float64)SendTime; //call by server
+- (float)CalculateDistance:(Float64)SendTime; //call by server
 - (float)GetDistance:(SInt32)Samples;
 - (void)CalcKKF:(SInt64*)AKkf WithRecordSig:(SInt32*)ARecord AndSendSig:(SInt32*)ASend AndNumberOfSamples:(SInt32)Nsamples;
 - (void)RingKKF:(SInt64*)AKkf ofRecord:(SInt32*)ARecord AndSend:(SInt32*)ASend RecSamples:(SInt32)NRecordSamples SendSamples:(SInt32)NSendSamples;

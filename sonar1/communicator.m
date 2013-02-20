@@ -15,6 +15,7 @@ const CFStringRef DEBUG_HOST = (CFStringRef)@"192.168.173.1";
 
 @implementation communicator
 
+@synthesize timestampReceived;
 @synthesize inputStream;
 @synthesize outputStream;
 @synthesize host;
@@ -203,7 +204,7 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
                                        SOCK_STREAM,
                                        IPPROTO_TCP,
                                        callBackTypes,
-                                       &callout,
+                                       &socketCallbackServer,
                                        context);
 
     NSLog(@"socket %ld", (SInt32)pSockListen);

@@ -693,20 +693,35 @@ static OSStatus recordingCallback(void *inRefCon,
 
         if ([[ac com]timestampReceived])
         {
+            NSString *Output = [[NSString alloc]init];
             //stop ac
-            //timestampReceived = false
+            [ac stop];
+            [[ac com]setTimestampReceived:false];
+          
             //processing
+            [[ac proc]GetPointerReceive:ac->recordBuf->buf Send:ac->play->buf Len:ac->play->len];       //set pointers
+
+            Float64 receivedTimestamp=0;
             if ([[ac proc]isCalibrated])
             {
                 //calc distance
+                float Distance=[[ac proc]CalculateDistance:receivedTimestamp];
                 //display distance
+                [Output initWithFormat:@"Distance: %f meters\nwaiting for new measurement",Distance];
+                ac->LabelOutput.text=Output;
+                
             }
             else
             {
                 //calc latency
+                [[ac proc]SetLatency:receivedTimestamp];
                 //display measurement
+                Output=@"calibration succesfull\nwaiting for measurement";
+                ac->LabelOutput.text=Output;
+
             }
             //restart listening
+            [ac start];
         }
         if (ac->recordBuf->pos+inNumberFrames > ac->recordBuf->len)
         {
@@ -726,6 +741,7 @@ static OSStatus recordingCallback(void *inRefCon,
     
 
     }
+
     //assume that without network one device with headphones is used
     //playing and recording
     //once the buffer is full, we are done
@@ -969,6 +985,12 @@ static OSStatus recordingCallback(void *inRefCon,
 - (SInt16)setOutput:(UITextField**)tf
 {
     tfOutput = *tf;
+    return 0;
+}
+
+- (SInt16)setOutputLabel:(UILabel**)Label
+{
+    LabelOutput = *Label;
     return 0;
 }
 

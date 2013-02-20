@@ -34,6 +34,7 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    [audioController setOutputLabel:(&tf1)];
     // Do any additional setup after loading the view from its nib.
 }
 
@@ -46,7 +47,7 @@
 - (IBAction)startMeasurement:(id)sender
 {
     [audioController start];
-    self.tf1.text = @"started";
+    //self.tf1.text = @"started";
 }
 
 - (void)dealloc {
