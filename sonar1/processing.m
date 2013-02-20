@@ -130,16 +130,11 @@
     Float64 receiveTime;
     receiveTime=[self GetSampleOfKKFSample:KKFSample ofSamples:100 withTimeStamp:receiveTimeTags];
     Latency=receiveTime-SendTime;
+    [self setIsCalibrated:true];
     NSLog(@"latency: %f",Latency);
 }
 
--(Float64)GetLatencyOfSendStart:(Float64)SendStart atReceiveStart:(Float64)ReceiveStart;
-{
-    Float64 LocalLatency=ReceiveStart-SendStart;
-    return LocalLatency;
-}
-
-- (void)CalculateDistance:(Float64)SendTime
+- (float)CalculateDistanceServerWithTimestamp:(Float64)SendTime
 {
     SInt32 KKFSize=SigLen+2*4800;
     SInt64 AKKf[KKFSize];
@@ -156,6 +151,7 @@
     float Distance;
     Distance=[self GetDistance:SignalTime];
     NSLog(@"Distance: %f",Distance);
+    return Distance;
 }
 
 -(float)GetDistance:(SInt32) Samples

@@ -58,9 +58,12 @@ SInt16 (^comRet) (NSString*); //returnvalue (^functionname) (parameter)
 - (SInt16)sendNew: (char*)msg;
 - (void)closeNew;
 
+<<<<<<< HEAD
 
 
 //static void callout(CFSocketRef s, CFSocketCallBackType type, CFDataRef address, const void *data, void *info);
 
+=======
+>>>>>>> origin/KoMa
 @end
 #endif

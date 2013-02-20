@@ -703,20 +703,35 @@ static OSStatus recordingCallback(void *inRefCon,
 
         if ([[ac com]timestampReceived])
         {
+            NSString *Output = [[NSString alloc]init];
             //stop ac
-            //timestampReceived = false
+            [ac stop];
+            [[ac com]setTimestampReceived:false];
+          
             //processing
+            [[ac proc]GetPointerReceive:ac->recordBuf->buf Send:ac->play->buf Len:ac->play->len];       //set pointers
+
+            Float64 receivedTimestamp=0;
             if ([[ac proc]isCalibrated])
             {
                 //calc distance
+                float Distance=[[ac proc]CalculateDistanceServerWithTimestamp:receivedTimestamp];
                 //display distance
+                [Output initWithFormat:@"Distance: %f meters\nwaiting for new measurement",Distance];
+                ac->LabelOutput.text=Output;
+                
             }
             else
             {
                 //calc latency
+                [[ac proc]SetLatency:receivedTimestamp];
                 //display measurement
+                Output=@"calibration succesfull\nwaiting for measurement";
+                ac->LabelOutput.text=Output;
+
             }
             //restart listening
+            [ac start];
         }
         if (ac->recordBuf->pos+inNumberFrames > ac->recordBuf->len)
         {
@@ -736,6 +751,7 @@ static OSStatus recordingCallback(void *inRefCon,
     
 
     }
+
     //assume that without network one device with headphones is used
     //playing and recording
     //once the buffer is full, we are done
@@ -775,23 +791,9 @@ static OSStatus recordingCallback(void *inRefCon,
     AKkf = (SInt64*)malloc(KKFSize*sizeof(SInt64));
     [proc CalcKKF:AKkf WithRecordSig:recordBuf->buf AndSendSig:play->buf AndNumberOfSamples:play->len];
 
-    UInt32 FirstPeak=[proc MaximumSearchInKKF:AKkf atStartValue:0 withEndValue:KKFSize];
-    NSLog(@"erster Peak bei %li, entspricht NRL bei 1 Geräte System",FirstPeak);
-    
-    
-    UInt32 Offset=40;
-    UInt32 SecondPeak=[proc MaximumSearchInKKF:AKkf atStartValue:FirstPeak+Offset withEndValue:KKFSize];
-    NSLog(@"zweiter Peak bei %li, entspricht Ziel bei 1 Geräte System (offset für Mindestentfernung %li Samples)",SecondPeak,Offset);
-
-    SInt64* AKkf2;
-    AKkf2 = (SInt64*)malloc((2*play->len+recordBuf->len)*sizeof(SInt64));
-
-    UInt32 RingKKFPeak=[proc MaximumSearchInKKF:AKkf2 atStartValue:0 withEndValue:2*play->len+recordBuf->len];
-    NSLog(@"RingKKFPeak bei %li",RingKKFPeak);
-
     [proc GetPointerReceive:recordBuf->buf Send:play->buf Len:play->len];
     [proc SetLatency:[proc GetTimeTag:@"send" at:1]];
-    [proc CalculateDistance:[proc GetTimeTag:@"send" at:0]];
+    [proc CalculateDistanceServerWithTimestamp:[proc GetTimeTag:@"send" at:0]];
     
        
     NSString *outStr = [[NSString alloc] init];
@@ -843,43 +845,6 @@ static OSStatus recordingCallback(void *inRefCon,
         SInt16 TMP;
         TMP = ((SInt16*)play->buf)[2*i];
         sprintf(sOutPtr,"%i,",TMP);
-        len += strlen(sOutPtr);
-        sOutPtr = sOut + len;
-        // to package the frame data check the  size of the outStr
-        if (len > 1990)
-        {
-                sOutPtr[len] = 0;
-                outStr = [NSString stringWithFormat:@"%s\n",sOut];
-                [com send:outStr];
-                sOutPtr = sOut;
-                len = 0;
-                memset(sOut,0,2000);
-        }
-    }
-    //send the rest of the content if there is
-    if (len > 0)
-    {
-        if (com.host) //short test assumes that the network is initialized
-        {
-            //remove the last ','
-            sOut[len] = 0;
-            outStr = [NSString stringWithFormat:@"%s\n",sOut];
-            [com send:outStr];
-            NSLog(@"com send");
-        }
-    }
-    [com send:@"fileEnd\n"];
-    NSLog(@"com fileEnd send");
-
-
-
-    [com send:@"fileName:RingKKF_2k_6k_6k_10k_.txt\n"];
-    len = 0;
-    memset(sOut,0,2000);
-    sOutPtr=sOut;
-    for (int i=0; i< 2*play->len+recordBuf->len; i++)
-    {
-        sprintf(sOutPtr,"%lli,",AKkf2[i]);
         len += strlen(sOutPtr);
         sOutPtr = sOut + len;
         // to package the frame data check the  size of the outStr
@@ -979,6 +944,12 @@ static OSStatus recordingCallback(void *inRefCon,
 - (SInt16)setOutput:(UITextField**)tf
 {
     tfOutput = *tf;
+    return 0;
+}
+
+- (SInt16)setOutputLabel:(UILabel**)Label
+{
+    LabelOutput = *Label;
     return 0;
 }
 

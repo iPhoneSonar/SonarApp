@@ -31,14 +31,10 @@
 - (int)SetTimeTag:(NSString*)Type To:(AudioTimeStamp)TimeStamp;
 - (Float64)GetTimeTag:(NSString*)Type at:(SInt32)Frame;
 - (void)SetLatency:(Float64)SendTime; //call by server
-- (Float64)GetLatencyOfSendStart:(Float64)SendStart atReceiveStart:(Float64) ReceiveStart;
 - (void)GetPointerReceive:(SInt32*)ARecord Send:(SInt32*)ASend Len:(SInt32)Len;
-- (void)CalculateDistance:(Float64)SendTime; //call by server
-- (float)GetDistance:(SInt32)Samples;
+- (float)CalculateDistanceServerWithTimestamp:(Float64)SendTime; //call by server
 - (void)CalcKKF:(SInt64*)AKkf WithRecordSig:(SInt32*)ARecord AndSendSig:(SInt32*)ASend AndNumberOfSamples:(SInt32)Nsamples;
 - (void)RingKKF:(SInt64*)AKkf ofRecord:(SInt32*)ARecord AndSend:(SInt32*)ASend RecSamples:(SInt32)NRecordSamples SendSamples:(SInt32)NSendSamples;
-- (SInt32)MaximumSearchInKKF:(SInt64*)AKkf atStartValue:(UInt32)StartValue withEndValue:(UInt32)EndValue;
-- (Float64) GetSampleOfKKFSample:(SInt32)KKFSample ofSamples:(SInt32)Samples withTimeStamp:(AudioTimeStamp*)timeTags;
 @end
 
 SInt32 sendSigGen(SInt32 *Tptr);
