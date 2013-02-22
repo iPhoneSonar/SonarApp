@@ -35,11 +35,6 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
     com = [[communicator alloc] init];
     proc = [processing alloc];
     
-    //returnvalue (parametertype parameter) {implementation}
-    comRet = ^ SInt16 (NSString* strTest){ NSLog(@"hello from %@",strTest); return 0;};
-
-    [com setPComReturn:(void*)comRet];
-    
     if([self sendSigInit])
     {
         NSLog(@"error sendSigInit");
@@ -76,11 +71,21 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
     {
         return -1;
     }
-    
     //send chirp on gui screen click -> button event (on start button)
     //tcp transmitt timestamp -> send in playing callback
-    //wait for tcp transmitted distance -> handled in
+    //wait for tcp transmitted msg (distance) -> handled in communicator socketclientcallback
+    //  function pointer to comRet to display msg in lable
+    //returnvalue (parametertype parameter) {implementation}
+    comRet = ^ SInt16 (NSString* strMsg)
+    {
+        NSLog(@"strMsg from server:\n %@.\n",strMsg);
+        LabelOutput.text = strMsg;
+        return 0;
+    };
+    [com setPComReturn:(void*)comRet];
+    
     //show distance
+
     return 0;
 }
 
@@ -95,10 +100,13 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
     //playingcallback mute <- done by decition in playingCallback
     //init ringbuffer <- returning pointer on overflow in recordingCallback
     //wait for timestamp <- done in acceptcallback
-
-    //if no headphone is connected calibration follows (neasurement  view
+    //if no headphone is connected calibration follows (measurement  view
     //display waiting for calibration
+    LabelOutput.text = @"waiting for calibration";
     //  wait for signal
+    [self start];
+    //when started next steps are handled from recording callback
+
     //  process signal
     //  response calibration successful ???
     // (1) wait again for signal (display waiting for measurement //next/ distance, waiting for newe
@@ -696,7 +704,7 @@ static OSStatus recordingCallback(void *inRefCon,
         AudioOutputUnitStop(ac.audioUnit);
         return -1;
     }
-    //the server is ready if it got the message from the client,
+    //the server is ready if it got the timestamp from the client,
     //till that it records in cyles into the buffer
     if ([[ac com]connectionState] == CS_SERVER)
     {

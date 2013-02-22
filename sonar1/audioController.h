@@ -39,12 +39,10 @@ typedef struct recordBuffer recordBuffer;
     processing *proc;
 
     UITextField *tfOutput;
-<<<<<<< HEAD
     //returnvalue (^functionname) (parameter)
-    SInt16 (^comRet) (NSString*);
-=======
     UILabel *LabelOutput;
->>>>>>> origin/KoMa
+    SInt16 (^comRet) (NSString*);
+
 }
 
 @property(nonatomic) int frequency;
