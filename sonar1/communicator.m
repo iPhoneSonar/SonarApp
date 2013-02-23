@@ -31,6 +31,7 @@ const CFStringRef DEBUG_HOST = (CFStringRef)@"192.168.173.1";
     comRet = NULL;
     pSock = NULL;
     pSockNative = NULL;
+    timestampReceived = false;
     return self;
 }
 
@@ -71,7 +72,7 @@ static void socketCallbackClient(CFSocketRef s, CFSocketCallBackType type, CFDat
         case kCFSocketReadCallBack:
         {
             NSLog(@"kCFSocketReadCallBack");
-            const UInt16 BUFSIZE = 15;
+            const UInt16 BUFSIZE = 20;
             char sBuf[BUFSIZE];
             memset(sBuf,0,BUFSIZE);
             int iRet = 0;
@@ -174,8 +175,10 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
     NSLog(@"socketCallbackServer %ld called", (SInt32)s);
     CFSocketContext cfSC;
     CFSocketGetContext(s, &cfSC);
+    communicator *localCom = (communicator*)cfSC.info;
+    [localCom closeNew];
     
-    CFSocketNativeHandle pSock = CFSocketGetNative(s);
+    CFSocketNativeHandle pSockNativeLocal = CFSocketGetNative(s);
     if (type == kCFSocketReadCallBack)
     {
         //server
@@ -185,7 +188,9 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
         socklen_t addrSize = sizeof(addr);
         memset(&addr, 0, addrSize);
         CFSocketNativeHandle pSockAccepted = NULL;
-        pSockAccepted = accept(pSock, &addr, &addrSize);
+        //NSLog(@"got native handle");
+        pSockAccepted = accept(pSockNativeLocal, &addr, &addrSize);
+        NSLog(@"client accepted");
         //from the native socket we need to create a cfsocket objekt
         CFSocketRef cfSockAccepted =
         CFSocketCreateWithNative(kCFAllocatorDefault,
@@ -193,6 +198,7 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
                                  kCFSocketReadCallBack,
                                  socketCallbackServerAccpeted,
                                  &cfSC);
+        //NSLog(@"create from native");
         //once we have the new connected socket put it in the runloop
         
         CFRunLoopSourceRef sourceRef = 
@@ -200,6 +206,7 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
 
         CFRunLoopAddSource(CFRunLoopGetCurrent(), sourceRef, kCFRunLoopCommonModes);
         CFRelease(sourceRef);
+        //NSLog(@"added to runloop");
     }
     else
     {
@@ -332,7 +339,14 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
     CFDataRef cfdAddr = CFDataCreate(NULL, (UInt8 *)&addr, sizeof(struct sockaddr_in));
     CFTimeInterval timeout = 30.0;
 
-    CFSocketError status =
+    //setsockopt(CFSocketGetNative(pSockListen), SOL_SOCKET, SO_REUSEADDR,
+    //           (void *)&flag, sizeof(flag));
+
+
+    CFSocketNativeHandle pSockNativeLoc = CFSocketGetNative(pSock);
+
+    int status = connect(pSockNativeLoc,(sockaddr*)&addr,sizeof(addr));
+    
     CFSocketConnectToAddress (pSock, cfdAddr, timeout);
 
     if (status != kCFSocketSuccess)
@@ -447,9 +461,12 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
 
 - (void)closeNew
 {
-    CFSocketInvalidate(pSock);
-    pSockNative = NULL;
-    pSock = NULL;
+    if (pSock)
+    {
+        CFSocketInvalidate(pSock);
+        pSockNative = NULL;
+        pSock = NULL;
+    }
     NSLog(@"socket closed");
 }
 

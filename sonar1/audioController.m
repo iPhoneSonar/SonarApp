@@ -259,8 +259,8 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
         if (ac->play->pos + inNumberFrames > ac->play->len)
         {
             [ac stop];
-            char sTimeStamp[15];
-            sprintf(sTimeStamp,"%f",inTimeStamp->mSampleTime);
+            char sTimeStamp[20];
+            sprintf(sTimeStamp,"%.0f",inTimeStamp->mSampleTime);
             [[ac com] sendNew:sTimeStamp];
             NSLog(@"ac stoped");
         }
@@ -709,8 +709,9 @@ static OSStatus recordingCallback(void *inRefCon,
     if ([[ac com]connectionState] == CS_SERVER)
     {
         //NSLog(@"timestampReceived=%d.\n",[[ac com]timestampReceived]);
-        if ([[ac com]timestampReceived])
+        if ([[ac com]timestampReceived] == true)
         {
+            NSLog(@"timestampReceived");
             NSString *Output = [[NSString alloc]init];
             //stop ac
             [ac stop];
@@ -720,6 +721,7 @@ static OSStatus recordingCallback(void *inRefCon,
             [[ac proc]GetPointerReceive:ac->recordBuf->buf Send:ac->play->buf Len:ac->play->len];       //set pointers
 
             Float64 receivedTimestamp=[[ac com]receivedTimestamp];
+            
             if ([[ac proc]isCalibrated])
             {
                 //calc distance
@@ -740,6 +742,7 @@ static OSStatus recordingCallback(void *inRefCon,
                 ac->LabelOutput.text=Output;
 
             }
+            
             //restart listening
             [ac start];
         }
