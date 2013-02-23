@@ -10,6 +10,8 @@
 @synthesize Latency;
 @synthesize SigLen;
 @synthesize isCalibrated;
+@synthesize com;
+@synthesize eKKF;
 
 -(void)InitializeArrays
 {
@@ -18,6 +20,7 @@
     count[1]=0;
     sendTimeTags = (AudioTimeStamp*)malloc(10000*sizeof(AudioTimeStamp));
     receiveTimeTags = (AudioTimeStamp*)malloc(10000*sizeof(AudioTimeStamp));
+    eKKF=(SInt64*)malloc(999999*sizeof(SInt64));
 }
 
 - (int)IncreaseCount:(NSString*)Type
@@ -164,8 +167,6 @@
 - (void)CalcKKF:(SInt64*)AKkf WithRecordSig:(SInt32*)ARecord AndSendSig:(SInt32*)ASend AndNumberOfSamples:(SInt32)Nsamples;
 {
     SInt32 KKFSize=2*Nsamples;
-    //Nullen aller AKkf Werte
-    memset(AKkf,0,KKFSize*sizeof(SInt64));
     int i=0;
     int j=0;
     int endJ=0;
@@ -193,6 +194,7 @@
             //add 2048 (2*Framesize), because record is 2 Samples longer than send.
             AKkf[i]=AKkf[i]+(SInt16)ASend[j]*(SInt16)ARecord[j+i-Nsamples];
         }
+        eKKF[i]=AKkf[i];
     }
     NSLog(@"Berechnung der KKF durchgeführt");
 }
@@ -292,13 +294,18 @@
 {
     SInt32 KKFSize=SigLen+2*4800;
     SInt64 AKKf[KKFSize];
+    memset(AKKf,0,KKFSize*sizeof(SInt64));
 
     [self CalcKKF:AKKf WithRecordSig:PRecord AndSendSig:PSend AndNumberOfSamples:SigLen];
     SInt32 Samples=[self MaximumSearchInKKF:AKKf atStartValue:SigLen withEndValue:KKFSize];
-
-    float Distance;
-    Distance=((float)Samples)*343.0f/48000.0f;
     
+    float Distance;
+    Distance=((float)(Samples-24910))*343.0f/48000.0f;
+    if (Distance < 0)
+    {
+        NSLog(@"Distanz war %f (kleiner als 0), bereinigt", Distance);
+        Distance=0;
+    }
     NSLog(@"Distance: %f",Distance);
     return Distance;
 }

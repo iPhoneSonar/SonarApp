@@ -765,8 +765,7 @@ static OSStatus recordingCallback(void *inRefCon,
 
             float Distance=[[ac proc]CalculateDistanceHeadphone];
             //display
-            NSString *Output=[[NSString alloc]init];
-            [Output initWithFormat:@"Distance: %f meters\nwaiting for new measurement",Distance];
+            NSString *Output=[[NSString alloc]initWithFormat:@"Distance: %.2f meters\nwaiting for new measurement",Distance];
             ac->LabelOutput.text=Output;
         }
     }
@@ -779,15 +778,9 @@ static OSStatus recordingCallback(void *inRefCon,
     NSLog(@"testOutput started");
     [com initNetworkCom];
     
-    SInt32 KKFSize=2*play->len;
+    SInt32 KKFSize=3*play->len;
     SInt64* AKkf;
     AKkf = (SInt64*)malloc(KKFSize*sizeof(SInt64));
-    [proc CalcKKF:AKkf WithRecordSig:recordBuf->buf AndSendSig:play->buf AndNumberOfSamples:play->len];
-
-    [proc GetPointerReceive:recordBuf->buf Send:play->buf Len:play->len];
-    [proc SetLatency:[proc GetTimeTag:@"send" at:1]];
-    [proc CalculateDistanceServerWithTimestamp:[proc GetTimeTag:@"send" at:0]];
-    
        
     NSString *outStr = [[NSString alloc] init];
     
@@ -872,7 +865,7 @@ static OSStatus recordingCallback(void *inRefCon,
     sOutPtr=sOut;
     for (int i=0; i< KKFSize; i++)
     {
-        sprintf(sOutPtr,"%lli,",AKkf[i]);
+        sprintf(sOutPtr,"%lli,",proc.eKKF[i]);
         len += strlen(sOutPtr);
         sOutPtr = sOut + len;
         // to package the frame data check the  size of the outStr

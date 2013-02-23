@@ -2,6 +2,7 @@
 #define processingH
 #import <Foundation/Foundation.h>
 #import <AudioToolbox/AudioToolbox.h>
+#import "communicator.h"
 
 
 @interface processing : NSObject
@@ -14,8 +15,10 @@
     SInt32 *PSend;
     Float64 Latency;
     bool isCalibrated;
+    communicator *com;
+    SInt64 *eKKF;
 }
-
+@property(nonatomic,retain) communicator *com;
 @property(nonatomic) AudioTimeStamp *sendTimeTags;
 @property(nonatomic) AudioTimeStamp *receiveTimeTags;
 @property(nonatomic) SInt32 *count;
@@ -24,6 +27,7 @@
 @property(nonatomic) Float64 Latency;
 @property(nonatomic) SInt32 SigLen;
 @property(nonatomic) bool isCalibrated;
+@property(nonatomic) SInt64 *eKKF;
 
 - (void)InitializeArrays;
 - (int)IncreaseCount:(NSString*)Type;
