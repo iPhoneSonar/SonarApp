@@ -59,6 +59,7 @@ SInt16 (^comRet) (NSString*); //returnvalue (^functionname) (parameter)
 - (SInt16)recvNew: (char*)sBuf : (UInt16*)uiLen;
 - (SInt16)sendNew: (char*)msg;
 - (void)closeNew;
+- (NSString*)getLocalIP;
 
 
 @end

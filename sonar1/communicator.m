@@ -7,7 +7,7 @@
 //
 
 #import "communicator.h"
-
+#import <ifaddrs.h>
 
 
 const SInt16 PORT = 2000;
@@ -451,6 +451,36 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
     pSockNative = NULL;
     pSock = NULL;
     NSLog(@"socket closed");
+}
+
+- (NSString*)getLocalIP
+{
+    NSString *locIp = @"noAdd";
+    ifaddrs *interfaces = NULL;
+    ifaddrs *temp_addr = NULL;
+    int iRet = getifaddrs(&interfaces);
+    if(iRet != 0)
+    {
+        NSLog(@"error getifaddrs");
+        return locIp;
+    }
+    temp_addr = interfaces;
+    sockaddr *sa = (temp_addr->ifa_addr);
+    while (temp_addr != NULL)
+    {
+        if(sa->sa_family == AF_INET)
+            //check if interface is wlan (en0)
+            if([[NSString stringWithUTF8String:temp_addr->ifa_name] isEqual:@"en0"])
+            {
+                locIp =
+                [NSString stringWithUTF8String:inet_ntoa(((sockaddr_in *)sa)->sin_addr)];
+                break;
+            }
+        temp_addr = temp_addr->ifa_next;
+        sa = (temp_addr->ifa_addr);
+    }
+    freeifaddrs(interfaces);
+    return locIp;
 }
 
 @end

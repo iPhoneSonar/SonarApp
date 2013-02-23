@@ -926,19 +926,9 @@ static OSStatus recordingCallback(void *inRefCon,
 {
     play->pos = 0;
     OSStatus status = 0;
-    if (recordingBufferList)
-    {
-        recordBuf->pos = 0;
-        recordingBufferList->mBuffers[0].mData = recordBuf->buf;
-        status = AudioOutputUnitStart(audioUnit);
-        NSLog(@"audioUnit started status = %ld", status);
-    }
-    else
-    {
-        NSLog(@"recordingBufferList not initialized");
-    }
-    tfOutput.text = @"start";
-
+    recordBuf->pos = 0;
+    status = AudioOutputUnitStart(audioUnit);
+    NSLog(@"audioUnit started status = %ld", status);
     return status;
 }
 
@@ -946,7 +936,6 @@ static OSStatus recordingCallback(void *inRefCon,
 {
     OSStatus status;
     status = AudioOutputUnitStop(audioUnit);
-    tfOutput.text = @"stop";
     NSLog(@"audioUnit stoped status = %ld", status);
     return status;
 }
