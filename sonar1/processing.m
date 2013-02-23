@@ -128,7 +128,7 @@
     [self RingKKF:AKkf ofRecord:PRecord AndSend:PSend RecSamples:SigLen SendSamples:100];
 
     SInt32 KKFSample;
-    KKFSample=[self MaximumSearchInKKF:AKkf atStartValue:0 withEndValue:SigLen];
+    KKFSample=[self MaximumSearchAtStartValue:0 WithEndValue:SigLen];
 
     Float64 receiveTime;
     receiveTime=[self GetSampleOfKKFSample:KKFSample ofSamples:100 withTimeStamp:receiveTimeTags];
@@ -139,11 +139,8 @@
 
 - (float)CalculateDistanceServerWithTimestamp:(Float64)SendTime
 {
-    SInt32 KKFSize=SigLen+2*4800;
-    SInt64 AKKf[KKFSize];
-
     SInt32 KKFSample;
-    KKFSample=[self MaximumSearchInKKF:AKKf atStartValue:0 withEndValue:SigLen];
+    KKFSample=[self MaximumSearchAtStartValue:0 WithEndValue:SigLen];
 
     Float64 receiveTime;
     receiveTime=[self GetSampleOfKKFSample:KKFSample ofSamples:4800 withTimeStamp:receiveTimeTags];
@@ -164,37 +161,35 @@
     return Distance;
 }
 
-- (void)CalcKKF:(SInt64*)AKkf WithRecordSig:(SInt32*)ARecord AndSendSig:(SInt32*)ASend AndNumberOfSamples:(SInt32)Nsamples;
+- (void)CalcKKFWithumberOfSamples:(SInt32)Nsamples;
 {
     SInt32 KKFSize=2*Nsamples;
     int i=0;
     int j=0;
     int endJ=0;
-    /*int startJ=0;
+    int startJ=0;
      //für erste Hälfte (nicht nötig, da keine kausale aussage möglich ist)
      for (i=0; i<Nsamples; i++)
      {
-     startJ=Nsamples-i;
-     for(j=startJ;j<Nsamples;j++)
-     {
-     AKkf[i]=AKkf[i]+ASend[j]*ARecord[j+i-Nsamples];
+         startJ=Nsamples-i;
+         for(j=startJ;j<Nsamples;j++)
+         {
+             eKKF[i]=eKKF[i]+PSend[j]*PRecord[j+i-Nsamples];
+         }
      }
-     }*/
 
     //zweite Hälfte, ab hier kausale Aussage möglich.
     //Berechnung um 2048 Werte später als Mitte, da das Empfangssignal um etwas mehr als 2 Frames verzögert ist
     //for (i=Nsamples+2048;i<KKFSize;i++)
     //3500 Werte entsprechen ca. 25 Meter, darum nicht mehr berechnen
     NSLog(@"Start der KKF Berechnung");
-    for (i=Nsamples+2048;i<Nsamples+3500+2048;i++)
+    for (i=Nsamples;i<KKFSize;i++)
     {
         endJ=KKFSize-i;
         for(j=1;j<endJ;j++)
         {
-            //add 2048 (2*Framesize), because record is 2 Samples longer than send.
-            AKkf[i]=AKkf[i]+(SInt16)ASend[j]*(SInt16)ARecord[j+i-Nsamples];
+            eKKF[i]=eKKF[i]+(SInt16)PSend[j]*(SInt16)PRecord[j+i-Nsamples];
         }
-        eKKF[i]=AKkf[i];
     }
     NSLog(@"Berechnung der KKF durchgeführt");
 }
@@ -237,9 +232,8 @@
     NSLog(@"Berechnung der RingKKF durchgeführt");
 }
 
-- (SInt32)MaximumSearchInKKF:(SInt64*)AKkf atStartValue:(UInt32)StartValue withEndValue:(UInt32)EndValue;
+- (SInt32)MaximumSearchAtStartValue:(UInt32)StartValue WithEndValue:(UInt32)EndValue;
 {
-    UInt64 max=0;
     SInt64 pmax=0;
     SInt64 nmax=0;
     int pmax_t=0;
@@ -250,21 +244,20 @@
     for (int i=StartValue;i<EndValue;i++)
     {
         //abs(Sint64) doesn´t work, abs() is only usable for Int
-        if (AKkf[i]>0)
+        if (eKKF[i]>0)
         {
-            max=abs(AKkf[i]);
             max_t=i;
-            if (pmax<AKkf[i])
+            if (pmax<eKKF[i])
             {
-                pmax=AKkf[i];
+                pmax=eKKF[i];
                 pmax_t=i;
             }
         }
         else
         {
-            if (nmax>AKkf[i] || nmax==0)
+            if (nmax>eKKF[i] || nmax==0)
             {
-                nmax=AKkf[i];
+                nmax=eKKF[i];
                 nmax_t=i;
             }
         }
@@ -277,11 +270,11 @@
     {
         max_t=nmax_t;
     }
-    NSLog(@"start = %ld, end = %ld, max = %lld",StartValue, EndValue, max);
+    NSLog(@"start = %ld, end = %ld, max: %i",StartValue, EndValue, max_t);
     return max_t;
 }
 
-- (Float64) GetSampleOfKKFSample:(SInt32)KKFSample ofSamples:(SInt32)Samples withTimeStamp:(AudioTimeStamp*)timeTags;
+- (Float64)GetSampleOfKKFSample:(SInt32)KKFSample ofSamples:(SInt32)Samples withTimeStamp:(AudioTimeStamp*)timeTags;
 {
     SInt32 Start=KKFSample-Samples;
     SInt32 Frame=Start/1024;
@@ -292,16 +285,16 @@
 
 - (float)CalculateDistanceHeadphone
 {
-    SInt32 KKFSize=SigLen+2*4800;
-    SInt64 AKKf[KKFSize];
-    memset(AKKf,0,KKFSize*sizeof(SInt64));
+    SInt32 KKFSize=2*SigLen;
+    eKKF = (SInt64*)malloc(KKFSize*sizeof(SInt64));
+    memset(eKKF,0,KKFSize*sizeof(SInt64));
 
-    [self CalcKKF:AKKf WithRecordSig:PRecord AndSendSig:PSend AndNumberOfSamples:SigLen];
-    SInt32 Samples=[self MaximumSearchInKKF:AKKf atStartValue:SigLen withEndValue:KKFSize];
+    [self CalcKKFWithumberOfSamples:SigLen];
+    SInt32 Samples=[self MaximumSearchAtStartValue:SigLen WithEndValue:KKFSize];
     
     float Distance;
-    NSLog(@"Samplemax: %li",Samples);
-    Distance=((float)(Samples-24813))*343.0f/48000.0f;
+    //Distance=((float)(Samples-24813))*343.0f/48000.0f;
+    Distance=((float)(Samples-SigLen-2048-238))*343.0f/48000.0f;
     if (Distance < 0)
     {
         NSLog(@"Distanz war %f (kleiner als 0), bereinigt", Distance);
