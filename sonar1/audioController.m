@@ -29,13 +29,12 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
     
     [super dealloc];
 }
-
+//^^^^^^^^^^
 - (audioController*)init
 {
     com = [[communicator alloc] init];
     proc = [processing alloc];
-
-
+    
     if([self sendSigInit])
     {
         NSLog(@"error sendSigInit");
@@ -48,13 +47,22 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
     {
          NSLog(@"error recordBufferInitSamples");;
     }
-
+    play = sendSig;
+    
     [self sessionInit]; //return values
     [self audioUnitInit]; //return values
 
     //if no headphone is connected we know its a server
     //[self initServer];
     return self;
+}
+
+- (SInt16)comRet: (NSString*) retStr
+{
+    NSString* dummy = @"dummy called";
+    NSLog(@"%@",dummy);
+    NSLog(@"retStr:%@.\n",retStr);
+    return 0;
 }
 
 -(SInt16)initClient
@@ -64,11 +72,22 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
     {
         return -1;
     }
-    
+    play = sendSig;
     //send chirp on gui screen click -> button event (on start button)
     //tcp transmitt timestamp -> send in playing callback
-    //wait for tcp transmitted distance -> handled in
+    //wait for tcp transmitted msg (distance) -> handled in communicator socketclientcallback
+    //  function pointer to comRet to display msg in lable
+    //returnvalue (parametertype parameter) {implementation}
+    comRet = ^ SInt16 (NSString* strMsg)
+    {
+        NSLog(@"strMsg from server:\n %@.\n",strMsg);
+        LabelOutput.text = strMsg;
+        return 0;
+    };
+    [com setPComReturn:(void*)comRet];
+    
     //show distance
+
     return 0;
 }
 
@@ -79,16 +98,17 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
     {
         return -1;
     }    
-
-    //tcp server starten
-
+    play = zeroSig;
     //playingcallback mute <- done by decition in playingCallback
-    //init ringbuffer <- pointer returning pointer on overflow in recordingCallback
+    //init ringbuffer <- returning pointer on overflow in recordingCallback
     //wait for timestamp <- done in acceptcallback
-
-    //if no headphone is connected calibration follows (neasurement  view
+    //if no headphone is connected calibration follows (measurement  view
     //display waiting for calibration
+    LabelOutput.text = @"waiting for calibration";
     //  wait for signal
+    [self start];
+    //when started next steps are handled from recording callback
+
     //  process signal
     //  response calibration successful ???
     // (1) wait again for signal (display waiting for measurement //next/ distance, waiting for newe
@@ -136,8 +156,6 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
     
     sendSig->len = len;
     sendSig->pos = 0;
-
-    play = sendSig;
 
     NSLog(@"Sendesignal Länge: %li Samples",sendSig->len);
     return 0;
@@ -241,8 +259,8 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
         if (ac->play->pos + inNumberFrames > ac->play->len)
         {
             [ac stop];
-            char sTimeStamp[15];
-            sprintf(sTimeStamp,"%f",inTimeStamp->mSampleTime);
+            char sTimeStamp[20];
+            sprintf(sTimeStamp,"%.0f",inTimeStamp->mSampleTime);
             [[ac com] sendNew:sTimeStamp];
             NSLog(@"ac stoped");
         }
@@ -663,7 +681,7 @@ static OSStatus recordingCallback(void *inRefCon,
                                   UInt32 inNumberFrames,
                                   AudioBufferList *ioData)
 {
-
+    
     audioController* ac = (audioController*)inRefCon;
 
     //CS_CLIENT does no recording
@@ -686,13 +704,14 @@ static OSStatus recordingCallback(void *inRefCon,
         AudioOutputUnitStop(ac.audioUnit);
         return -1;
     }
-    //the server is ready if it got the message from the client,
+    //the server is ready if it got the timestamp from the client,
     //till that it records in cyles into the buffer
     if ([[ac com]connectionState] == CS_SERVER)
     {
-
-        if ([[ac com]timestampReceived])
+        //NSLog(@"timestampReceived=%d.\n",[[ac com]timestampReceived]);
+        if ([[ac com]timestampReceived] == true)
         {
+            NSLog(@"timestampReceived");
             NSString *Output = [[NSString alloc]init];
             //stop ac
             [ac stop];
@@ -701,7 +720,8 @@ static OSStatus recordingCallback(void *inRefCon,
             //processing
             [[ac proc]GetPointerReceive:ac->recordBuf->buf Send:ac->play->buf Len:ac->play->len];       //set pointers
 
-            Float64 receivedTimestamp=0;
+            Float64 receivedTimestamp=[[ac com]receivedTimestamp];
+            
             if ([[ac proc]isCalibrated])
             {
                 //calc distance
@@ -716,9 +736,12 @@ static OSStatus recordingCallback(void *inRefCon,
                 [[ac proc]SetLatency:receivedTimestamp];
                 //display measurement
                 Output=@"calibration succesfull\nwaiting for measurement";
+                NSLog(@"calibrated");
+                NSLog(@"latency=%f.\n",[[ac proc]Latency]);
                 ac->LabelOutput.text=Output;
 
             }
+            
             //restart listening
             [ac start];
         }
@@ -902,19 +925,9 @@ static OSStatus recordingCallback(void *inRefCon,
 {
     play->pos = 0;
     OSStatus status = 0;
-    if (recordingBufferList)
-    {
-        recordBuf->pos = 0;
-        recordingBufferList->mBuffers[0].mData = recordBuf->buf;
-        status = AudioOutputUnitStart(audioUnit);
-        NSLog(@"audioUnit started status = %ld", status);
-    }
-    else
-    {
-        NSLog(@"recordingBufferList not initialized");
-    }
-    tfOutput.text = @"start";
-
+    recordBuf->pos = 0;
+    status = AudioOutputUnitStart(audioUnit);
+    NSLog(@"audioUnit started status = %ld", status);
     return status;
 }
 
@@ -922,7 +935,6 @@ static OSStatus recordingCallback(void *inRefCon,
 {
     OSStatus status;
     status = AudioOutputUnitStop(audioUnit);
-    tfOutput.text = @"stop";
     NSLog(@"audioUnit stoped status = %ld", status);
     return status;
 }
