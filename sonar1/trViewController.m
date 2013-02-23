@@ -139,14 +139,17 @@
     if (btnNetMode.selected == YES) //server
     {
         NSLog(@"btnNetMode YES");
-        [[audioController com ] serverStart];
+        [audioController initServer];
     }
     else
     { //must be client
         NSLog(@"btnNetMode NO");
         [[audioController com ]setHost: (CFStringRef)self.tfIp.text];
         NSLog(@"server ip = %@",[[audioController com]host]);
-        [audioController initClient];
+        if([audioController initClient] == -1)
+        {
+            return;
+        }
         [audioController start];
     }
 }

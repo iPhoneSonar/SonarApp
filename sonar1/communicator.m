@@ -60,7 +60,7 @@ const CFStringRef DEBUG_HOST = (CFStringRef)@"192.168.173.1";
 
 static void socketCallbackClient(CFSocketRef s, CFSocketCallBackType type, CFDataRef address, const void *data, void *info)
 {
-    NSLog(@"socketCallback %ld called", (SInt32)s);
+    NSLog(@"socketCallbackClient %ld called", (SInt32)s);
     //get the object pointer from the context
     CFSocketContext cfSC;
     CFSocketGetContext(s, &cfSC);
@@ -282,9 +282,9 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
 {
     //fpComReturn comReturn = (fpComReturn) pComReturn;
     //comReturn(@"hello from clientConnect");
-    SInt16 (^myblock) (NSString*); //returnvalue (^functionname) (parameter)
-    myblock = (SInt16 (^)(NSString*))pComReturn;
-    NSLog(@"ret = %d.\n",myblock(@"communicator"));
+    //SInt16 (^myblock) (NSString*); //returnvalue (^functionname) (parameter)
+    //myblock = (SInt16 (^)(NSString*))pComReturn;
+    //NSLog(@"ret = %d.\n",myblock(@"communicator"));
     
     //close socket if open
     if (pSock)

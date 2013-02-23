@@ -47,7 +47,8 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
     {
          NSLog(@"error recordBufferInitSamples");;
     }
-
+    play = sendSig;
+    
     [self sessionInit]; //return values
     [self audioUnitInit]; //return values
 
@@ -71,6 +72,7 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
     {
         return -1;
     }
+    play = sendSig;
     //send chirp on gui screen click -> button event (on start button)
     //tcp transmitt timestamp -> send in playing callback
     //wait for tcp transmitted msg (distance) -> handled in communicator socketclientcallback
@@ -96,7 +98,7 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
     {
         return -1;
     }    
-
+    play = zeroSig;
     //playingcallback mute <- done by decition in playingCallback
     //init ringbuffer <- returning pointer on overflow in recordingCallback
     //wait for timestamp <- done in acceptcallback
@@ -154,8 +156,6 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
     
     sendSig->len = len;
     sendSig->pos = 0;
-
-    play = sendSig;
 
     NSLog(@"Sendesignal Länge: %li Samples",sendSig->len);
     return 0;
@@ -681,7 +681,7 @@ static OSStatus recordingCallback(void *inRefCon,
                                   UInt32 inNumberFrames,
                                   AudioBufferList *ioData)
 {
-
+    
     audioController* ac = (audioController*)inRefCon;
 
     //CS_CLIENT does no recording
@@ -708,7 +708,7 @@ static OSStatus recordingCallback(void *inRefCon,
     //till that it records in cyles into the buffer
     if ([[ac com]connectionState] == CS_SERVER)
     {
-
+        //NSLog(@"timestampReceived=%d.\n",[[ac com]timestampReceived]);
         if ([[ac com]timestampReceived])
         {
             NSString *Output = [[NSString alloc]init];
@@ -719,7 +719,7 @@ static OSStatus recordingCallback(void *inRefCon,
             //processing
             [[ac proc]GetPointerReceive:ac->recordBuf->buf Send:ac->play->buf Len:ac->play->len];       //set pointers
 
-            Float64 receivedTimestamp=0;
+            Float64 receivedTimestamp=[[ac com]receivedTimestamp];
             if ([[ac proc]isCalibrated])
             {
                 //calc distance
@@ -735,6 +735,8 @@ static OSStatus recordingCallback(void *inRefCon,
                 [[ac proc]SetLatency:receivedTimestamp];
                 //display measurement
                 Output=@"calibration succesfull\nwaiting for measurement";
+                NSLog(@"calibrated");
+                NSLog(@"latency=%f.\n",[[ac proc]Latency]);
                 ac->LabelOutput.text=Output;
 
             }
