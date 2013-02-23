@@ -300,7 +300,8 @@
     SInt32 Samples=[self MaximumSearchInKKF:AKKf atStartValue:SigLen withEndValue:KKFSize];
     
     float Distance;
-    Distance=((float)(Samples-24910))*343.0f/48000.0f;
+    NSLog(@"Samplemax: %li",Samples);
+    Distance=((float)(Samples-24813))*343.0f/48000.0f;
     if (Distance < 0)
     {
         NSLog(@"Distanz war %f (kleiner als 0), bereinigt", Distance);
