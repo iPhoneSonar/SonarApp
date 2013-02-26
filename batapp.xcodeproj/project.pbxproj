@@ -42,8 +42,8 @@
 		32C1C14B16CEA6A100D0A9D8 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = "en.lproj/trViewController~ipad.xib"; sourceTree = "<group>"; };
 		32C1C14D16CEA83C00D0A9D8 /* MeasurementView~ipad.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = "MeasurementView~ipad.xib"; sourceTree = "<group>"; };
 		32C1C14F16CEA84400D0A9D8 /* MeasurementView~iphone.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = "MeasurementView~iphone.xib"; sourceTree = "<group>"; };
-		32C218BD16527FC30024E731 /* processing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = processing.h; sourceTree = "<group>"; };
-		32C218BE16527FC30024E731 /* processing.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = processing.m; sourceTree = "<group>"; };
+		32C218BD16527FC30024E731 /* processing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = processing.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		32C218BE16527FC30024E731 /* processing.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = processing.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		32CC656C16A5895E004628AF /* MeasurementView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MeasurementView.h; sourceTree = "<group>"; };
 		32CC656D16A5895E004628AF /* MeasurementView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MeasurementView.m; sourceTree = "<group>"; };
 		32D352E3164D8CF600364CF9 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
@@ -70,7 +70,7 @@
 		B4BA4ACF162056B300520207 /* trViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = trViewController.h; sourceTree = "<group>"; };
 		B4BA4AD0162056B300520207 /* trViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = trViewController.m; sourceTree = "<group>"; };
 		B4BA4ADA1620571400520207 /* audioController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = audioController.h; sourceTree = "<group>"; };
-		B4BA4ADB1620571400520207 /* audioController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = audioController.m; sourceTree = "<group>"; };
+		B4BA4ADB1620571400520207 /* audioController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = audioController.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		B4BA4AE01620617600520207 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 

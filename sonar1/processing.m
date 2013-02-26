@@ -7,7 +7,6 @@
 @synthesize count;
 @synthesize PRecord;
 @synthesize PSend;
-@synthesize Latency;
 @synthesize SigLen;
 @synthesize isCalibrated;
 @synthesize com;
@@ -130,7 +129,7 @@
     SigLen=Len;
 }
 
-- (void)SetLatency:(Float64)SendTime
+- (void)SetTimeDifference:(Float64)SendTime ReciveTimestamp:(Float64)ReceiveTime
 {
     SInt64 AKkf[SigLen+2*100];
     [self RingKKF:AKkf ofRecord:PRecord AndSend:PSend RecSamples:SigLen SendSamples:100];
@@ -138,11 +137,15 @@
     SInt32 KKFSample;
     KKFSample=[self MaximumSearchAtStartValue:0 WithEndValue:SigLen];
 
-    Float64 receiveTime;
-    receiveTime=[self GetSampleOfKKFSample:KKFSample ofSamples:100 withTimeStamp:recordTimeTags];
-    Latency=receiveTime-SendTime;
+    Float64 KKFSampleTime;
+    KKFSampleTime=ReceiveTime-KKFSample;
+    
+    //receiveTime=[self GetSampleOfKKFSample:KKFSample ofSamples:100 withTimeStamp:ReceiveTime];
+
+    TimeDifference=KKFSampleTime-SendTime;
+    
     [self setIsCalibrated:true];
-    NSLog(@"latency: %f",Latency);
+    NSLog(@"TimeDifference: %f",TimeDifference);
 }
 
 - (float)CalculateDistanceServerWithTimestamp:(Float64)SendTime
@@ -150,15 +153,15 @@
     SInt32 KKFSample;
     KKFSample=[self MaximumSearchAtStartValue:0 WithEndValue:SigLen];
 
-    Float64 receiveTime;
-    receiveTime=[self GetSampleOfKKFSample:KKFSample ofSamples:4800 withTimeStamp:recordTimeTags];
+    //Float64 receiveTime;
+    //receiveTime=[self GetSampleOfKKFSample:KKFSample ofSamples:4800 withTimeStamp:recordTimeTags];
     
-    SInt32 SignalTime;
-    SignalTime=(SInt32)(receiveTime-SendTime-Latency);
+    //SInt32 SignalTime;
+    //SignalTime=(SInt32)(receiveTime-SendTime-TimeDifference);
 
-    float Distance;
-    Distance=[self GetDistance:SignalTime];
-    NSLog(@"Distance: %f",Distance);
+    float Distance=0;
+    //Distance=[self GetDistance:SignalTime];
+    //NSLog(@"Distance: %f",Distance);
     return Distance;
 }
 
@@ -280,15 +283,6 @@
     }
     NSLog(@"start = %ld, end = %ld, max: %i",StartValue, EndValue, max_t);
     return max_t;
-}
-
-- (Float64)GetSampleOfKKFSample:(SInt32)KKFSample ofSamples:(SInt32)Samples withTimeStamp:(AudioTimeStamp*)timeTags;
-{
-    SInt32 Start=KKFSample-Samples;
-    SInt32 Frame=Start/1024;
-    Float64 Sample=timeTags[Frame].mSampleTime+(Float64)(Start%1024);
-    NSLog(@"Vergleich: Empfangsframe: %f Darin Abtastwert: %li, Entspricht Sample: %f",timeTags[Frame].mSampleTime,Start%1024,Sample);
-    return Sample;
 }
 
 - (float)CalculateDistanceHeadphone

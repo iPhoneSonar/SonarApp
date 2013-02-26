@@ -254,18 +254,13 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
     //client plays the buffer content once
     else if([[ac com]connectionState] == CS_ClIENT)
     {
-        if ([[ac proc]SetTimeTag:@"play" To:*inTimeStamp]<0)
-        {
-            [ac stop];
-            NSLog(@"Error at SetTimeTag in playing Callback()");
-        }
         ac->play->pos += inNumberFrames;
         //if all frames are send the client work is completed
         if (ac->play->pos + inNumberFrames > ac->play->len)
         {
             [ac stop];
             char sTimeStamp[20];
-            sprintf(sTimeStamp,"%.0f",[[ac proc]GetTimeTag:@"play" at:0]);
+            sprintf(sTimeStamp,"%.0f",inTimeStamp->mSampleTime);
             NSLog(@"timeStamp: %s", sTimeStamp);
             [[ac com] sendNew:sTimeStamp];
             [[ac proc]resetTimeTags];
@@ -284,7 +279,6 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
             ioData->mBuffers[0].mData = ac->zeroSig->buf;
             ac->play->pos -= inNumberFrames; //to prevent an overflow
         }
-
     }
 
     return noErr;
@@ -698,7 +692,6 @@ static OSStatus recordingCallback(void *inRefCon,
     }
 
     int dataSize = inNumberFrames * sizeof(SInt32); // 16bit twice
-    //NSLog(@"recordingCallback");
 
     OSStatus status;
 
@@ -715,13 +708,8 @@ static OSStatus recordingCallback(void *inRefCon,
     //till that it records in cyles into the buffer
     if ([[ac com]connectionState] == CS_SERVER)
     {
-        if ([[ac proc]SetTimeTag:@"record" To:*inTimeStamp]<0)
-        {
-            [ac stop];
-        }
         if ([[ac com]timestampReceived] == true)
         {
-            NSLog(@"timestampReceived");
             NSString *Output = [[NSString alloc]init];
             //stop ac
             [ac stop];
@@ -731,6 +719,7 @@ static OSStatus recordingCallback(void *inRefCon,
             [[ac proc]GetPointerReceive:ac->recordBuf->buf Send:ac->play->buf Len:ac->play->len];       //set pointers
 
             Float64 receivedTimestamp=[[ac com]receivedTimestamp];
+            NSLog(@"timestampReceived= %0.f",receivedTimestamp);
             
             //if ([[ac proc]isCalibrated])
             if (false)
@@ -744,12 +733,11 @@ static OSStatus recordingCallback(void *inRefCon,
             else
             {
                 //calc latency
-                NSLog(@"recivedTimestamp= %0.f",receivedTimestamp);
-                [[ac proc]SetLatency:receivedTimestamp];
+                [[ac proc]SetTimeDifference:receivedTimestamp ReciveTimestamp:inTimeStamp->mSampleTime];
                 //display measurement
                 //Output=@"calibration succesfull\nwaiting for measurement";
                 [Output initWithFormat:@"recived Timestamp: %2.f",receivedTimestamp];
-                NSLog(@"calibrated, latency=%0.f\n",[[ac proc]Latency]);
+                //NSLog(@"calibrated, latency=%0.f\n",[[ac proc]Latency]);
                 ac->LabelOutput.text=Output;
 
             }
@@ -770,8 +758,6 @@ static OSStatus recordingCallback(void *inRefCon,
                                  inNumberFrames,
                                  bufferList);
         ac->recordBuf->pos += inNumberFrames;
-
-        [ac.proc SetTimeTag:@"receive" To:*inTimeStamp];
     }
 
     //assume that without network one device with headphones is used
@@ -779,7 +765,6 @@ static OSStatus recordingCallback(void *inRefCon,
     //once the buffer is full, we are done
     else if ([[ac com]connectionState] == CS_DISCONNECTED)
     {
-        [ac.proc SetTimeTag:@"receive" To:*inTimeStamp];
         bufferList->mBuffers[0].mData = ac->recordBuf->buf+ac->recordBuf->pos;
         //AudioUnitRenderActionFlags ioActionFlags;
         status = AudioUnitRender(ac.audioUnit,

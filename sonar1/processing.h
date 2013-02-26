@@ -13,7 +13,7 @@
     SInt32 SigLen;
     SInt32 *PRecord;
     SInt32 *PSend;
-    Float64 Latency;
+    Float64 TimeDifference;
     bool isCalibrated;
     communicator *com;
     SInt64 *eKKF;
@@ -24,7 +24,6 @@
 @property(nonatomic) SInt32 *count;
 @property(nonatomic) SInt32 *PRecord;
 @property(nonatomic) SInt32 *PSend;
-@property(nonatomic) Float64 Latency;
 @property(nonatomic) SInt32 SigLen;
 @property(nonatomic) bool isCalibrated;
 @property(nonatomic) SInt64 *eKKF;
@@ -32,9 +31,9 @@
 - (void)InitializeArrays;
 - (int)IncreaseCount:(NSString*)Type;
 - (SInt32)GetCount:(NSString*)Type;
-- (int)SetTimeTag:(NSString*)Type To:(AudioTimeStamp)TimeStamp;
-- (Float64)GetTimeTag:(NSString*)Type at:(SInt32)Frame;
-- (void)SetLatency:(Float64)SendTime; //call by server
+//- (int)SetTimeTag:(NSString*)Type To:(AudioTimeStamp)TimeStamp;
+//- (Float64)GetTimeTag:(NSString*)Type at:(SInt32)Frame;
+- (void)SetTimeDifference:(Float64)SendTime ReciveTimestamp:(Float64)ReceiveTime; //call by server
 - (void)GetPointerReceive:(SInt32*)ARecord Send:(SInt32*)ASend Len:(SInt32)Len;
 - (float)CalculateDistanceServerWithTimestamp:(Float64)SendTime; //call by server
 - (void)RingKKF:(SInt64*)AKkf ofRecord:(SInt32*)ARecord AndSend:(SInt32*)ASend RecSamples:(SInt32)NRecordSamples SendSamples:(SInt32)NSendSamples;
