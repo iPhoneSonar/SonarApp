@@ -12,7 +12,7 @@
 
 const SInt16 PORT = 2000;
 const SInt16 DEBUG_PORT = 2002;
-const CFStringRef DEBUG_HOST = (CFStringRef)@"192.168.173.1";
+const CFStringRef DEBUG_HOST = (CFStringRef)@"192.168.56.1";
 
 @implementation communicator
 
@@ -336,8 +336,8 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
     addr.sin_port = htons(PORT);
     addr.sin_addr.s_addr = inet_addr(sAddr);
                            
-    CFDataRef cfdAddr = CFDataCreate(NULL, (UInt8 *)&addr, sizeof(struct sockaddr_in));
-    CFTimeInterval timeout = 30.0;
+    //CFDataRef cfdAddr = CFDataCreate(NULL, (UInt8 *)&addr, sizeof(struct sockaddr_in));
+    //CFTimeInterval timeout = 30.0;
 
     //setsockopt(CFSocketGetNative(pSockListen), SOL_SOCKET, SO_REUSEADDR,
     //           (void *)&flag, sizeof(flag));
@@ -347,7 +347,7 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
 
     int status = connect(pSockNativeLoc,(sockaddr*)&addr,sizeof(addr));
     
-    CFSocketConnectToAddress (pSock, cfdAddr, timeout);
+    //CFSocketConnectToAddress (pSock, cfdAddr, timeout);
 
     if (status != kCFSocketSuccess)
     {
@@ -358,14 +358,14 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
     }
 
     connectionState = CS_ClIENT;
-    NSLog(@"clientConnected");
+    NSLog(@"client Connected");
 
     CFRunLoopSourceRef sourceRef =
     CFSocketCreateRunLoopSource(kCFAllocatorDefault, pSock, 0);
     
     CFRunLoopAddSource(CFRunLoopGetCurrent(), sourceRef, kCFRunLoopCommonModes);
     CFRelease(sourceRef);
-
+    printf("printf hallo");
     return 0;
 }
 
