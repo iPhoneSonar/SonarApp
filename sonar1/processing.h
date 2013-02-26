@@ -7,8 +7,8 @@
 
 @interface processing : NSObject
 {
-    AudioTimeStamp *sendTimeTags;
-    AudioTimeStamp *receiveTimeTags;
+    AudioTimeStamp *playTimeTags;
+    AudioTimeStamp *recordTimeTags;
     SInt32 *count;
     SInt32 SigLen;
     SInt32 *PRecord;
@@ -19,8 +19,8 @@
     SInt64 *eKKF;
 }
 @property(nonatomic,retain) communicator *com;
-@property(nonatomic) AudioTimeStamp *sendTimeTags;
-@property(nonatomic) AudioTimeStamp *receiveTimeTags;
+@property(nonatomic) AudioTimeStamp *playTimeTags;
+@property(nonatomic) AudioTimeStamp *recordTimeTags;
 @property(nonatomic) SInt32 *count;
 @property(nonatomic) SInt32 *PRecord;
 @property(nonatomic) SInt32 *PSend;
@@ -39,6 +39,7 @@
 - (float)CalculateDistanceServerWithTimestamp:(Float64)SendTime; //call by server
 - (void)RingKKF:(SInt64*)AKkf ofRecord:(SInt32*)ARecord AndSend:(SInt32*)ASend RecSamples:(SInt32)NRecordSamples SendSamples:(SInt32)NSendSamples;
 - (float)CalculateDistanceHeadphone;
+- (void)resetTimeTags;
 
 @end
 

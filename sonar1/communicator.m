@@ -336,8 +336,8 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
     addr.sin_port = htons(PORT);
     addr.sin_addr.s_addr = inet_addr(sAddr);
                            
-    CFDataRef cfdAddr = CFDataCreate(NULL, (UInt8 *)&addr, sizeof(struct sockaddr_in));
-    CFTimeInterval timeout = 30.0;
+    //CFDataRef cfdAddr = CFDataCreate(NULL, (UInt8 *)&addr, sizeof(struct sockaddr_in));
+    //CFTimeInterval timeout = 30.0;
 
     //setsockopt(CFSocketGetNative(pSockListen), SOL_SOCKET, SO_REUSEADDR,
     //           (void *)&flag, sizeof(flag));
@@ -347,7 +347,7 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
 
     int status = connect(pSockNativeLoc,(sockaddr*)&addr,sizeof(addr));
     
-    CFSocketConnectToAddress (pSock, cfdAddr, timeout);
+    //CFSocketConnectToAddress (pSock, cfdAddr, timeout);
 
     if (status != kCFSocketSuccess)
     {
@@ -483,8 +483,9 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
     }
     temp_addr = interfaces;
     sockaddr *sa = (temp_addr->ifa_addr);
-    while (temp_addr != NULL)
+    while (temp_addr != NULL || temp_addr!=0)
     {
+        sa = (temp_addr->ifa_addr);
         if(sa->sa_family == AF_INET)
             //check if interface is wlan (en0)
             if([[NSString stringWithUTF8String:temp_addr->ifa_name] isEqual:@"en0"])
@@ -494,7 +495,6 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
                 break;
             }
         temp_addr = temp_addr->ifa_next;
-        sa = (temp_addr->ifa_addr);
     }
     freeifaddrs(interfaces);
     return locIp;

@@ -2,8 +2,8 @@
 
 @implementation processing
 
-@synthesize sendTimeTags;
-@synthesize receiveTimeTags;
+@synthesize playTimeTags;
+@synthesize recordTimeTags;
 @synthesize count;
 @synthesize PRecord;
 @synthesize PSend;
@@ -18,22 +18,30 @@
     count = (SInt32*)malloc(2*sizeof(SInt32));
     count[0]=0;
     count[1]=0;
-    sendTimeTags = (AudioTimeStamp*)malloc(10000*sizeof(AudioTimeStamp));
-    receiveTimeTags = (AudioTimeStamp*)malloc(10000*sizeof(AudioTimeStamp));
+    playTimeTags = (AudioTimeStamp*)malloc(10000*sizeof(AudioTimeStamp));
+    recordTimeTags = (AudioTimeStamp*)malloc(10000*sizeof(AudioTimeStamp));
     eKKF=(SInt64*)malloc(999999*sizeof(SInt64));
+}
+
+-(void)resetTimeTags
+{
+    count[0]=0;
+    count[1]=0;
+    memset(playTimeTags,0,10000*sizeof(AudioTimeStamp));
+    memset(recordTimeTags,0,10000*sizeof(AudioTimeStamp));
 }
 
 - (int)IncreaseCount:(NSString*)Type
 {
     int retval;
-    if ([Type isEqualToString:@"receive"])
+    if ([Type isEqualToString:@"record"])
     {
         count[1]++;
         retval=0;
     }
     else
     {
-        if([Type isEqualToString:@"send"])
+        if([Type isEqualToString:@"play"])
         {
             count[0]++;
             retval =0;
@@ -50,13 +58,13 @@
 - (SInt32)GetCount:(NSString*)Type;
 {
     SInt32 retval;
-    if ([Type isEqualToString:@"receive"])
+    if ([Type isEqualToString:@"record"])
     {
         retval=count[1];
     }
     else
     {
-        if([Type isEqualToString:@"send"])
+        if([Type isEqualToString:@"play"])
         {
             retval=count[0];
         }
@@ -72,16 +80,16 @@
 - (int)SetTimeTag:(NSString*)Type To:(AudioTimeStamp)TimeStamp;
 {
     int retval;
-    if ([Type isEqualToString:@"receive"])
+    if ([Type isEqualToString:@"record"])
     {
-        receiveTimeTags[count[1]]=TimeStamp;
+        recordTimeTags[count[1]]=TimeStamp;
         retval=[self IncreaseCount:Type];
     }
     else
     {
-        if([Type isEqualToString:@"send"])
+        if([Type isEqualToString:@"play"])
         {
-            sendTimeTags[count[0]]=TimeStamp;
+            playTimeTags[count[0]]=TimeStamp;
             retval=[self IncreaseCount:Type];
         }
         else
@@ -96,15 +104,15 @@
 - (Float64)GetTimeTag:(NSString*)Type at:(SInt32)Frame
 {
     Float64 retval;
-    if ([Type isEqualToString:@"receive"])
+    if ([Type isEqualToString:@"record"])
     {
-        retval=receiveTimeTags[Frame].mSampleTime;
+        retval=recordTimeTags[Frame].mSampleTime;
     }
     else
     {
-        if([Type isEqualToString:@"send"])
+        if([Type isEqualToString:@"play"])
         {
-            retval=sendTimeTags[Frame].mSampleTime;
+            retval=playTimeTags[Frame].mSampleTime;
         }
         else
         {
@@ -131,7 +139,7 @@
     KKFSample=[self MaximumSearchAtStartValue:0 WithEndValue:SigLen];
 
     Float64 receiveTime;
-    receiveTime=[self GetSampleOfKKFSample:KKFSample ofSamples:100 withTimeStamp:receiveTimeTags];
+    receiveTime=[self GetSampleOfKKFSample:KKFSample ofSamples:100 withTimeStamp:recordTimeTags];
     Latency=receiveTime-SendTime;
     [self setIsCalibrated:true];
     NSLog(@"latency: %f",Latency);
@@ -143,7 +151,7 @@
     KKFSample=[self MaximumSearchAtStartValue:0 WithEndValue:SigLen];
 
     Float64 receiveTime;
-    receiveTime=[self GetSampleOfKKFSample:KKFSample ofSamples:4800 withTimeStamp:receiveTimeTags];
+    receiveTime=[self GetSampleOfKKFSample:KKFSample ofSamples:4800 withTimeStamp:recordTimeTags];
     
     SInt32 SignalTime;
     SignalTime=(SInt32)(receiveTime-SendTime-Latency);
