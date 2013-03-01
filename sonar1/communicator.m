@@ -12,7 +12,7 @@
 
 const SInt16 PORT = 2000;
 const SInt16 DEBUG_PORT = 2002;
-const CFStringRef DEBUG_HOST = (CFStringRef)@"192.168.173.1";
+const CFStringRef DEBUG_HOST = (CFStringRef)@"172.20.10.3";
 
 @implementation communicator
 
@@ -137,7 +137,7 @@ static void socketCallbackServerAccpeted(CFSocketRef s, CFSocketCallBackType typ
     {
         //we have an connected client socket that will send us an timestamp
 
-        const UInt16 BUFSIZE = 15;
+        const UInt16 BUFSIZE = 30;
         char sBuf[BUFSIZE];
         memset(sBuf,0,BUFSIZE);
         int iRet = 0;

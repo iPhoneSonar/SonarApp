@@ -2,156 +2,169 @@
 
 @implementation processing
 
-@synthesize playTimeTags;
-@synthesize recordTimeTags;
-@synthesize count;
-@synthesize PRecord;
-@synthesize PSend;
-@synthesize SigLen;
 @synthesize isCalibrated;
 @synthesize com;
-@synthesize eKKF;
+@synthesize PKKF;
+@synthesize KKFLen;
 
 -(void)InitializeArrays
 {
-    count = (SInt32*)malloc(2*sizeof(SInt32));
-    count[0]=0;
-    count[1]=0;
-    playTimeTags = (AudioTimeStamp*)malloc(10000*sizeof(AudioTimeStamp));
-    recordTimeTags = (AudioTimeStamp*)malloc(10000*sizeof(AudioTimeStamp));
-    eKKF=(SInt64*)malloc(999999*sizeof(SInt64));
+    KKFLen=999999;
+    PKKF=(SInt64*)malloc(KKFLen*sizeof(SInt64));
+    TimeDifference=0;
+    [self ResetArrays];
 }
-
--(void)resetTimeTags
+-(void)ResetArrays
 {
-    count[0]=0;
-    count[1]=0;
-    memset(playTimeTags,0,10000*sizeof(AudioTimeStamp));
-    memset(recordTimeTags,0,10000*sizeof(AudioTimeStamp));
+    memset(PKKF,0,KKFLen*sizeof(SInt64));
 }
 
-- (int)IncreaseCount:(NSString*)Type
-{
-    int retval;
-    if ([Type isEqualToString:@"record"])
-    {
-        count[1]++;
-        retval=0;
-    }
-    else
-    {
-        if([Type isEqualToString:@"play"])
-        {
-            count[0]++;
-            retval =0;
-        }
-        else
-        {
-            retval=-1;
-            NSLog(@"error at IncreaseCount");
-        }
-    }
-    return retval;
-}
-
-- (SInt32)GetCount:(NSString*)Type;
-{
-    SInt32 retval;
-    if ([Type isEqualToString:@"record"])
-    {
-        retval=count[1];
-    }
-    else
-    {
-        if([Type isEqualToString:@"play"])
-        {
-            retval=count[0];
-        }
-        else
-        {
-            retval=-1;
-            NSLog(@"error at GetCount");
-        }
-    }
-    return retval;
-}
-
-- (int)SetTimeTag:(NSString*)Type To:(AudioTimeStamp)TimeStamp;
-{
-    int retval;
-    if ([Type isEqualToString:@"record"])
-    {
-        recordTimeTags[count[1]]=TimeStamp;
-        retval=[self IncreaseCount:Type];
-    }
-    else
-    {
-        if([Type isEqualToString:@"play"])
-        {
-            playTimeTags[count[0]]=TimeStamp;
-            retval=[self IncreaseCount:Type];
-        }
-        else
-        {
-            retval=-1;
-            NSLog(@"error at setTimeTags");
-        }
-    }
-    return retval;
-}
-
-- (Float64)GetTimeTag:(NSString*)Type at:(SInt32)Frame
-{
-    Float64 retval;
-    if ([Type isEqualToString:@"record"])
-    {
-        retval=recordTimeTags[Frame].mSampleTime;
-    }
-    else
-    {
-        if([Type isEqualToString:@"play"])
-        {
-            retval=playTimeTags[Frame].mSampleTime;
-        }
-        else
-        {
-            retval=-1;
-            NSLog(@"error at GetTimeTag");
-        }
-    }
-    return retval;
-}
-
-- (void)GetPointerReceive:(SInt32*)ARecord Send:(SInt32*)ASend Len:(SInt32)Len;
+- (void)SetSignalDetailsRecord:(SInt32*)ARecord Play:(SInt32*)ASend RecordLen:(SInt32)RecordLen Playlen:(SInt32)PlayLen
 {
     PRecord=ARecord;
-    PSend=ASend;
-    SigLen=Len;
+    PPlay=ASend;
+    RecordSigLen=RecordLen;
+    PlaySigLen=PlayLen;
 }
 
-- (void)SetTimeDifference:(Float64)SendTime ReciveTimestamp:(Float64)ReceiveTime
+- (void)CalcKKFWithumberOfSamples:(SInt32)Nsamples;
 {
-    SInt64 AKkf[SigLen+2*100];
-    [self RingKKF:AKkf ofRecord:PRecord AndSend:PSend RecSamples:SigLen SendSamples:100];
+    SInt32 KKFSize=2*Nsamples;
+    int i=0;
+    int j=0;
+    int endJ=0;
+    /*int startJ=0;
+     //für erste Hälfte (nicht nötig, da keine kausale aussage möglich ist)
+     for (i=0; i<Nsamples; i++)
+     {
+     startJ=Nsamples-i;
+     for(j=startJ;j<Nsamples;j++)
+     {
+     PKKF[i]=PKKF[i]+PPlay[j]*PRecord[j+i-Nsamples];
+     }
+     }
+     */
 
-    SInt32 KKFSample;
-    KKFSample=[self MaximumSearchAtStartValue:0 WithEndValue:SigLen];
+    //zweite Hälfte, ab hier kausale Aussage möglich.
+    //Berechnung um 2048 Werte später als Mitte, da das Empfangssignal um etwas mehr als 2 Frames verzögert ist
+    //for (i=Nsamples+2048;i<KKFSize;i++)
+    //3500 Werte entsprechen ca. 25 Meter, darum nicht mehr berechnen
+    NSLog(@"Start der KKF Berechnung");
+    for (i=Nsamples+2048;i<Nsamples+2048+3500;i++)
+    {
+        endJ=KKFSize-i;
+        for(j=1;j<endJ;j++)
+        {
+            PKKF[i]=PKKF[i]+(SInt16)PPlay[j]*(SInt16)PRecord[j+i-Nsamples];
+        }
+    }
+    NSLog(@"Berechnung der KKF durchgeführt");
+}
 
-    Float64 KKFSampleTime;
-    KKFSampleTime=ReceiveTime-KKFSample;
+- (void)CalcRingKKF{
+    NSLog(@"Start der RingKKF berechnung");
+    [self ResetArrays];
+    SInt32 startJ, endJ;
+    SInt32 i, j;
+    SInt32 TMP=PlaySigLen;
+    PlaySigLen=2000;
+
+    for(i=0; i<PlaySigLen;i++)
+    {
+        startJ=PlaySigLen-i;
+        for(j=startJ;j<PlaySigLen;j++)
+        {
+            PKKF[i]=PKKF[i]+(SInt64)PPlay[j]*(SInt64)PRecord[i+j-PlaySigLen];
+        }
+    }
+    for(i=PlaySigLen;i<RecordSigLen;i++)
+    {
+        for(j=0;j<PlaySigLen;j++)
+        {
+            PKKF[i]=PKKF[i]+(SInt64)PPlay[j]*(SInt64)PRecord[i+j-PlaySigLen];
+        }
+    }
+    for(i=RecordSigLen;i<RecordSigLen+PlaySigLen;i++)
+    {
+        endJ=RecordSigLen+PlaySigLen-i;
+        for(j=0;j<endJ;j++)
+        {
+            PKKF[i]=PKKF[i]+(SInt64)PPlay[j]*(SInt64)PRecord[i+j-PlaySigLen];
+        }
+    }
+
+    for(i=0;i<PlaySigLen;i++)
+    {
+        PKKF[i]=PKKF[i]+PKKF[RecordSigLen-i];
+        PKKF[RecordSigLen-i]=0;
+    }
+    PlaySigLen=TMP;
+    NSLog(@"Berechnung der RingKKF durchgeführt");
+}
+
+- (SInt32)MaximumSearchAtStartValue:(UInt32)StartValue WithEndValue:(UInt32)EndValue;
+{
+    SInt64 pmax=0;
+    SInt64 nmax=0;
+    int pmax_t=0;
+    int nmax_t=0;
+
+    int max_t=0;
+    //get absolut highest peak of KKF between the values -13490
+    for (int i=StartValue;i<EndValue;i++)
+    {
+        //abs(Sint64) doesn´t work, abs() is only usable for Int
+        if (PKKF[i]>0)
+        {
+            max_t=i;
+            if (pmax<PKKF[i])
+            {
+                pmax=PKKF[i];
+                pmax_t=i;
+            }
+        }
+        else
+        {
+            if (nmax>PKKF[i] || nmax==0)
+            {
+                nmax=PKKF[i];
+                nmax_t=i;
+            }
+        }
+    }
+    max_t=pmax_t;
+    NSLog(@"start = %ld, end = %ld, max: %i, maxVal: %lli",StartValue, EndValue, max_t, pmax);
+    return max_t;
+}
+
+- (void)SetTimeDifference:(Float64)PlayStopTime RecordStopTime:(Float64)RecordStopTime AtBufPos:(SInt32)RecordStopBufferPosition
+{
+    [self CalcRingKKF];
+    //get position of maximum KKF Value
+    SInt32 KKFMaxPos;
+    KKFMaxPos=[self MaximumSearchAtStartValue:0 WithEndValue:KKFLen];
+
+    SInt32 StartOfRecordedSignal=KKFMaxPos;
+    SInt32 EndOfRecordedSignal=StartOfRecordedSignal+PlaySigLen;
+    Float64 Latency=PlayStopTime-(Float64)(EndOfRecordedSignal)/48.f*1000.f-RecordStopTime;
+    NSLog(@"Latenz= %f",Latency);
+
+    Float64 TimeOfFirstSample=RecordStopTime-(((Float64)RecordStopBufferPosition)/48.0f*1000.0f);
     
-    //receiveTime=[self GetSampleOfKKFSample:KKFSample ofSamples:100 withTimeStamp:ReceiveTime];
-
-    TimeDifference=KKFSampleTime-SendTime;
+    Float64 TimeOfRecordedSignalEnd=TimeOfFirstSample+(((Float64)EndOfRecordedSignal)/48.0f*1000.0f);
     
+    TimeDifference=RecordStopTime-TimeOfRecordedSignalEnd;
+
     [self setIsCalibrated:true];
-    NSLog(@"TimeDifference: %f",TimeDifference);
+    NSLog(@"TimeDifference: %f us",TimeDifference);
 }
 
 - (float)CalculateDistanceServerWithTimestamp:(Float64)SendTime
 {
+    [self CalcRingKKF];
     SInt32 KKFSample;
-    KKFSample=[self MaximumSearchAtStartValue:0 WithEndValue:SigLen];
+    KKFSample=[self MaximumSearchAtStartValue:0 WithEndValue:RecordSigLen];   
+    
 
     //Float64 receiveTime;
     //receiveTime=[self GetSampleOfKKFSample:KKFSample ofSamples:4800 withTimeStamp:recordTimeTags];
@@ -165,138 +178,17 @@
     return Distance;
 }
 
--(float)GetDistance:(SInt32) Samples
-{
-    float Distance;
-    Distance=((float)Samples)*343.0f/48000.0f;
-    return Distance;
-}
-
-- (void)CalcKKFWithumberOfSamples:(SInt32)Nsamples;
-{
-    SInt32 KKFSize=2*Nsamples;
-    int i=0;
-    int j=0;
-    int endJ=0;
-    int startJ=0;
-     //für erste Hälfte (nicht nötig, da keine kausale aussage möglich ist)
-     for (i=0; i<Nsamples; i++)
-     {
-         startJ=Nsamples-i;
-         for(j=startJ;j<Nsamples;j++)
-         {
-             eKKF[i]=eKKF[i]+PSend[j]*PRecord[j+i-Nsamples];
-         }
-     }
-
-    //zweite Hälfte, ab hier kausale Aussage möglich.
-    //Berechnung um 2048 Werte später als Mitte, da das Empfangssignal um etwas mehr als 2 Frames verzögert ist
-    //for (i=Nsamples+2048;i<KKFSize;i++)
-    //3500 Werte entsprechen ca. 25 Meter, darum nicht mehr berechnen
-    NSLog(@"Start der KKF Berechnung");
-    for (i=Nsamples;i<KKFSize;i++)
-    {
-        endJ=KKFSize-i;
-        for(j=1;j<endJ;j++)
-        {
-            eKKF[i]=eKKF[i]+(SInt16)PSend[j]*(SInt16)PRecord[j+i-Nsamples];
-        }
-    }
-    NSLog(@"Berechnung der KKF durchgeführt");
-}
-
-- (void)RingKKF:(SInt64*)AKkf ofRecord:(SInt32*)ARecord AndSend:(SInt32*)ASend RecSamples:(SInt32)NRecordSamples SendSamples:(SInt32)NSendSamples
-{
-    NSLog(@"Start der RingKKF berechnung");
-    SInt32 startJ, endJ;
-    SInt32 i, j;
-
-    for(i=0; i<NSendSamples;i++)
-    {
-        startJ=NSendSamples-i;
-        for(j=startJ;j<NSendSamples;j++)
-        {
-            AKkf[i]=AKkf[i]+(SInt16)ASend[j]*(SInt16)ARecord[i+j-NSendSamples];
-        }
-    }
-    for(i=NSendSamples;i<NRecordSamples;i++)
-    {
-        for(j=0;j<NSendSamples;j++)
-        {
-            AKkf[i]=AKkf[i]+(SInt16)ASend[j]*(SInt16)ARecord[i+j-NSendSamples];
-        }
-    }
-    for(i=NRecordSamples;i<NRecordSamples+NSendSamples;i++)
-    {
-        endJ=NRecordSamples+NSendSamples-i;
-        for(j=0;j<endJ;j++)
-        {
-            AKkf[i]=AKkf[i]+(SInt16)ASend[j]*(SInt16)ARecord[i+j-NSendSamples];
-        }
-    }
-
-    for(i=0;i<NSendSamples;i++)
-    {
-        AKkf[i]=AKkf[i]+AKkf[NRecordSamples-i];
-        AKkf[NRecordSamples-i]=0;
-    }
-    NSLog(@"Berechnung der RingKKF durchgeführt");
-}
-
-- (SInt32)MaximumSearchAtStartValue:(UInt32)StartValue WithEndValue:(UInt32)EndValue;
-{
-    SInt64 pmax=0;
-    SInt64 nmax=0;
-    int pmax_t=0;
-    int nmax_t=0;
-
-    int max_t=0;
-    //get absolut highest peak of KKF between the values
-    for (int i=StartValue;i<EndValue;i++)
-    {
-        //abs(Sint64) doesn´t work, abs() is only usable for Int
-        if (eKKF[i]>0)
-        {
-            max_t=i;
-            if (pmax<eKKF[i])
-            {
-                pmax=eKKF[i];
-                pmax_t=i;
-            }
-        }
-        else
-        {
-            if (nmax>eKKF[i] || nmax==0)
-            {
-                nmax=eKKF[i];
-                nmax_t=i;
-            }
-        }
-    }
-    if (nmax+pmax>=0)
-    {
-        max_t=pmax_t;
-    }
-    else
-    {
-        max_t=nmax_t;
-    }
-    NSLog(@"start = %ld, end = %ld, max: %i",StartValue, EndValue, max_t);
-    return max_t;
-}
-
 - (float)CalculateDistanceHeadphone
 {
-    SInt32 KKFSize=2*SigLen;
-    eKKF = (SInt64*)malloc(KKFSize*sizeof(SInt64));
-    memset(eKKF,0,KKFSize*sizeof(SInt64));
+    SInt32 KKFSize=2*RecordSigLen;
+    [self ResetArrays];
 
-    [self CalcKKFWithumberOfSamples:SigLen];
-    SInt32 Samples=[self MaximumSearchAtStartValue:SigLen WithEndValue:KKFSize];
+    [self CalcKKFWithumberOfSamples:RecordSigLen];
+    SInt32 Samples=[self MaximumSearchAtStartValue:RecordSigLen WithEndValue:KKFSize];
     
     float Distance;
     //Distance=((float)(Samples-24813))*343.0f/48000.0f;
-    Distance=((float)(Samples-SigLen-2048-238))*343.0f/48000.0f;
+    Distance=((float)(Samples-RecordSigLen-2048-243))*343.0f/48000.0f;
     if (Distance < 0)
     {
         NSLog(@"Distanz war %f (kleiner als 0), bereinigt", Distance);

@@ -10,6 +10,7 @@
 #endif
 
 #import "audioController.h"
+#include <sys/time.h>
 
 const Float64 SAMPLERATE = 48000.0;
 const SInt16 FRAMESIZE = 1024;
@@ -97,7 +98,7 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
     if([com serverStart])
     {
         return -1;
-    }    
+    }
     play = zeroSig;
     //playingcallback mute <- done by decition in playingCallback
     //init ringbuffer <- returning pointer on overflow in recordingCallback
@@ -115,7 +116,7 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
     //      measurement)
     //  process
     //  response and display distance
-    //  back to (1) 
+    //  back to (1)
     return -1;
 }
 
@@ -211,7 +212,7 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
         return -1;
     }
 
-    SInt32 len = sendSig->len + uiExtention;
+    SInt32 len = 2*sendSig->len + 2*uiExtention;
 
     recordBuf->buf = (SInt32*)malloc(len*sizeof(SInt32)); //SInt16 = 2 Bytes
     if (recordBuf->buf == NULL)
@@ -235,6 +236,8 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
 // audio render procedure, don't allocate memory, don't take any locks, don't waste time
 static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioActionFlags, const AudioTimeStamp *inTimeStamp, UInt32 inBusNumber, UInt32 inNumberFrames, AudioBufferList *ioData)
 {
+    struct timeval TimeStamp;
+    gettimeofday(&TimeStamp, NULL);
     audioController* ac = (audioController*)inRefCon;
 
     if (inNumberFrames > FRAMESIZE)
@@ -259,16 +262,17 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
         if (ac->play->pos + inNumberFrames > ac->play->len)
         {
             [ac stop];
-            char sTimeStamp[20];
-            sprintf(sTimeStamp,"%.0f",inTimeStamp->mSampleTime);
+            char sTimeStamp[30];
+            Float64 fTimeStamp;
+            fTimeStamp=((Float64)(TimeStamp.tv_sec)*1000000)+((Float64)(TimeStamp.tv_usec));
+            sprintf(sTimeStamp,"%2.f",fTimeStamp);
             NSLog(@"timeStamp: %s", sTimeStamp);
             [[ac com] sendNew:sTimeStamp];
-            [[ac proc]resetTimeTags];
             NSLog(@"ac stoped");
         }
     }
     //assume that without network one device with headphones is used
-    //playing and recording
+    //playing and recording   207500.000000 us   269604.250000 us    285375.000000 us   272166.500000 us  266333.250000 us   266333.250000 us
     else if([[ac com]connectionState] == CS_DISCONNECTED)
     {
         ac->play->pos += inNumberFrames;
@@ -280,7 +284,6 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
             ac->play->pos -= inNumberFrames; //to prevent an overflow
         }
     }
-
     return noErr;
 }
 
@@ -682,7 +685,9 @@ static OSStatus recordingCallback(void *inRefCon,
                                   UInt32 inNumberFrames,
                                   AudioBufferList *ioData)
 {
-    
+    struct timeval TimeStamp;
+    gettimeofday(&TimeStamp, NULL);
+
     audioController* ac = (audioController*)inRefCon;
 
     //CS_CLIENT does no recording
@@ -710,40 +715,45 @@ static OSStatus recordingCallback(void *inRefCon,
     {
         if ([[ac com]timestampReceived] == true)
         {
-            NSString *Output = [[NSString alloc]init];
             //stop ac
             [ac stop];
+            
+            //Server Timestamp
+            Float64 fTimeStamp;
+            fTimeStamp=((Float64)(TimeStamp.tv_sec)*1000000)+((Float64)(TimeStamp.tv_usec));
             [[ac com]setTimestampReceived:false];
+
           
             //processing
-            [[ac proc]GetPointerReceive:ac->recordBuf->buf Send:ac->play->buf Len:ac->play->len];       //set pointers
+            [[ac proc]SetSignalDetailsRecord:ac->recordBuf->buf Play:ac->sendSig->buf RecordLen:ac->recordBuf->len Playlen:ac->sendSig->len];         //set pointers
 
+            //Client Timestamp
             Float64 receivedTimestamp=[[ac com]receivedTimestamp];
-            NSLog(@"timestampReceived= %0.f",receivedTimestamp);
-            
+
             //if ([[ac proc]isCalibrated])
             if (false)
             {
                 //calc distance
-                float Distance=[[ac proc]CalculateDistanceServerWithTimestamp:receivedTimestamp];
+                //float Distance=[[ac proc]CalculateDistanceServerWithTimestamp:receivedTimestamp];
                 //display distance
-                [Output initWithFormat:@"Distance: %f meters\nwaiting for new measurement",Distance];
-                ac->LabelOutput.text=Output;
+                //NSString *Output=[[NSString alloc]initWithFormat:@"Distance: %f meters\nwaiting for new measurement",Distance];
+                //ac->LabelOutput.text=Output;
             }
             else
             {
                 //calc latency
-                [[ac proc]SetTimeDifference:receivedTimestamp ReciveTimestamp:inTimeStamp->mSampleTime];
+                [[ac proc]SetTimeDifference:receivedTimestamp RecordStopTime:fTimeStamp AtBufPos:ac->recordBuf->pos];
+                
                 //display measurement
                 //Output=@"calibration succesfull\nwaiting for measurement";
-                [Output initWithFormat:@"recived Timestamp: %2.f",receivedTimestamp];
-                //NSLog(@"calibrated, latency=%0.f\n",[[ac proc]Latency]);
+                NSString *Output=[[NSString alloc]initWithFormat:@"recived Timestamp: %2.f",receivedTimestamp];
                 ac->LabelOutput.text=Output;
-
+                NSLog(@"receivedTimestamp= %2.f",receivedTimestamp);
+                NSLog(@"recordStopTime= %2.f",fTimeStamp);
             }
             
             //restart listening
-            //[ac start]; removed because of error after restart
+            //[ac start];
         }
         if (ac->recordBuf->pos+inNumberFrames > ac->recordBuf->len)
         {
@@ -776,20 +786,24 @@ static OSStatus recordingCallback(void *inRefCon,
         ac->recordBuf->pos += inNumberFrames;
 
         if (ac->recordBuf->pos+inNumberFrames > ac->recordBuf->len)
-        {
+        {            
             [ac stop];
             NSLog(@"recording stoped");
-            [[ac proc]GetPointerReceive:ac->recordBuf->buf Send:ac->play->buf Len:ac->play->len];
+            [[ac proc]SetSignalDetailsRecord:ac->recordBuf->buf Play:ac->play->buf RecordLen:ac->recordBuf->len Playlen:ac->play->len];         //set pointers
+            NSLog(@"Pointer bekommen");
 
             //calc distance
 
             float Distance=[[ac proc]CalculateDistanceHeadphone];
             //display
             NSString *Output=[[NSString alloc]initWithFormat:@"Distance: %.2f meters\nwaiting for new measurement",Distance];
+            NSLog(@"%@",Output);
             ac->LabelOutput.text=Output;
         }
     }
     return noErr;
+    
+    
 }
 
 //mainly used for debugging, outputs the recorded data by sending to the python server
@@ -797,14 +811,11 @@ static OSStatus recordingCallback(void *inRefCon,
 {
     NSLog(@"testOutput started");
     [com initNetworkCom];
-    
-    SInt32 KKFSize=3*play->len;
-    SInt64* AKkf;
-    AKkf = (SInt64*)malloc(KKFSize*sizeof(SInt64));
        
     NSString *outStr = [[NSString alloc] init];
     
     [com open];
+    NSLog(@"opened");
     [com send:@"fileName:record_2k_6k_6k_10k_.txt\n"];
     char *sOut = (char*)malloc(2000);
     char *sOutPtr = sOut;
@@ -883,9 +894,9 @@ static OSStatus recordingCallback(void *inRefCon,
     len = 0;
     memset(sOut,0,2000);
     sOutPtr=sOut;
-    for (int i=0; i< KKFSize; i++)
+    for (int i=0; i< proc.KKFLen; i++)
     {
-        sprintf(sOutPtr,"%lli,",proc.eKKF[i]);
+        sprintf(sOutPtr,"%lli,",proc.PKKF[i]);
         len += strlen(sOutPtr);
         sOutPtr = sOut + len;
         // to package the frame data check the  size of the outStr
@@ -932,7 +943,7 @@ static OSStatus recordingCallback(void *inRefCon,
 {
     OSStatus status;
     status = AudioOutputUnitStop(audioUnit);
-    NSLog(@"audioUnit stoped status = %ld", status);
+    //NSLog(@"audioUnit stoped status = %ld", status);
     return status;
 }
 
