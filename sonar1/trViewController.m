@@ -46,6 +46,7 @@
 	// Do any additional setup after loading the view, typically from a nib.
     [audioController setOutput:(&tf2)];
     tfIp.text = [[audioController com]getLocalIP];
+    [audioController setOutput:&tf1];
 
 }
 

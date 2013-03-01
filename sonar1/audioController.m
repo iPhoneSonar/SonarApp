@@ -14,10 +14,13 @@
 const Float64 SAMPLERATE = 48000.0;
 const SInt16 FRAMESIZE = 1024;
 const SInt16 SAMPLES_PER_PERIOD = 48;
+//double recSample;
+//double plaSample;
+//UInt64 recHost;
+//UInt64 plaHost;
 
 @implementation audioController
 
-@synthesize frequency;
 @synthesize audioUnit;
 @synthesize recordingBufferList;
 @synthesize com;
@@ -25,11 +28,12 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
 
 
 // Clean up memory
-- (void)dealloc {
-    
+- (void)dealloc
+{
+    NSLog(@"audiocontroller dealloc");
     [super dealloc];
 }
-//^^^^^^^^^^
+
 - (audioController*)init
 {
     com = [[communicator alloc] init];
@@ -54,16 +58,22 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
 
     //if no headphone is connected we know its a server
     //[self initServer];
+    NSLog(@"audiocontroller init");
     return self;
 }
 
-- (SInt16)comRet: (NSString*) retStr
+//create block for setting the output lable from the communicator
+- (fpComReturn)fComReturn
 {
-    NSString* dummy = @"dummy called";
-    NSLog(@"%@",dummy);
-    NSLog(@"retStr:%@.\n",retStr);
-    return 0;
+    fpComReturn comReturn = ^ SInt16 (NSString* strMsg)
+    {
+        NSLog(@"strMsg from server:\n %@.\n",strMsg);
+        LabelOutput.text = strMsg;
+        return 0;
+    };
+    return [[comReturn copy] autorelease];
 }
+
 
 -(SInt16)initClient
 {
@@ -78,27 +88,42 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
     //wait for tcp transmitted msg (distance) -> handled in communicator socketclientcallback
     //  function pointer to comRet to display msg in lable
     //returnvalue (parametertype parameter) {implementation}
-    comRet = ^ SInt16 (NSString* strMsg)
-    {
-        NSLog(@"strMsg from server:\n %@.\n",strMsg);
-        LabelOutput.text = strMsg;
-        return 0;
-    };
-    [com setPComReturn:(void*)comRet];
+
+    [com setFComReturn:[self fComReturn]];
     
     //show distance
 
     return 0;
 }
 
+
+//create a block to do the audioprocessin of the server from the comunicator
+- (fpDoProc)fDoProc
+{
+    NSLog(@"fDoProc init");
+    fpDoProc doProc = ^ SInt16 (void)
+    {
+        NSLog(@"Do Proc");
+        [self stop];
+        return 0;
+    };
+    return [[doProc copy] autorelease];
+}
+
+
 -(SInt16)initServer
 {
+
+    [com setFDoProc: [self fDoProc]];
+    
     NSLog(@"initServer");
     if([com serverStart])
     {
         return -1;
-    }    
+    }
+    
     play = zeroSig;
+    
     //playingcallback mute <- done by decition in playingCallback
     //init ringbuffer <- returning pointer on overflow in recordingCallback
     //wait for timestamp <- done in acceptcallback
@@ -116,7 +141,7 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
     //  process
     //  response and display distance
     //  back to (1) 
-    return -1;
+    return 0;
 }
 
 
@@ -235,6 +260,10 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
 // audio render procedure, don't allocate memory, don't take any locks, don't waste time
 static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioActionFlags, const AudioTimeStamp *inTimeStamp, UInt32 inBusNumber, UInt32 inNumberFrames, AudioBufferList *ioData)
 {
+    //NSLog(@"playing timestamp:%0.f host: %lld\n",inTimeStamp->mSampleTime - plaSample, inTimeStamp->mHostTime - plaHost);
+    //plaHost = inTimeStamp->mHostTime;
+    //plaSample = inTimeStamp->mSampleTime;
+
     audioController* ac = (audioController*)inRefCon;
 
     if (inNumberFrames > FRAMESIZE)
@@ -259,7 +288,7 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
         if (ac->play->pos + inNumberFrames > ac->play->len)
         {
             [ac stop];
-            char sTimeStamp[20];
+            char sTimeStamp[30];
             sprintf(sTimeStamp,"%.0f",inTimeStamp->mSampleTime);
             NSLog(@"timeStamp: %s", sTimeStamp);
             [[ac com] sendNew:sTimeStamp];
@@ -682,9 +711,12 @@ static OSStatus recordingCallback(void *inRefCon,
                                   UInt32 inNumberFrames,
                                   AudioBufferList *ioData)
 {
+    //NSLog(@"recordi timestamp:%0.f host: %lld\n",inTimeStamp->mSampleTime - recSample, inTimeStamp->mHostTime - recHost);
+    //recHost = inTimeStamp->mHostTime;
+    //recSample = inTimeStamp->mSampleTime;
     
     audioController* ac = (audioController*)inRefCon;
-
+    
     //CS_CLIENT does no recording
     if ([[ac com]connectionState] == CS_ClIENT)
     {
@@ -708,42 +740,45 @@ static OSStatus recordingCallback(void *inRefCon,
     //till that it records in cyles into the buffer
     if ([[ac com]connectionState] == CS_SERVER)
     {
+        //TODO: move this code to fDoProc
         if ([[ac com]timestampReceived] == true)
         {
-            NSString *Output = [[NSString alloc]init];
             //stop ac
-            [ac stop];
+            //[ac stop];
             [[ac com]setTimestampReceived:false];
-          
-            //processing
-            [[ac proc]GetPointerReceive:ac->recordBuf->buf Send:ac->play->buf Len:ac->play->len];       //set pointers
 
-            Float64 receivedTimestamp=[[ac com]receivedTimestamp];
-            NSLog(@"timestampReceived= %0.f",receivedTimestamp);
+            
+            //processing
+            //[[ac proc]GetPointerReceive:ac->recordBuf->buf Send:ac->play->buf Len:ac->play->len];       //set pointers
+
+            //Float64 receivedTimestamp=[[ac com]receivedTimestamp];
+            //NSLog(@"timestampReceived= %0.f",receivedTimestamp);
             
             //if ([[ac proc]isCalibrated])
             if (false)
             {
                 //calc distance
-                float Distance=[[ac proc]CalculateDistanceServerWithTimestamp:receivedTimestamp];
+                //float Distance=[[ac proc]CalculateDistanceServerWithTimestamp:receivedTimestamp];
                 //display distance
-                [Output initWithFormat:@"Distance: %f meters\nwaiting for new measurement",Distance];
-                ac->LabelOutput.text=Output;
+                //NSString *Output = [[NSString alloc] initWithFormat:@"Distance: %f meters\nwaiting for new measurement",Distance];
+                //ac->LabelOutput.text=Output;
             }
             else
             {
                 //calc latency
-                [[ac proc]SetTimeDifference:receivedTimestamp ReciveTimestamp:inTimeStamp->mSampleTime];
+                //[[ac proc]SetTimeDifference:receivedTimestamp ReciveTimestamp:inTimeStamp->mSampleTime];
                 //display measurement
                 //Output=@"calibration succesfull\nwaiting for measurement";
-                [Output initWithFormat:@"recived Timestamp: %2.f",receivedTimestamp];
+                //NSString *Output = [[NSString alloc]  initWithFormat:@"recived Timestamp: %2.f",receivedTimestamp];
                 //NSLog(@"calibrated, latency=%0.f\n",[[ac proc]Latency]);
-                ac->LabelOutput.text=Output;
+                //ac->LabelOutput.text=Output;
+                
 
             }
             
             //restart listening
-            //[ac start]; removed because of error after restart
+            //[ac dummy];
+            //[ac start]; //removed because of error after restart
         }
         if (ac->recordBuf->pos+inNumberFrames > ac->recordBuf->len)
         {
@@ -945,6 +980,14 @@ static OSStatus recordingCallback(void *inRefCon,
 - (SInt16)setOutputLabel:(UILabel**)Label
 {
     LabelOutput = *Label;
+    return 0;
+}
+
+- (SInt16)dummy
+{
+    [self stop];
+    [NSThread sleepForTimeInterval: 2];
+    [self start];
     return 0;
 }
 

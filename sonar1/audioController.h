@@ -14,6 +14,10 @@
 #import "processing.h"
 #import "communicator.h"
 
+//prepare function pointers
+//typedef SInt16 (^fpComReturn)(NSString*);
+//typedef SInt16 (^fpDoProc)(void);
+
 struct sig{
     SInt32 *buf;
     SInt32 pos;
@@ -24,10 +28,7 @@ typedef struct sig sig;
 typedef struct recordBuffer recordBuffer;
 
 @interface audioController : NSObject
-{
-    //frequency for the sine wave
-    int frequency;
-    
+{   
     //recording unit
     AudioComponentInstance audioUnit;
     AudioBufferList *recordingBufferList;
@@ -39,13 +40,10 @@ typedef struct recordBuffer recordBuffer;
     processing *proc;
 
     UITextField *tfOutput;
-    //returnvalue (^functionname) (parameter)
     UILabel *LabelOutput;
-    SInt16 (^comRet) (NSString*);
 
 }
 
-@property(nonatomic) int frequency;
 @property(nonatomic) AudioComponentInstance audioUnit;
 @property(nonatomic) AudioBufferList *recordingBufferList;
 @property(nonatomic,retain) communicator *com;
@@ -68,7 +66,6 @@ typedef struct recordBuffer recordBuffer;
 
 - (SInt16)setOutput:(UITextField**)tf;
 - (SInt16)setOutputLabel:(UILabel**)Label;
-
 
 @end
 #endif

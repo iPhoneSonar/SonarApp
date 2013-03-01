@@ -16,7 +16,9 @@
 #import <time.h>
 #import <arpa/inet.h>
 
+//prepare function pointers
 typedef SInt16 (^fpComReturn)(NSString*);
+typedef SInt16 (^fpDoProc)(void);
 
 enum ConnectionState {
     CS_DISCONNECTED = 0,
@@ -34,8 +36,8 @@ CFSocketNativeHandle pSockNative;
 ConnectionState connectionState;
 bool timestampReceived;
 Float64 receivedTimestamp;
-void* pComReturn;
-SInt16 (^comRet) (NSString*); //returnvalue (^functionname) (parameter)
+fpComReturn fComReturn;
+fpDoProc fDoProc;
 }
 
 
@@ -47,7 +49,8 @@ SInt16 (^comRet) (NSString*); //returnvalue (^functionname) (parameter)
 @property(nonatomic) ConnectionState connectionState;
 @property(nonatomic) bool timestampReceived;
 @property(nonatomic) Float64 receivedTimestamp;
-@property(nonatomic) void* pComReturn;
+@property(nonatomic, copy) fpComReturn fComReturn;
+@property(nonatomic, copy) fpDoProc fDoProc;
 
 - (void)initNetworkCom;
 - (void)send:(NSString*)msg;
@@ -60,6 +63,7 @@ SInt16 (^comRet) (NSString*); //returnvalue (^functionname) (parameter)
 - (SInt16)sendNew: (char*)msg;
 - (void)closeNew;
 - (NSString*)getLocalIP;
+
 
 
 @end

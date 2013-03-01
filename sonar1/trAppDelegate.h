@@ -17,7 +17,7 @@
 
 }
 
-@property (readonly, nonatomic) audioController *paC;
+@property (nonatomic,retain) audioController *paC;
 
 @property (strong, nonatomic) UIWindow *window;
 

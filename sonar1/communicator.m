@@ -8,7 +8,7 @@
 
 #import "communicator.h"
 #import <ifaddrs.h>
-
+#import <time.h>
 
 const SInt16 PORT = 2000;
 const SInt16 DEBUG_PORT = 2002;
@@ -23,15 +23,20 @@ const CFStringRef DEBUG_HOST = (CFStringRef)@"192.168.173.1";
 @synthesize pSock;
 @synthesize pSockNative;
 @synthesize connectionState;
-@synthesize pComReturn;
+@synthesize fComReturn;
+@synthesize fDoProc;
 @synthesize receivedTimestamp;
+
+
 -(communicator*)init
 {
     connectionState = CS_DISCONNECTED;
-    comRet = NULL;
+    fComReturn = NULL;
+    fDoProc = NULL;
     pSock = NULL;
     pSockNative = NULL;
     timestampReceived = false;
+    NSLog(@"communicator init");
     return self;
 }
 
@@ -54,7 +59,6 @@ const CFStringRef DEBUG_HOST = (CFStringRef)@"192.168.173.1";
 
     [inputStream scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
     [outputStream scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
-    
 
     NSLog(@"communicator started");
 }
@@ -99,9 +103,14 @@ static void socketCallbackClient(CFSocketRef s, CFSocketCallBackType type, CFDat
             else
             {
                 NSString *strMsg = [NSString stringWithFormat:@"communicator %s",sBuf];
-                localCom->comRet = (SInt16 (^)(NSString*))localCom->pComReturn;
-                NSLog(@"strMsg: %@ = %d.\n",strMsg, localCom->comRet(strMsg));
-                
+                if (localCom->fComReturn != NULL)
+                {
+                    NSLog(@"strMsg: %@ = %d.\n",strMsg, localCom->fComReturn(strMsg));
+                }
+                else
+                {
+                    NSLog(@"localCom->fComReturn == NULL");
+                }
             }
                 
             break;
@@ -131,13 +140,14 @@ static void socketCallbackServerAccpeted(CFSocketRef s, CFSocketCallBackType typ
     CFSocketContext cfSC;
     CFSocketGetContext(s, &cfSC);
     communicator *localCom = (communicator*)cfSC.info;
+    localCom->fDoProc();
     CFSocketNativeHandle pSockNativeLoc = CFSocketGetNative(s);
     //this check is not realy needed as only one callback tye is defined
     if (type == kCFSocketReadCallBack)
     {
         //we have an connected client socket that will send us an timestamp
 
-        const UInt16 BUFSIZE = 15;
+        const UInt16 BUFSIZE = 30;
         char sBuf[BUFSIZE];
         memset(sBuf,0,BUFSIZE);
         int iRet = 0;
@@ -155,7 +165,10 @@ static void socketCallbackServerAccpeted(CFSocketRef s, CFSocketCallBackType typ
             return;
         }
         [localCom setReceivedTimestamp: atof(sBuf)];
-        NSLog(@"fTimestamp=%f.\n", [localCom receivedTimestamp]);
+        //NSLog(@"fTimestamp=%f.\n", [localCom receivedTimestamp]);
+        //ReceivedTimestamp is not realy needed anymore,
+        //because we directly call the function to do the processing
+
 
 
         //we need the socket to respond the distance after processing
@@ -175,8 +188,8 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
     NSLog(@"socketCallbackServer %ld called", (SInt32)s);
     CFSocketContext cfSC;
     CFSocketGetContext(s, &cfSC);
-    communicator *localCom = (communicator*)cfSC.info;
-    [localCom closeNew];
+    //communicator *localCom = (communicator*)cfSC.info;
+    //[localCom closeNew];
     
     CFSocketNativeHandle pSockNativeLocal = CFSocketGetNative(s);
     if (type == kCFSocketReadCallBack)
@@ -365,7 +378,6 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
     
     CFRunLoopAddSource(CFRunLoopGetCurrent(), sourceRef, kCFRunLoopCommonModes);
     CFRelease(sourceRef);
-
     return 0;
 }
 
@@ -403,15 +415,6 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
 
     *uiLen = 0;
     return iRet;
-}
-
-
-
-
-- (void)setHost1: (CFStringRef)ip
-{
-    NSLog(@"set ip");
-    host = ip;
 }
 
 - (void)send:(NSString*)msg
@@ -499,5 +502,7 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
     freeifaddrs(interfaces);
     return locIp;
 }
+
+
 
 @end
