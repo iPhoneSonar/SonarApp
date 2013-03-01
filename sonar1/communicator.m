@@ -12,7 +12,7 @@
 
 const SInt16 PORT = 2000;
 const SInt16 DEBUG_PORT = 2002;
-const CFStringRef DEBUG_HOST = (CFStringRef)@"192.168.173.1";
+const CFStringRef DEBUG_HOST = (CFStringRef)@"172.20.10.3";
 
 @implementation communicator
 
