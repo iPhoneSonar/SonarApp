@@ -122,10 +122,7 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
     {
         return -1;
     }
-<<<<<<< HEAD
-    
-=======
->>>>>>> KoMa
+
     play = zeroSig;
     
     //playingcallback mute <- done by decition in playingCallback
@@ -144,13 +141,8 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
     //      measurement)
     //  process
     //  response and display distance
-<<<<<<< HEAD
     //  back to (1) 
     return 0;
-=======
-    //  back to (1)
-    return -1;
->>>>>>> KoMa
 }
 
 
@@ -269,15 +261,14 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
 // audio render procedure, don't allocate memory, don't take any locks, don't waste time
 static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioActionFlags, const AudioTimeStamp *inTimeStamp, UInt32 inBusNumber, UInt32 inNumberFrames, AudioBufferList *ioData)
 {
-<<<<<<< HEAD
+
     //NSLog(@"playing timestamp:%0.f host: %lld\n",inTimeStamp->mSampleTime - plaSample, inTimeStamp->mHostTime - plaHost);
     //plaHost = inTimeStamp->mHostTime;
     //plaSample = inTimeStamp->mSampleTime;
 
-=======
     struct timeval TimeStamp;
     gettimeofday(&TimeStamp, NULL);
->>>>>>> KoMa
+
     audioController* ac = (audioController*)inRefCon;
 
     if (inNumberFrames > FRAMESIZE)
@@ -303,13 +294,10 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
         {
             [ac stop];
             char sTimeStamp[30];
-<<<<<<< HEAD
             sprintf(sTimeStamp,"%.0f",inTimeStamp->mSampleTime);
-=======
             Float64 fTimeStamp;
             fTimeStamp=((Float64)(TimeStamp.tv_sec)*1000000)+((Float64)(TimeStamp.tv_usec));
             sprintf(sTimeStamp,"%2.f",fTimeStamp);
->>>>>>> KoMa
             NSLog(@"timeStamp: %s", sTimeStamp);
             [[ac com] sendNew:sTimeStamp];
             NSLog(@"ac stoped");
@@ -729,16 +717,13 @@ static OSStatus recordingCallback(void *inRefCon,
                                   UInt32 inNumberFrames,
                                   AudioBufferList *ioData)
 {
-<<<<<<< HEAD
     //NSLog(@"recordi timestamp:%0.f host: %lld\n",inTimeStamp->mSampleTime - recSample, inTimeStamp->mHostTime - recHost);
     //recHost = inTimeStamp->mHostTime;
     //recSample = inTimeStamp->mSampleTime;
-    
-=======
+
     struct timeval TimeStamp;
     gettimeofday(&TimeStamp, NULL);
 
->>>>>>> KoMa
     audioController* ac = (audioController*)inRefCon;
     
     //CS_CLIENT does no recording
@@ -767,9 +752,7 @@ static OSStatus recordingCallback(void *inRefCon,
         //TODO: move this code to fDoProc
         if ([[ac com]timestampReceived] == true)
         {
-            //stop ac
-<<<<<<< HEAD
-            //[ac stop];
+
             [[ac com]setTimestampReceived:false];
 
             
@@ -778,8 +761,7 @@ static OSStatus recordingCallback(void *inRefCon,
 
             //Float64 receivedTimestamp=[[ac com]receivedTimestamp];
             //NSLog(@"timestampReceived= %0.f",receivedTimestamp);
-            
-=======
+
             [ac stop];
             
             //Server Timestamp
@@ -794,40 +776,22 @@ static OSStatus recordingCallback(void *inRefCon,
             //Client Timestamp
             Float64 receivedTimestamp=[[ac com]receivedTimestamp];
 
->>>>>>> KoMa
             //if ([[ac proc]isCalibrated])
             if (false)
             {
                 //calc distance
                 //float Distance=[[ac proc]CalculateDistanceServerWithTimestamp:receivedTimestamp];
                 //display distance
-<<<<<<< HEAD
+
                 //NSString *Output = [[NSString alloc] initWithFormat:@"Distance: %f meters\nwaiting for new measurement",Distance];
-=======
+
                 //NSString *Output=[[NSString alloc]initWithFormat:@"Distance: %f meters\nwaiting for new measurement",Distance];
->>>>>>> KoMa
+
                 //ac->LabelOutput.text=Output;
             }
             else
             {
-                //calc latency
-<<<<<<< HEAD
-                //[[ac proc]SetTimeDifference:receivedTimestamp ReciveTimestamp:inTimeStamp->mSampleTime];
-                //display measurement
-                //Output=@"calibration succesfull\nwaiting for measurement";
-                //NSString *Output = [[NSString alloc]  initWithFormat:@"recived Timestamp: %2.f",receivedTimestamp];
-                //NSLog(@"calibrated, latency=%0.f\n",[[ac proc]Latency]);
-                //ac->LabelOutput.text=Output;
-                
-
-            }
-            
-            //restart listening
-            //[ac dummy];
-            //[ac start]; //removed because of error after restart
-=======
                 [[ac proc]SetTimeDifference:receivedTimestamp RecordStopTime:fTimeStamp AtBufPos:ac->recordBuf->pos];
-                
                 //display measurement
                 //Output=@"calibration succesfull\nwaiting for measurement";
                 NSString *Output=[[NSString alloc]initWithFormat:@"recived Timestamp: %2.f",receivedTimestamp];
@@ -838,7 +802,7 @@ static OSStatus recordingCallback(void *inRefCon,
             
             //restart listening
             //[ac start];
->>>>>>> KoMa
+
         }
         if (ac->recordBuf->pos+inNumberFrames > ac->recordBuf->len)
         {
@@ -887,8 +851,6 @@ static OSStatus recordingCallback(void *inRefCon,
         }
     }
     return noErr;
-    
-    
 }
 
 //mainly used for debugging, outputs the recorded data by sending to the python server

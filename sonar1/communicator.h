@@ -38,6 +38,8 @@ bool timestampReceived;
 Float64 receivedTimestamp;
 fpComReturn fComReturn;
 fpDoProc fDoProc;
+Float64 fTDifSum;
+SInt32 siTDifCount;
 }
 
 

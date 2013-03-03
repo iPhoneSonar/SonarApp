@@ -12,7 +12,7 @@
 
 const SInt16 PORT = 2000;
 const SInt16 DEBUG_PORT = 2002;
-const CFStringRef DEBUG_HOST = (CFStringRef)@"172.20.10.3";
+const CFStringRef DEBUG_HOST = (CFStringRef)@"192.168.173.1";
 
 @implementation communicator
 
@@ -501,6 +501,25 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
     }
     freeifaddrs(interfaces);
     return locIp;
+}
+
+- (Float64) getTDif
+{
+    return fTDifSum/((Float64)siTDifCount);
+}
+
+- (SInt32)addTDif:(Float64)fVal
+{
+    fTDifSum += fVal;
+    siTDifCount += 1;
+    return siTDifCount;
+}
+
+- (SInt16)initTDif
+{
+    siTDifCount = 0;
+    fTDifSum = 0;
+    return 0;
 }
 
 
