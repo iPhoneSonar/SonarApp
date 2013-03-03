@@ -12,7 +12,7 @@
 
 const SInt16 PORT = 2000;
 const SInt16 DEBUG_PORT = 2002;
-const CFStringRef DEBUG_HOST = (CFStringRef)@"192.168.173.1";
+const CFStringRef DEBUG_HOST = (CFStringRef)@"192.168.56.1";
 
 @implementation communicator
 
@@ -371,13 +371,17 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
     }
 
     connectionState = CS_ClIENT;
-    NSLog(@"clientConnected");
+    NSLog(@"client Connected");
 
     CFRunLoopSourceRef sourceRef =
     CFSocketCreateRunLoopSource(kCFAllocatorDefault, pSock, 0);
     
     CFRunLoopAddSource(CFRunLoopGetCurrent(), sourceRef, kCFRunLoopCommonModes);
     CFRelease(sourceRef);
+<<<<<<< HEAD
+=======
+    printf("printf hallo");
+>>>>>>> x51
     return 0;
 }
 

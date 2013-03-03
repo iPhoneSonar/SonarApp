@@ -168,7 +168,7 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
 
 
     SInt32 shift = 0;
-    SInt32 len = 22528;
+    SInt32 len = 30*48*2*4+shift; //~240ms
 
     sendSig->buf = (SInt32*)malloc((len+shift)*sizeof(SInt32));
     if (sendSig == NULL)
@@ -178,7 +178,7 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
     }
     memset(sendSig->buf,0,(len+shift)*sizeof(SInt32));
     
-    sendSigGen((sendSig->buf)+shift);
+    [proc sendSigGen:(sendSig->buf)+shift: len];
     
     sendSig->len = len;
     sendSig->pos = 0;
@@ -802,7 +802,10 @@ static OSStatus recordingCallback(void *inRefCon,
             
             //restart listening
             //[ac start];
+<<<<<<< HEAD
 
+=======
+>>>>>>> x51
         }
         if (ac->recordBuf->pos+inNumberFrames > ac->recordBuf->len)
         {
