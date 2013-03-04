@@ -28,18 +28,19 @@ enum ConnectionState {
 
 
 @interface communicator : NSObject {
-NSInputStream* inputStream;
-NSOutputStream* outputStream;
-CFStringRef host;
-CFSocketRef	pSock;
-CFSocketNativeHandle pSockNative;
-ConnectionState connectionState;
-bool timestampReceived;
-Float64 receivedTimestamp;
-fpComReturn fComReturn;
-fpDoProc fDoProc;
-Float64 fTDifSum;
-SInt32 siTDifCount;
+    NSInputStream* inputStream;
+    NSOutputStream* outputStream;
+    CFStringRef host;
+    CFSocketRef	pSock;
+    CFSocketNativeHandle pSockNative;
+    ConnectionState connectionState;
+    bool timestampReceived;
+    Float64 receivedTimestamp;
+    fpComReturn fComReturn;
+    fpDoProc fDoProc;
+    Float64 fTDifSum;
+    SInt32 siTDifCount;
+    UInt64 uiTimestampUsec[100]; 
 }
 
 
@@ -53,6 +54,7 @@ SInt32 siTDifCount;
 @property(nonatomic) Float64 receivedTimestamp;
 @property(nonatomic, copy) fpComReturn fComReturn;
 @property(nonatomic, copy) fpDoProc fDoProc;
+@property(nonatomic) UInt64 *uiTimesampUsec;
 
 - (void)initNetworkCom;
 - (void)send:(NSString*)msg;
@@ -65,7 +67,7 @@ SInt32 siTDifCount;
 - (SInt16)sendNew: (char*)msg;
 - (void)closeNew;
 - (NSString*)getLocalIP;
-
+- (UInt64) getTimestampUsec;
 
 
 @end

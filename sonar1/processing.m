@@ -248,23 +248,12 @@ const SInt32 GAIN = 30000;
 
     SInt32 iChirpLen = 30*48*2;
     SInt32 iRet =
-    [self chirpGen:ipBuf :iChirpLen :1000.0 :2000.0];
-    iRet = [self chirpGen:ipBuf+iChirpLen :iChirpLen :2000.0 :3000.0];
-    iRet = [self chirpGen:ipBuf+iChirpLen*2 :iChirpLen :3000.0 :4000.0];
-    iRet = [self chirpGen:ipBuf+iChirpLen*3 :iChirpLen :4000.0 :5000.0];
+    [self chirpGen:ipBuf :iChirpLen:1000.0 :5000.0];
+    SInt32 iChirpLen2 = 30*48*2*3;
+    iRet =
+    [self chirpGen:ipBuf+iChirpLen :iChirpLen2:1000.0 :5000.0];
 
-    return 0;
+    return iRet;
 }
 
 @end
-
-//implementation for compatibility
-SInt32 sendSigGen(SInt32 *Tptr)
-{
-    SInt32 iSigLen = 30*48*2*4;
-    processing *p = [processing alloc];
-    [p sendSigGen:Tptr :iSigLen];
-    [p dealloc];
-    return 1;
-}
-

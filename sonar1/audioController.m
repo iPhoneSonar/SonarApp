@@ -20,6 +20,10 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
 //UInt64 recHost;
 //UInt64 plaHost;
 
+UInt64 uiTimestamp[100];
+UInt16 uiFramePos[100];
+UInt16 uiPos;
+
 @implementation audioController
 
 @synthesize audioUnit;
@@ -37,6 +41,10 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
 
 - (audioController*)init
 {
+    memset(uiFramePos,0,sizeof(uiFramePos));
+    memset(uiTimestamp,0,sizeof(uiTimestamp));
+    uiPos = 0;
+    
     com = [[communicator alloc] init];
     proc = [processing alloc];
     
@@ -114,7 +122,17 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
 
 -(SInt16)initServer
 {
+    /* it was just for testing the needed time between two getTimestamp calls
+     the result is <5 usec on the iphone 3
+    UInt64 uiTimestampUsec[100];
+    for (int x=0; x<20;x++)
+        uiTimestampUsec[x] = [com getTimestampUsec];
+    for (int x=0; x<20;x++)
+        NSLog(@"uiTimestamp: %lld.\n",uiTimestampUsec[x]);
 
+    //debug
+    return 0;
+    */
     [com setFDoProc: [self fDoProc]];
     
     NSLog(@"initServer");
@@ -177,7 +195,7 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
         return -1;
     }
     memset(sendSig->buf,0,(len+shift)*sizeof(SInt32));
-    
+
     [proc sendSigGen:(sendSig->buf)+shift: len];
     
     sendSig->len = len;
@@ -263,14 +281,23 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
 {
 
     //NSLog(@"playing timestamp:%0.f host: %lld\n",inTimeStamp->mSampleTime - plaSample, inTimeStamp->mHostTime - plaHost);
-    //plaHost = inTimeStamp->mHostTime;
+    //UInt64 plaHost = inTimeStamp->mHostTime;
     //plaSample = inTimeStamp->mSampleTime;
-
+    //duration of a frame is about 0.02133 seconds
     struct timeval TimeStamp;
     gettimeofday(&TimeStamp, NULL);
+    uiTimestamp[uiPos] = ((UInt64)TimeStamp.tv_sec*1000*1000) + TimeStamp.tv_usec;
+    //NSLog(@"ts=%15lld,mh=%15lld",uiTimestamp[uiPos],plaHost);
+    uiFramePos[uiPos] = inTimeStamp->mSampleTime;
 
-    audioController* ac = (audioController*)inRefCon;
-
+    audioController* ac = (audioController*)inRefCon; //about 6 usec on the iphone 3
+    if (uiPos >= 100)
+    {
+        [ac stop];
+        uiPos = 0;
+    }
+    uiPos +=1;
+    
     if (inNumberFrames > FRAMESIZE)
     {
         NSLog(@"inNumberFrames = %ld",inNumberFrames);
@@ -294,11 +321,11 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
         {
             [ac stop];
             char sTimeStamp[30];
-            sprintf(sTimeStamp,"%.0f",inTimeStamp->mSampleTime);
-            Float64 fTimeStamp;
-            fTimeStamp=((Float64)(TimeStamp.tv_sec)*1000000)+((Float64)(TimeStamp.tv_usec));
-            sprintf(sTimeStamp,"%2.f",fTimeStamp);
-            NSLog(@"timeStamp: %s", sTimeStamp);
+            sprintf(sTimeStamp,"%lld",inTimeStamp->mSampleTime);
+            
+            //fTimeStamp=((Float64)(TimeStamp.tv_sec)*1000000)+((Float64)(TimeStamp.tv_usec));
+            //sprintf(sTimeStamp,"%2.f",fTimeStamp);
+            //NSLog(@"timeStamp: %s", sTimeStamp);
             [[ac com] sendNew:sTimeStamp];
             NSLog(@"ac stoped");
         }
@@ -802,10 +829,7 @@ static OSStatus recordingCallback(void *inRefCon,
             
             //restart listening
             //[ac start];
-<<<<<<< HEAD
 
-=======
->>>>>>> x51
         }
         if (ac->recordBuf->pos+inNumberFrames > ac->recordBuf->len)
         {
@@ -994,6 +1018,11 @@ static OSStatus recordingCallback(void *inRefCon,
     OSStatus status;
     status = AudioOutputUnitStop(audioUnit);
     //NSLog(@"audioUnit stoped status = %ld", status);
+    for(int x=0;x<99;x++)
+    {
+        NSLog(@" timestampDif=%15lld,frameDif=%5d.\n",
+              uiTimestamp[x]-uiTimestamp[x+1],uiFramePos[x]-uiFramePos[x+1]);
+    }
     return status;
 }
 

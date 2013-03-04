@@ -9,10 +9,11 @@
 #import "communicator.h"
 #import <ifaddrs.h>
 #import <time.h>
+#include <sys/time.h>
 
 const SInt16 PORT = 2000;
 const SInt16 DEBUG_PORT = 2002;
-const CFStringRef DEBUG_HOST = (CFStringRef)@"192.168.56.1";
+const CFStringRef DEBUG_HOST = (CFStringRef)@"192.168.173.1";
 
 @implementation communicator
 
@@ -26,7 +27,7 @@ const CFStringRef DEBUG_HOST = (CFStringRef)@"192.168.56.1";
 @synthesize fComReturn;
 @synthesize fDoProc;
 @synthesize receivedTimestamp;
-
+@synthesize uiTimesampUsec;
 
 -(communicator*)init
 {
@@ -145,9 +146,9 @@ static void socketCallbackServerAccpeted(CFSocketRef s, CFSocketCallBackType typ
     //this check is not realy needed as only one callback tye is defined
     if (type == kCFSocketReadCallBack)
     {
-        //we have an connected client socket that will send us an timestamp
+        //we have an connected client socket that will send us a timestamp
 
-        const UInt16 BUFSIZE = 30;
+        const UInt16 BUFSIZE = 50;
         char sBuf[BUFSIZE];
         memset(sBuf,0,BUFSIZE);
         int iRet = 0;
@@ -378,10 +379,7 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
     
     CFRunLoopAddSource(CFRunLoopGetCurrent(), sourceRef, kCFRunLoopCommonModes);
     CFRelease(sourceRef);
-<<<<<<< HEAD
-=======
-    printf("printf hallo");
->>>>>>> x51
+
     return 0;
 }
 
@@ -526,6 +524,16 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
     return 0;
 }
 
+- (UInt64) getTimestampUsec
+{
+    timeval tvTimeStamp;
+    gettimeofday(&tvTimeStamp, NULL);
+    //NSLog(@"tv_sec %ld.\n",tvTimeStamp.tv_sec);
+    //NSLog(@"tv_usec %d.\n",tvTimeStamp.tv_usec);
+    UInt64 uiTimestampUsecLoc = ((UInt64)tvTimeStamp.tv_sec*1000*1000) + tvTimeStamp.tv_usec;
+    //NSLog(@"uiTimestampUsecLoc %lld.\n",uiTimestampUsecLoc);
+    return uiTimestampUsecLoc;
+}
 
 
 @end
