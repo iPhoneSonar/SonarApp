@@ -320,9 +320,9 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
         if (ac->play->pos + inNumberFrames > ac->play->len)
         {
             [ac stop];
-            char sTimeStamp[30];
-            sprintf(sTimeStamp,"%lld",inTimeStamp->mSampleTime);
-            
+            char sTimeStamp[50];
+            sprintf(sTimeStamp,"%lld %0.f",uiTimestamp[uiPos],inTimeStamp->mSampleTime);
+            NSLog(
             //fTimeStamp=((Float64)(TimeStamp.tv_sec)*1000000)+((Float64)(TimeStamp.tv_usec));
             //sprintf(sTimeStamp,"%2.f",fTimeStamp);
             //NSLog(@"timeStamp: %s", sTimeStamp);
