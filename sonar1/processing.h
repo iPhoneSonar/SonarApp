@@ -27,7 +27,7 @@
 - (void)SetSignalDetailsRecord:(SInt32*)ARecord Play:(SInt32*)ASend RecordLen:(SInt32)RecordLen Playlen:(SInt32)PlayLen;
 - (float)CalculateDistanceHeadphone;
 - (SInt32)sendSigGen:(SInt32*)ipBuf :(SInt32&)iBufLen;
-- (void)CalculateNetworklatencyComTimeStamp:(UInt64*)comTimeStamp acTimeStamp:(UInt64*)acTimeStamp nTimeStamps:(SInt32)nTimeStamps;
+- (void)CalculateNetworklatencyRecvTimeStamp:(UInt64*)RecvTimeStamp TimestampOwn:(UInt64*)TimestampOwn nTimeStamps:(SInt32)nTimeStamps;
 
 @end
 

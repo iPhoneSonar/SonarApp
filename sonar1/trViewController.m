@@ -162,17 +162,17 @@
         self.btnNetMode.selected = NO;
         self.tfIp.hidden = NO;
         self.btnConnect.hidden=YES;
-        self.LabelServerIP.hidden=YES;
-
-        NSLog(@"btnNetMode YES");
-        [audioController initServer];
+        self.LabelServerIP.hidden=NO;
     }
     else
     {
         self.btnNetMode.selected = YES;
         self.tfIp.hidden = YES;
         self.LabelServerIP.hidden=NO;
-        self.btnConnect.hidden=NO;
+        self.btnConnect.hidden=YES;
+        
+        NSLog(@"btnNetMode YES");
+        [audioController initServer];
     }
 }
 

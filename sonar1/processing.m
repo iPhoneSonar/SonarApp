@@ -180,18 +180,21 @@ const SInt32 GAIN = 30000;
     return Distance;
 }
 
-- (void)CalculateNetworklatencyComTimeStamp:(UInt64*)comTimeStamp acTimeStamp:(UInt64*)acTimeStamp nTimeStamps:(SInt32)nTimeStamps
+- (void)CalculateNetworklatencyRecvTimeStamp:(UInt64*)RecvTimeStamp TimestampOwn:(UInt64*)TimestampOwn nTimeStamps:(SInt32)nTimeStamps
 {
+    //calculate Network Latency
     for (int i=0;i<nTimeStamps;i++)
     {
-        NetworkLatency+=(Float64)((acTimeStamp[i]-comTimeStamp[i]));
+        NetworkLatency+=(Float64)((TimestampOwn[i]-RecvTimeStamp[i]));
     }
     NetworkLatency=NetworkLatency/((Float64)nTimeStamps);
 
     //Calculate Zero Distance Sample
     [self CalcKKFWithumberOfSamples:1024];    
     KKFZeroDistanceSample=[self MaximumSearchAtStartValue:0 WithEndValue:KKFLen];
-    
+    NSLog(@"NetworkLatency=%f\n Sample for Zero Distance: %li",NetworkLatency,KKFZeroDistanceSample);
+    isCalibrated=true;
+    NSLog(@"isCalibrated: %i",isCalibrated);
 }
 
 

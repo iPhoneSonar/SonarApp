@@ -409,6 +409,7 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
     
     CFRunLoopAddSource(CFRunLoopGetCurrent(), sourceRef, kCFRunLoopCommonModes);
     CFRelease(sourceRef);
+    [NSThread sleepForTimeInterval:1];
 
     return 0;
 }

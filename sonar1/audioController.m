@@ -119,6 +119,7 @@ UInt16 uiPos;
         [[self proc]SetSignalDetailsRecord:self->recordBuf->buf Play:self->sendSig->buf RecordLen:self->recordBuf->len Playlen:self->sendSig->len];         //set pointers
 
         //if ([[ac proc]isCalibrated])
+        //TODO: calc Distance
         if (false)
         {
             //calc distance
@@ -133,12 +134,13 @@ UInt16 uiPos;
         }
         else
         {
-            //[[self proc]SetTimeDifference:receivedTimestamp RecordStopTime:fTimeStamp AtBufPos:ac->recordBuf->pos];
+            //TODO: get nTimeStamps from communicator
             int nTimeStamps=15;
-            UInt64 comTimeStamp[nTimeStamps];
-            UInt64 acTimeStamp[nTimeStamps];
-            [[self proc]CalculateNetworklatencyComTimeStamp:comTimeStamp acTimeStamp:acTimeStamp nTimeStamps:nTimeStamps];
-            //KKFMaxPos==Network Latency            
+            UInt64 *TimestampRecv=self.com.uiTimestampRecv;
+            UInt64 *TimestampOwn=self.com.uiTimestamp;
+            [[self proc]CalculateNetworklatencyRecvTimeStamp:TimestampRecv TimestampOwn:TimestampOwn nTimeStamps:nTimeStamps];
+            NSLog(@"end of calibration");
+            
         }
         return 0;
     };
@@ -338,7 +340,6 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
         [ac stop];
         uiPos = 0;
     }
-    uiPos +=1;
     
     if (inNumberFrames > FRAMESIZE)
     {
@@ -360,7 +361,7 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
         //send the TimeStamp with each frame
         uiFramePos[uiPos] = inTimeStamp->mSampleTime;
         char sTimeStamp[50];
-        sprintf(sTimeStamp,"%lld %0.f",uiTimestamp[uiPos],inTimeStamp->mSampleTime);
+        sprintf(sTimeStamp,"%lld %0.f",uiTimestamp[uiPos++],inTimeStamp->mSampleTime);
         NSLog(@"sTimestamp %s",sTimeStamp);
         [[ac com] sendNew:sTimeStamp];
         
