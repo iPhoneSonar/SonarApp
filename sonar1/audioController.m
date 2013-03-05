@@ -376,20 +376,11 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
         if (ac->play->pos + inNumberFrames > ac->play->len)
         {
             [ac stop];
-<<<<<<< HEAD
-=======
-            char sTimeStamp[50];
-            sprintf(sTimeStamp,"%lld %0.f",uiTimestamp[uiPos],inTimeStamp->mSampleTime);
-            //fTimeStamp=((Float64)(TimeStamp.tv_sec)*1000000)+((Float64)(TimeStamp.tv_usec));
-            //sprintf(sTimeStamp,"%2.f",fTimeStamp);
-            //NSLog(@"timeStamp: %s", sTimeStamp);
-            [[ac com] sendNew:sTimeStamp];
->>>>>>> changed Processing for NetworkLatency
             NSLog(@"ac stoped");
         }
     }
     //assume that without network one device with headphones is used
-    //playing and recording   207500.000000 us   269604.250000 us    285375.000000 us   272166.500000 us  266333.250000 us   266333.250000 us
+    //playing and recording
     else if([[ac com]connectionState] == CS_DISCONNECTED)
     {
         ac->play->pos += inNumberFrames;
@@ -810,7 +801,7 @@ static OSStatus recordingCallback(void *inRefCon,
     gettimeofday(&TimeStamp, NULL);
 
     audioController* ac = (audioController*)inRefCon;
-    
+
     //CS_CLIENT does no recording
     if ([[ac com]connectionState] == CS_ClIENT)
     {
@@ -834,65 +825,6 @@ static OSStatus recordingCallback(void *inRefCon,
     //till that it records in cyles into the buffer
     if ([[ac com]connectionState] == CS_SERVER)
     {
-        //TODO: move this code to fDoProc
-        if ([[ac com]timestampReceived] == true)
-        {
-
-            [[ac com]setTimestampReceived:false];
-
-            
-            //processing
-            //[[ac proc]GetPointerReceive:ac->recordBuf->buf Send:ac->play->buf Len:ac->play->len];       //set pointers
-
-            //Float64 receivedTimestamp=[[ac com]receivedTimestamp];
-            //NSLog(@"timestampReceived= %0.f",receivedTimestamp);
-
-            [ac stop];
-            
-            //Server Timestamp
-            Float64 fTimeStamp;
-            fTimeStamp=((Float64)(TimeStamp.tv_sec)*1000000)+((Float64)(TimeStamp.tv_usec));
-            [[ac com]setTimestampReceived:false];
-
-<<<<<<< HEAD
-
-            //processing
-            [[ac proc]SetSignalDetailsRecord:ac->recordBuf->buf Play:ac->sendSig->buf RecordLen:ac->recordBuf->len Playlen:ac->sendSig->len];         //set pointers
-
-            //Client Timestamp
-            Float64 receivedTimestamp=[[ac com]receivedTimestamp];
-
-            //if ([[ac proc]isCalibrated])
-            if (false)
-            {
-                //calc distance
-                //float Distance=[[ac proc]CalculateDistanceServerWithTimestamp:receivedTimestamp];
-                //display distance
-
-                //NSString *Output = [[NSString alloc] initWithFormat:@"Distance: %f meters\nwaiting for new measurement",Distance];
-
-                //NSString *Output=[[NSString alloc]initWithFormat:@"Distance: %f meters\nwaiting for new measurement",Distance];
-
-                //ac->LabelOutput.text=Output;
-            }
-            else
-            {
-                [[ac proc]SetTimeDifference:receivedTimestamp RecordStopTime:fTimeStamp AtBufPos:ac->recordBuf->pos];
-                //display measurement
-                //Output=@"calibration succesfull\nwaiting for measurement";
-                NSString *Output=[[NSString alloc]initWithFormat:@"recived Timestamp: %2.f",receivedTimestamp];
-                ac->LabelOutput.text=Output;
-                NSLog(@"receivedTimestamp= %2.f",receivedTimestamp);
-                NSLog(@"recordStopTime= %2.f",fTimeStamp);
-            }
-=======
-          
->>>>>>> changed Processing for NetworkLatency
-            
-            //restart listening
-            //[ac start];
-
-        }
         if (ac->recordBuf->pos+inNumberFrames > ac->recordBuf->len)
         {
             ac->recordBuf->pos = 0; //ringbuffer
