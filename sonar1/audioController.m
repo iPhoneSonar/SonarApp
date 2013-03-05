@@ -106,17 +106,31 @@ UInt16 uiPos;
 }
 
 
-//create a block to do the audioprocessin of the server from the comunicator
+//create a block to do the audioprocessing of the server from the comunicator
 - (fpDoProc)fDoProc
 {
     NSLog(@"fDoProc init");
     fpDoProc doProc = ^ SInt16 (void)
     {
+        //
         NSLog(@"Do Proc");
         [self stop];
         return 0;
     };
     return [[doProc copy] autorelease];
+}
+
+//create a block to start the audio session
+- (fpStart)fStart
+{
+    NSLog(@"fStart");
+    fpStart start = ^ SInt16 (void)
+    {
+        NSLog(@"start");
+        [self start];
+        return 0;
+    };
+    return [[start copy] autorelease];
 }
 
 
@@ -134,6 +148,7 @@ UInt16 uiPos;
     return 0;
     */
     [com setFDoProc: [self fDoProc]];
+    [com setFStart: [self fStart]];
     
     NSLog(@"initServer");
     if([com serverStart])
@@ -284,13 +299,15 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
     //UInt64 plaHost = inTimeStamp->mHostTime;
     //plaSample = inTimeStamp->mSampleTime;
     //duration of a frame is about 0.02133 seconds
+    //needs to be the first thing we do to avoid latencies
     struct timeval TimeStamp;
     gettimeofday(&TimeStamp, NULL);
     uiTimestamp[uiPos] = ((UInt64)TimeStamp.tv_sec*1000*1000) + TimeStamp.tv_usec;
     //NSLog(@"ts=%15lld,mh=%15lld",uiTimestamp[uiPos],plaHost);
-    uiFramePos[uiPos] = inTimeStamp->mSampleTime;
 
     audioController* ac = (audioController*)inRefCon; //about 6 usec on the iphone 3
+
+    
     if (uiPos >= 100)
     {
         [ac stop];
@@ -315,18 +332,18 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
     //client plays the buffer content once
     else if([[ac com]connectionState] == CS_ClIENT)
     {
+        //send the TimeStamp with each frame
+        uiFramePos[uiPos] = inTimeStamp->mSampleTime;
+        char sTimeStamp[50];
+        sprintf(sTimeStamp,"%lld %0.f",uiTimestamp[uiPos],inTimeStamp->mSampleTime);
+        NSLog(@"sTimestamp %s",sTimeStamp);
+        [[ac com] sendNew:sTimeStamp];
+        
         ac->play->pos += inNumberFrames;
         //if all frames are send the client work is completed
         if (ac->play->pos + inNumberFrames > ac->play->len)
         {
             [ac stop];
-            char sTimeStamp[50];
-            sprintf(sTimeStamp,"%lld %0.f",uiTimestamp[uiPos],inTimeStamp->mSampleTime);
-            NSLog(
-            //fTimeStamp=((Float64)(TimeStamp.tv_sec)*1000000)+((Float64)(TimeStamp.tv_usec));
-            //sprintf(sTimeStamp,"%2.f",fTimeStamp);
-            //NSLog(@"timeStamp: %s", sTimeStamp);
-            [[ac com] sendNew:sTimeStamp];
             NSLog(@"ac stoped");
         }
     }
@@ -796,7 +813,7 @@ static OSStatus recordingCallback(void *inRefCon,
             fTimeStamp=((Float64)(TimeStamp.tv_sec)*1000000)+((Float64)(TimeStamp.tv_usec));
             [[ac com]setTimestampReceived:false];
 
-          
+
             //processing
             [[ac proc]SetSignalDetailsRecord:ac->recordBuf->buf Play:ac->sendSig->buf RecordLen:ac->recordBuf->len Playlen:ac->sendSig->len];         //set pointers
 
@@ -1017,12 +1034,7 @@ static OSStatus recordingCallback(void *inRefCon,
 {
     OSStatus status;
     status = AudioOutputUnitStop(audioUnit);
-    //NSLog(@"audioUnit stoped status = %ld", status);
-    for(int x=0;x<99;x++)
-    {
-        NSLog(@" timestampDif=%15lld,frameDif=%5d.\n",
-              uiTimestamp[x]-uiTimestamp[x+1],uiFramePos[x]-uiFramePos[x+1]);
-    }
+    NSLog(@"audioUnit stoped status = %ld", status);
     return status;
 }
 

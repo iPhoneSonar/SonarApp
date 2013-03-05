@@ -11,6 +11,7 @@
 #import <time.h>
 #include <sys/time.h>
 
+
 const SInt16 PORT = 2000;
 const SInt16 DEBUG_PORT = 2002;
 const CFStringRef DEBUG_HOST = (CFStringRef)@"192.168.173.1";
@@ -26,8 +27,13 @@ const CFStringRef DEBUG_HOST = (CFStringRef)@"192.168.173.1";
 @synthesize connectionState;
 @synthesize fComReturn;
 @synthesize fDoProc;
+@synthesize fStart;
 @synthesize receivedTimestamp;
-@synthesize uiTimesampUsec;
+
+@synthesize uiTimestamp;
+@synthesize uiTimestampRecv;
+@synthesize uiFramePosRecv;
+@synthesize uiPos;
 
 -(communicator*)init
 {
@@ -39,6 +45,10 @@ const CFStringRef DEBUG_HOST = (CFStringRef)@"192.168.173.1";
     timestampReceived = false;
     NSLog(@"communicator init");
     return self;
+    uiPos = 0;
+    uiTimestamp = (UInt64*)malloc(100*sizeof(UInt64));
+    uiTimestampRecv = (UInt64*)malloc(100*sizeof(UInt64));
+    uiFramePosRecv = (UInt16*)malloc(100*sizeof(UInt16));
 }
 
 -(void)dealloc
@@ -137,11 +147,18 @@ static void socketCallbackClient(CFSocketRef s, CFSocketCallBackType type, CFDat
 
 static void socketCallbackServerAccpeted(CFSocketRef s, CFSocketCallBackType type, CFDataRef address, const void *data, void *info)
 {
+    //first get an timestamp -> later save it in the uiTimestamp of the com object
+    timeval tvTimeStamp;
+    gettimeofday(&tvTimeStamp, NULL);
+    //NSLog(@"tv_sec %ld.\n",tvTimeStamp.tv_sec);
+    //NSLog(@"tv_usec %d.\n",tvTimeStamp.tv_usec);
+    UInt64 uiTimestampUsecLoc = ((UInt64)tvTimeStamp.tv_sec*1000*1000) + tvTimeStamp.tv_usec;
+    
     NSLog(@"socketCallbackServerAccpeted %ld called", (SInt32)s);
     CFSocketContext cfSC;
     CFSocketGetContext(s, &cfSC);
     communicator *localCom = (communicator*)cfSC.info;
-    localCom->fDoProc();
+
     CFSocketNativeHandle pSockNativeLoc = CFSocketGetNative(s);
     //this check is not realy needed as only one callback tye is defined
     if (type == kCFSocketReadCallBack)
@@ -165,13 +182,23 @@ static void socketCallbackServerAccpeted(CFSocketRef s, CFSocketCallBackType typ
             NSLog(@"iRet =%d.\nerrno =%d",iRet,errno);
             return;
         }
-        [localCom setReceivedTimestamp: atof(sBuf)];
+        if(localCom.uiPos--) //down counting
+        {
+            char* sPos = strchr(sBuf,' ');
+            *sPos = '\0';
+            sPos++;
+            localCom->uiTimestampRecv[localCom.uiPos] = atoi(sBuf);
+            localCom->uiFramePosRecv[localCom.uiPos] = atoi(sPos);
+            localCom->uiTimestamp[localCom.uiPos] = uiTimestampUsecLoc;
+            return; //nothing more to do for the moment!
+        }      
+
+        //[localCom setReceivedTimestamp: atof(sBuf)];
         //NSLog(@"fTimestamp=%f.\n", [localCom receivedTimestamp]);
         //ReceivedTimestamp is not realy needed anymore,
         //because we directly call the function to do the processing
-
-
-
+        localCom->fDoProc();
+        
         //we need the socket to respond the distance after processing
         //TODO:!!! do not forget to manage closing the socket
         [localCom setPSockNative: pSockNativeLoc];
@@ -189,7 +216,7 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
     NSLog(@"socketCallbackServer %ld called", (SInt32)s);
     CFSocketContext cfSC;
     CFSocketGetContext(s, &cfSC);
-    //communicator *localCom = (communicator*)cfSC.info;
+    communicator *localCom = (communicator*)cfSC.info;
     //[localCom closeNew];
     
     CFSocketNativeHandle pSockNativeLocal = CFSocketGetNative(s);
@@ -214,6 +241,9 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
                                  &cfSC);
         //NSLog(@"create from native");
         //once we have the new connected socket put it in the runloop
+
+        //tell the audiounit to start recording
+        localCom->fStart();
         
         CFRunLoopSourceRef sourceRef = 
         CFSocketCreateRunLoopSource(kCFAllocatorDefault, cfSockAccepted, 0);
@@ -398,6 +428,7 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
     {
         return 0; //
     }
+
     return iRet;
 }
 
