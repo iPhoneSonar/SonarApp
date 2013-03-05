@@ -341,10 +341,6 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
         [ac stop];
         uiPosX = 0;
     }
-<<<<<<< HEAD
-=======
-    uiPosX +=1;
->>>>>>> x52
     
     if (inNumberFrames > FRAMESIZE)
     {
@@ -366,11 +362,7 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
         //send the TimeStamp with each frame
         uiFramePos[uiPosX] = inTimeStamp->mSampleTime;
         char sTimeStamp[50];
-<<<<<<< HEAD
-        sprintf(sTimeStamp,"%lld %0.f",uiTimestamp[uiPos++],inTimeStamp->mSampleTime);
-=======
-        sprintf(sTimeStamp,"%lld %0.f",uiTimestamp[uiPosX],inTimeStamp->mSampleTime);
->>>>>>> x52
+        sprintf(sTimeStamp,"%lld %0.f",uiTimestamp[uiPosX++],inTimeStamp->mSampleTime);
         NSLog(@"sTimestamp %s",sTimeStamp);
         [[ac com] sendNew:sTimeStamp];
         
