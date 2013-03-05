@@ -181,6 +181,7 @@ UInt16 uiPos;
     */
     [com setFDoProc: [self fDoProc]];
     [com setFStart: [self fStart]];
+    [com setUiPos: sendSig->len/FRAMESIZE];
     
     NSLog(@"initServer");
     if([com serverStart])
@@ -196,8 +197,7 @@ UInt16 uiPos;
     //if no headphone is connected calibration follows (measurement  view
     //display waiting for calibration
     LabelOutput.text = @"waiting for calibration";
-    //  wait for signal
-    [self start];
+    //the audiounid is started once a client sends the first timestamp!
     //when started next steps are handled from recording callback
 
     //  process signal
