@@ -9,12 +9,13 @@ const SInt32 GAIN = 30000;
 @synthesize com;
 @synthesize PKKF;
 @synthesize KKFLen;
+@synthesize NetworkLatency;
+@synthesize KKFZeroDistancePos;
 
 -(void)InitializeArrays
 {
     KKFLen=999999;
     PKKF=(SInt64*)malloc(KKFLen*sizeof(SInt64));
-    TimeDifference=0;
     [self ResetArrays];
 }
 -(void)ResetArrays
@@ -30,7 +31,7 @@ const SInt32 GAIN = 30000;
     PlaySigLen=PlayLen;
 }
 
-- (void)CalcKKFWithumberOfSamples:(SInt32)Nsamples;
+- (void)CalcKKFWithumberOfSamples:(SInt32)Nsamples
 {
     SInt32 KKFSize=2*Nsamples;
     int i=0;
@@ -105,7 +106,7 @@ const SInt32 GAIN = 30000;
     NSLog(@"Berechnung der RingKKF durchgeführt");
 }
 
-- (SInt32)MaximumSearchAtStartValue:(UInt32)StartValue WithEndValue:(UInt32)EndValue;
+- (SInt32)MaximumSearchAtStartValue:(UInt32)StartValue WithEndValue:(UInt32)EndValue
 {
     SInt64 pmax=0;
     SInt64 nmax=0;
@@ -138,28 +139,6 @@ const SInt32 GAIN = 30000;
     max_t=pmax_t;
     NSLog(@"start = %ld, end = %ld, max: %i, maxVal: %lli",StartValue, EndValue, max_t, pmax);
     return max_t;
-}
-
-- (void)SetTimeDifference:(Float64)PlayStopTime RecordStopTime:(Float64)RecordStopTime AtBufPos:(SInt32)RecordStopBufferPosition
-{
-    [self CalcRingKKF];
-    //get position of maximum KKF Value
-    SInt32 KKFMaxPos;
-    KKFMaxPos=[self MaximumSearchAtStartValue:0 WithEndValue:KKFLen];
-
-    SInt32 StartOfRecordedSignal=KKFMaxPos;
-    SInt32 EndOfRecordedSignal=StartOfRecordedSignal+PlaySigLen;
-    Float64 Latency=PlayStopTime-(Float64)(EndOfRecordedSignal)/48.f*1000.f-RecordStopTime;
-    NSLog(@"Latenz= %f",Latency);
-
-    Float64 TimeOfFirstSample=RecordStopTime-(((Float64)RecordStopBufferPosition)/48.0f*1000.0f);
-    
-    Float64 TimeOfRecordedSignalEnd=TimeOfFirstSample+(((Float64)EndOfRecordedSignal)/48.0f*1000.0f);
-    
-    TimeDifference=RecordStopTime-TimeOfRecordedSignalEnd;
-
-    [self setIsCalibrated:true];
-    NSLog(@"TimeDifference: %f us",TimeDifference);
 }
 
 - (float)CalculateDistanceServerWithTimestamp:(Float64)SendTime
@@ -199,6 +178,15 @@ const SInt32 GAIN = 30000;
     }
     NSLog(@"Distance: %f",Distance);
     return Distance;
+}
+
+- (void)CalculateLatencyComTimeStamp:(UInt64*)comTimeStamp acTimeStamp:(UInt64*)acTimeStamp nTimeStamps:(SInt32)nTimeStamps
+{
+    for (int i=0;i<nTimeStamps;i++)
+    {
+        NetworkLatency+=(Float64)((acTimeStamp[i]-comTimeStamp[i]));
+    }
+    NetworkLatency=NetworkLatency/((Float64)nTimeStamps);
 }
 
 

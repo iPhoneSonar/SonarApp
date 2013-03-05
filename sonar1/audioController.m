@@ -115,6 +115,38 @@ UInt16 uiPos;
         //
         NSLog(@"Do Proc");
         [self stop];
+        //processing
+        [[self proc]SetSignalDetailsRecord:self->recordBuf->buf Play:self->sendSig->buf RecordLen:self->recordBuf->len Playlen:self->sendSig->len];         //set pointers
+
+        //if ([[ac proc]isCalibrated])
+        if (false)
+        {
+            //calc distance
+            //float Distance=[[ac proc]CalculateDistanceServerWithTimestamp:receivedTimestamp];
+            //display distance
+
+            //NSString *Output = [[NSString alloc] initWithFormat:@"Distance: %f meters\nwaiting for new measurement",Distance];
+
+            //NSString *Output=[[NSString alloc]initWithFormat:@"Distance: %f meters\nwaiting for new measurement",Distance];
+
+            //ac->LabelOutput.text=Output;
+        }
+        else
+        {
+            //[[self proc]SetTimeDifference:receivedTimestamp RecordStopTime:fTimeStamp AtBufPos:ac->recordBuf->pos];
+            int nTimeStamps=15;
+            UInt64 comTimeStamp[nTimeStamps];
+            UInt64 acTimeStamp[nTimeStamps];
+            [[self proc]CalculateLatencyComTimeStamp:comTimeStamp acTimeStamp:acTimeStamp nTimeStamps:nTimeStamps];
+            
+
+            //Calculate Zero Distance
+            [[self proc]CalcKKFWithumberOfSamples:1024];
+            SInt32 KKFMaxPos;
+            KKFMaxPos=[[self proc]MaximumSearchAtStartValue:0 WithEndValue:self->proc.KKFLen];
+            self->proc.KKFZeroDistancePos=KKFMaxPos;
+            //KKFMaxPos==Network Latency            
+        }
         return 0;
     };
     return [[doProc copy] autorelease];
@@ -344,6 +376,15 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
         if (ac->play->pos + inNumberFrames > ac->play->len)
         {
             [ac stop];
+<<<<<<< HEAD
+=======
+            char sTimeStamp[50];
+            sprintf(sTimeStamp,"%lld %0.f",uiTimestamp[uiPos],inTimeStamp->mSampleTime);
+            //fTimeStamp=((Float64)(TimeStamp.tv_sec)*1000000)+((Float64)(TimeStamp.tv_usec));
+            //sprintf(sTimeStamp,"%2.f",fTimeStamp);
+            //NSLog(@"timeStamp: %s", sTimeStamp);
+            [[ac com] sendNew:sTimeStamp];
+>>>>>>> changed Processing for NetworkLatency
             NSLog(@"ac stoped");
         }
     }
@@ -813,6 +854,7 @@ static OSStatus recordingCallback(void *inRefCon,
             fTimeStamp=((Float64)(TimeStamp.tv_sec)*1000000)+((Float64)(TimeStamp.tv_usec));
             [[ac com]setTimestampReceived:false];
 
+<<<<<<< HEAD
 
             //processing
             [[ac proc]SetSignalDetailsRecord:ac->recordBuf->buf Play:ac->sendSig->buf RecordLen:ac->recordBuf->len Playlen:ac->sendSig->len];         //set pointers
@@ -843,6 +885,9 @@ static OSStatus recordingCallback(void *inRefCon,
                 NSLog(@"receivedTimestamp= %2.f",receivedTimestamp);
                 NSLog(@"recordStopTime= %2.f",fTimeStamp);
             }
+=======
+          
+>>>>>>> changed Processing for NetworkLatency
             
             //restart listening
             //[ac start];
