@@ -9,13 +9,13 @@ const SInt32 GAIN = 30000;
 @synthesize com;
 @synthesize PKKF;
 @synthesize KKFLen;
-@synthesize NetworkLatency;
-@synthesize KKFZeroDistancePos;
 
 -(void)InitializeArrays
 {
     KKFLen=999999;
     PKKF=(SInt64*)malloc(KKFLen*sizeof(SInt64));
+    NetworkLatency=0;
+    KKFZeroDistanceSample=0;
     [self ResetArrays];
 }
 -(void)ResetArrays
@@ -180,13 +180,18 @@ const SInt32 GAIN = 30000;
     return Distance;
 }
 
-- (void)CalculateLatencyComTimeStamp:(UInt64*)comTimeStamp acTimeStamp:(UInt64*)acTimeStamp nTimeStamps:(SInt32)nTimeStamps
+- (void)CalculateNetworklatencyComTimeStamp:(UInt64*)comTimeStamp acTimeStamp:(UInt64*)acTimeStamp nTimeStamps:(SInt32)nTimeStamps
 {
     for (int i=0;i<nTimeStamps;i++)
     {
         NetworkLatency+=(Float64)((acTimeStamp[i]-comTimeStamp[i]));
     }
     NetworkLatency=NetworkLatency/((Float64)nTimeStamps);
+
+    //Calculate Zero Distance Sample
+    [self CalcKKFWithumberOfSamples:1024];    
+    KKFZeroDistanceSample=[self MaximumSearchAtStartValue:0 WithEndValue:KKFLen];
+    
 }
 
 

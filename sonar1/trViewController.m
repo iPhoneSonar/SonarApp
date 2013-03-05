@@ -19,11 +19,10 @@
 @synthesize btnStart;
 @synthesize btnStop;
 @synthesize btnProcess;
-@synthesize tf1;
-@synthesize tf2;
 @synthesize tfIp;
 @synthesize btnConnect;
 @synthesize btnNetMode;
+@synthesize LabelServerIP;
 
 - (IBAction)switchToMeasurementView:(id)sender
 {
@@ -44,9 +43,9 @@
 {
     [super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
-    [audioController setOutput:(&tf2)];
     tfIp.text = [[audioController com]getLocalIP];
-    [audioController setOutput:&tf1];
+    LabelServerIP.text=[[audioController com]getLocalIP];
+    LabelServerIP.hidden=YES;
 
 }
 
@@ -55,8 +54,6 @@
 
     [btnStart release];
     [btnStop release];
-    [tf1 release];
-    [tf2 release];
     [btnProcess release];
     [tfIp release];
     [btnConnect release];
@@ -68,8 +65,6 @@
 {
     [self setBtnStart:nil];
     [self setBtnStop:nil];
-    [self setTf1:nil];
-    [self setTf2:nil];
     [self setBtnProcess:nil];
     [self setTfIp:nil];
     [self setBtnConnect:nil];
@@ -107,8 +102,6 @@
 
 - (IBAction)backgroundTouched:(id)sender
 {
-    [tf1 resignFirstResponder];
-    [tf2 resignFirstResponder];
     [tfIp resignFirstResponder];
     //insert start here for start at Background touch
 }
@@ -117,31 +110,21 @@
 
     [audioController recordBufferInitSamples];
     [audioController start];
-    self.tf2.text = @"start";
 }
 
 - (IBAction)stop:(id)sender {
     [audioController stop];
-    self.tf2.text = @"stop";
 }
 
 - (IBAction)testOutput:(id)sender { //process button
     [audioController testOutput];
-    self.tf2.text = @"test out";
 }
 
 - (IBAction)connect:(id)sender
 {
-    NSLog(@"selected %d", btnNetMode.selected);
-    if ([[audioController com ] pSock])
-    {
-        [[audioController com] close];
-        NSLog(@"close socket");
-    }
     if (btnNetMode.selected == YES) //server
     {
-        NSLog(@"btnNetMode YES");
-        [audioController initServer];
+        return;
     }
     else
     { //must be client
@@ -158,8 +141,8 @@
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField
 {
-    if (textField == tf1)
-        [tf1 resignFirstResponder];
+    if (textField == tfIp)
+        [tfIp resignFirstResponder];
     return NO;
 }
 
@@ -167,15 +150,29 @@
 {
     //NSLog(@"btnNetMode.selected %d", self.btnNetMode.selected);
 
+    NSLog(@"selected %d", btnNetMode.selected);
+    if ([[audioController com ] pSock])
+    {
+        [[audioController com] close];
+        NSLog(@"close socket");
+    }
+
     if (self.btnNetMode.selected == YES)
     {
         self.btnNetMode.selected = NO;
         self.tfIp.hidden = NO;
+        self.btnConnect.hidden=YES;
+        self.LabelServerIP.hidden=YES;
+
+        NSLog(@"btnNetMode YES");
+        [audioController initServer];
     }
     else
     {
         self.btnNetMode.selected = YES;
         self.tfIp.hidden = YES;
+        self.LabelServerIP.hidden=NO;
+        self.btnConnect.hidden=NO;
     }
 }
 

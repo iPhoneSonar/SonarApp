@@ -137,14 +137,7 @@ UInt16 uiPos;
             int nTimeStamps=15;
             UInt64 comTimeStamp[nTimeStamps];
             UInt64 acTimeStamp[nTimeStamps];
-            [[self proc]CalculateLatencyComTimeStamp:comTimeStamp acTimeStamp:acTimeStamp nTimeStamps:nTimeStamps];
-            
-
-            //Calculate Zero Distance
-            [[self proc]CalcKKFWithumberOfSamples:1024];
-            SInt32 KKFMaxPos;
-            KKFMaxPos=[[self proc]MaximumSearchAtStartValue:0 WithEndValue:self->proc.KKFLen];
-            self->proc.KKFZeroDistancePos=KKFMaxPos;
+            [[self proc]CalculateNetworklatencyComTimeStamp:comTimeStamp acTimeStamp:acTimeStamp nTimeStamps:nTimeStamps];
             //KKFMaxPos==Network Latency            
         }
         return 0;

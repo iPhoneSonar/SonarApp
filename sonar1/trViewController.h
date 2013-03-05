@@ -18,15 +18,10 @@
     UIButton *btnStop;
     UIButton *btnProcess;
     UIButton *btnNetMode;
-    UITextField *tf1;
-    UITextField *tf2;
+    UILabel *LabelServerIP;
 }
 
 @property (retain, nonatomic) IBOutlet audioController *audioController;
-
-@property (retain, nonatomic) IBOutlet UITextField *tf1;
-
-@property (retain, nonatomic) IBOutlet UITextField *tf2;
 
 @property (retain, nonatomic) IBOutlet UIButton *btnStart;
 @property (retain, nonatomic) IBOutlet UIButton *btnStop;
@@ -34,6 +29,7 @@
 @property (retain, nonatomic) IBOutlet UITextField *tfIp;
 @property (retain, nonatomic) IBOutlet UIButton *btnConnect;
 @property (retain, nonatomic) IBOutlet UIButton *btnNetMode;
+@property (retain, nonatomic) IBOutlet UILabel *LabelServerIP;
 
 - (IBAction)connect:(id)sender;
 - (IBAction)backgroundTouched:(id)sender;
