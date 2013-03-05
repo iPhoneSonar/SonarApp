@@ -16,6 +16,8 @@ const SInt16 PORT = 2000;
 const SInt16 DEBUG_PORT = 2002;
 const CFStringRef DEBUG_HOST = (CFStringRef)@"192.168.173.1";
 
+int rets[100];
+
 @implementation communicator
 
 @synthesize timestampReceived;
@@ -43,12 +45,16 @@ const CFStringRef DEBUG_HOST = (CFStringRef)@"192.168.173.1";
     pSock = NULL;
     pSockNative = NULL;
     timestampReceived = false;
-    NSLog(@"communicator init");
-    return self;
     uiPos = 0;
     uiTimestamp = (UInt64*)malloc(100*sizeof(UInt64));
     uiTimestampRecv = (UInt64*)malloc(100*sizeof(UInt64));
     uiFramePosRecv = (UInt16*)malloc(100*sizeof(UInt16));
+    memset(uiTimestamp,0,100*sizeof(UInt64));
+    memset(uiTimestampRecv,0,100*sizeof(UInt64));
+    memset(uiFramePosRecv,0,100*sizeof(UInt16));
+
+    NSLog(@"communicator init");
+    return self;
 }
 
 -(void)dealloc
@@ -154,7 +160,7 @@ static void socketCallbackServerAccpeted(CFSocketRef s, CFSocketCallBackType typ
     //NSLog(@"tv_usec %d.\n",tvTimeStamp.tv_usec);
     UInt64 uiTimestampUsecLoc = ((UInt64)tvTimeStamp.tv_sec*1000*1000) + tvTimeStamp.tv_usec;
     
-    NSLog(@"socketCallbackServerAccpeted %ld called", (SInt32)s);
+    //NSLog(@"socketCallbackServerAccpeted %ld called", (SInt32)s);
     CFSocketContext cfSC;
     CFSocketGetContext(s, &cfSC);
     communicator *localCom = (communicator*)cfSC.info;
@@ -184,15 +190,21 @@ static void socketCallbackServerAccpeted(CFSocketRef s, CFSocketCallBackType typ
         }
         if(localCom.uiPos--) //down counting
         {
-            char* sPos = strchr(sBuf,' ');
+            NSLog(@"iRet)%d,uiPos=%d",iRet,localCom.uiPos);
+            rets[localCom.uiPos] = iRet;
+            char* sPos = strstr(sBuf," ");
+            //NSLog(@"iRet=%d,sBuf=%s.\n",iRet,sBuf);
+            //NSLog(@"sPos:%s.\n",sPos);
             *sPos = '\0';
             sPos++;
-            localCom->uiTimestampRecv[localCom.uiPos] = atoi(sBuf);
-            localCom->uiFramePosRecv[localCom.uiPos] = atoi(sPos);
+            localCom.uiTimestampRecv[localCom.uiPos] = atoll(sBuf);
+            //NSLog(@"sBuf:%s=%lld",sBuf, localCom->uiTimestampRecv[localCom.uiPos]);
+            localCom.uiFramePosRecv[localCom.uiPos] = atoi(sPos);
+            //NSLog(@"sBuf:%s=%d",sPos, localCom->uiFramePosRecv[localCom.uiPos]);
             localCom->uiTimestamp[localCom.uiPos] = uiTimestampUsecLoc;
             return; //nothing more to do for the moment!
         }      
-
+        NSLog(@"rets=%s",(char*)rets);
         //[localCom setReceivedTimestamp: atof(sBuf)];
         //NSLog(@"fTimestamp=%f.\n", [localCom receivedTimestamp]);
         //ReceivedTimestamp is not realy needed anymore,

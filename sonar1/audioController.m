@@ -22,7 +22,7 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
 
 UInt64 uiTimestamp[100];
 UInt16 uiFramePos[100];
-UInt16 uiPos;
+UInt16 uiPosX;
 
 @implementation audioController
 
@@ -43,7 +43,7 @@ UInt16 uiPos;
 {
     memset(uiFramePos,0,sizeof(uiFramePos));
     memset(uiTimestamp,0,sizeof(uiTimestamp));
-    uiPos = 0;
+    uiPosX = 0;
     
     com = [[communicator alloc] init];
     proc = [processing alloc];
@@ -175,7 +175,7 @@ UInt16 uiPos;
     [com setFDoProc: [self fDoProc]];
     [com setFStart: [self fStart]];
     [com setUiPos: sendSig->len/FRAMESIZE];
-    
+    NSLog(@"com uiPos %d",com.uiPos);
     NSLog(@"initServer");
     if([com serverStart])
     {
@@ -327,18 +327,19 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
     //needs to be the first thing we do to avoid latencies
     struct timeval TimeStamp;
     gettimeofday(&TimeStamp, NULL);
-    uiTimestamp[uiPos] = ((UInt64)TimeStamp.tv_sec*1000*1000) + TimeStamp.tv_usec;
+    uiTimestamp[uiPosX] = ((UInt64)TimeStamp.tv_sec*1000*1000) + TimeStamp.tv_usec;
     //NSLog(@"ts=%15lld,mh=%15lld",uiTimestamp[uiPos],plaHost);
 
     audioController* ac = (audioController*)inRefCon; //about 6 usec on the iphone 3
 
     
-    if (uiPos >= 100)
+    if (uiPosX >= 100)
     {
+        NSLog(@"uiPos");
         [ac stop];
-        uiPos = 0;
+        uiPosX = 0;
     }
-    uiPos +=1;
+    uiPosX +=1;
     
     if (inNumberFrames > FRAMESIZE)
     {
@@ -358,9 +359,9 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
     else if([[ac com]connectionState] == CS_ClIENT)
     {
         //send the TimeStamp with each frame
-        uiFramePos[uiPos] = inTimeStamp->mSampleTime;
+        uiFramePos[uiPosX] = inTimeStamp->mSampleTime;
         char sTimeStamp[50];
-        sprintf(sTimeStamp,"%lld %0.f",uiTimestamp[uiPos],inTimeStamp->mSampleTime);
+        sprintf(sTimeStamp,"%lld %0.f",uiTimestamp[uiPosX],inTimeStamp->mSampleTime);
         NSLog(@"sTimestamp %s",sTimeStamp);
         [[ac com] sendNew:sTimeStamp];
         
@@ -1017,14 +1018,6 @@ static OSStatus recordingCallback(void *inRefCon,
 - (SInt16)setOutputLabel:(UILabel**)Label
 {
     LabelOutput = *Label;
-    return 0;
-}
-
-- (SInt16)dummy
-{
-    [self stop];
-    [NSThread sleepForTimeInterval: 2];
-    [self start];
     return 0;
 }
 
