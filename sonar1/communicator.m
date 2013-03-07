@@ -14,7 +14,7 @@
 
 const SInt16 PORT = 2000;
 const SInt16 DEBUG_PORT = 2002;
-const CFStringRef DEBUG_HOST = (CFStringRef)@"192.168.173.1";
+const CFStringRef DEBUG_HOST = (CFStringRef)@"172.20.10.3";
 
 int rets[100];
 
@@ -192,7 +192,8 @@ static void socketCallbackServerAccpeted(CFSocketRef s, CFSocketCallBackType typ
         {
             NSLog(@"iRet)%d,uiPos=%d",iRet,localCom.uiPos);
             rets[localCom.uiPos] = iRet;
-            char* sPos = strstr(sBuf," ");
+            char* sPos = sBuf;
+            sPos=strstr(sBuf," ");
             //NSLog(@"iRet=%d,sBuf=%s.\n",iRet,sBuf);
             //NSLog(@"sPos:%s.\n",sPos);
             *sPos = '\0';
@@ -202,8 +203,11 @@ static void socketCallbackServerAccpeted(CFSocketRef s, CFSocketCallBackType typ
             localCom.uiFramePosRecv[localCom.uiPos] = atoi(sPos);
             //NSLog(@"sBuf:%s=%d",sPos, localCom->uiFramePosRecv[localCom.uiPos]);
             localCom->uiTimestamp[localCom.uiPos] = uiTimestampUsecLoc;
-            return; //nothing more to do for the moment!
-        }      
+            if (localCom.uiPos!=0)
+            {
+                return; //nothing more to do for the moment!
+            }
+        }
         NSLog(@"rets=%s",(char*)rets);
         //[localCom setReceivedTimestamp: atof(sBuf)];
         //NSLog(@"fTimestamp=%f.\n", [localCom receivedTimestamp]);
@@ -421,7 +425,7 @@ static void socketCallbackServer(CFSocketRef s, CFSocketCallBackType type, CFDat
     
     CFRunLoopAddSource(CFRunLoopGetCurrent(), sourceRef, kCFRunLoopCommonModes);
     CFRelease(sourceRef);
-    [NSThread sleepForTimeInterval:1];
+    [NSThread sleepForTimeInterval:0];
 
     return 0;
 }

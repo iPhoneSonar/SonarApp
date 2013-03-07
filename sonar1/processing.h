@@ -28,6 +28,7 @@
 - (float)CalculateDistanceHeadphone;
 - (SInt32)sendSigGen:(SInt32*)ipBuf :(SInt32&)iBufLen;
 - (void)CalculateNetworklatencyRecvTimeStamp:(UInt64*)RecvTimeStamp TimestampOwn:(UInt64*)TimestampOwn nTimeStamps:(SInt32)nTimeStamps;
+- (void)CalculateDistanceRecvTimeStamp:(UInt64*)RecvTimeStamp TimestampOwn:(UInt64*)TimestampOwn nTimeStamps:(SInt32)nTimeStamps;
 
 @end
 

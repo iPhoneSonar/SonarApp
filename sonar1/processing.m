@@ -10,6 +10,7 @@ const SInt32 GAIN = 30000;
 @synthesize PKKF;
 @synthesize KKFLen;
 
+
 -(void)InitializeArrays
 {
     KKFLen=999999;
@@ -29,10 +30,54 @@ const SInt32 GAIN = 30000;
     PPlay=ASend;
     RecordSigLen=RecordLen;
     PlaySigLen=PlayLen;
+    NSLog(@"pointer set");
+}
+
+- (void)CalcKKF
+{
+    [self ResetArrays];
+    SInt32 Nsamples;
+    if (RecordSigLen>PlaySigLen)
+    {
+        Nsamples=RecordSigLen;
+    } else
+    {
+        Nsamples=PlaySigLen;
+    }
+    SInt32 KKFSize=2*Nsamples;
+    int i=0;
+    int j=0;
+    int endJ=0;
+    int startJ=0;
+     //für erste Hälfte (nicht nötig, da keine kausale aussage möglich ist)
+     for (i=0; i<Nsamples; i++)
+     {
+         startJ=Nsamples-i;
+         for(j=startJ;j<Nsamples;j++)
+         {
+            PKKF[i]=PKKF[i]+(SInt16)PPlay[j]*(SInt16)PRecord[j+i-Nsamples];
+         }
+     }
+
+    //zweite Hälfte, ab hier kausale Aussage möglich.
+    //Berechnung um 2048 Werte später als Mitte, da das Empfangssignal um etwas mehr als 2 Frames verzögert ist
+    //for (i=Nsamples+2048;i<KKFSize;i++)
+    //3500 Werte entsprechen ca. 25 Meter, darum nicht mehr berechnen
+    //NSLog(@"Start der KKF Berechnung");
+    for (i=Nsamples;i<KKFSize;i++)
+    {
+        endJ=KKFSize-i;
+        for(j=1;j<endJ;j++)
+        {
+            PKKF[i]=PKKF[i]+(SInt16)PPlay[j]*(SInt16)PRecord[j+i-Nsamples];
+        }
+    }
+    //NSLog(@"Berechnung der KKF durchgeführt");
 }
 
 - (void)CalcKKFWithumberOfSamples:(SInt32)Nsamples
 {
+    [self ResetArrays];
     SInt32 KKFSize=2*Nsamples;
     int i=0;
     int j=0;
@@ -137,33 +182,13 @@ const SInt32 GAIN = 30000;
         }
     }
     max_t=pmax_t;
-    NSLog(@"start = %ld, end = %ld, max: %i, maxVal: %lli",StartValue, EndValue, max_t, pmax);
+    //NSLog(@"start = %ld, end = %ld, max: %i, maxVal: %lli",StartValue, EndValue, max_t, pmax);
     return max_t;
-}
-
-- (float)CalculateDistanceServerWithTimestamp:(Float64)SendTime
-{
-    [self CalcRingKKF];
-    SInt32 KKFSample;
-    KKFSample=[self MaximumSearchAtStartValue:0 WithEndValue:RecordSigLen];   
-    
-
-    //Float64 receiveTime;
-    //receiveTime=[self GetSampleOfKKFSample:KKFSample ofSamples:4800 withTimeStamp:recordTimeTags];
-    
-    //SInt32 SignalTime;
-    //SignalTime=(SInt32)(receiveTime-SendTime-TimeDifference);
-
-    float Distance=0;
-    //Distance=[self GetDistance:SignalTime];
-    //NSLog(@"Distance: %f",Distance);
-    return Distance;
 }
 
 - (float)CalculateDistanceHeadphone
 {
     SInt32 KKFSize=2*RecordSigLen;
-    [self ResetArrays];
 
     [self CalcKKFWithumberOfSamples:RecordSigLen];
     SInt32 Samples=[self MaximumSearchAtStartValue:RecordSigLen WithEndValue:KKFSize];
@@ -183,6 +208,7 @@ const SInt32 GAIN = 30000;
 - (void)CalculateNetworklatencyRecvTimeStamp:(UInt64*)RecvTimeStamp TimestampOwn:(UInt64*)TimestampOwn nTimeStamps:(SInt32)nTimeStamps
 {
     //calculate Network Latency
+    NetworkLatency=0;
     for (int i=0;i<nTimeStamps;i++)
     {
         NetworkLatency+=(Float64)((TimestampOwn[i]-RecvTimeStamp[i]));
@@ -190,11 +216,39 @@ const SInt32 GAIN = 30000;
     NetworkLatency=NetworkLatency/((Float64)nTimeStamps);
 
     //Calculate Zero Distance Sample
-    [self CalcKKFWithumberOfSamples:1024];    
+    [self CalcKKF];
     KKFZeroDistanceSample=[self MaximumSearchAtStartValue:0 WithEndValue:KKFLen];
-    NSLog(@"NetworkLatency=%f\n Sample for Zero Distance: %li",NetworkLatency,KKFZeroDistanceSample);
+    //NSLog(@"NetworkLatency=%f\n Sample for Zero Distance: %li",NetworkLatency,KKFZeroDistanceSample);
     isCalibrated=true;
-    NSLog(@"isCalibrated: %i",isCalibrated);
+}
+
+- (void)CalculateDistanceRecvTimeStamp:(UInt64*)RecvTimeStamp TimestampOwn:(UInt64*)TimestampOwn nTimeStamps:(SInt32)nTimeStamps
+{
+    Float64 ThisNetworkLatency=0;
+    //calculate Network Latency
+    for (int i=0;i<nTimeStamps;i++)
+    {
+        ThisNetworkLatency+=(Float64)((TimestampOwn[i]-RecvTimeStamp[i]));
+    }
+    ThisNetworkLatency=ThisNetworkLatency/((Float64)nTimeStamps);
+
+    //Calculate Zero Distance Sample
+    [self CalcKKF];
+
+    SInt32 SampleDistance=[self MaximumSearchAtStartValue:0 WithEndValue:KKFLen];
+
+    Float64 LatencyDiff=ThisNetworkLatency-NetworkLatency;
+    SInt32 SampleDiff=SampleDistance-KKFZeroDistanceSample;
+    Float64 SampleDiffInUs=((Float64)SampleDiff)/48.0f*1000.0f;
+    Float64 LatencyDiffInSamples=LatencyDiff*48.0f/1000.0f;
+    NSLog(@"\nLatencyDiff=%.2f SampleDiffInUs:%.2f \nLatencyDiffInSamples=%.0f SampleDiff=%li ",LatencyDiff,SampleDiffInUs, LatencyDiffInSamples, SampleDiff);
+    Float64 SignalLaufzeitInMs=(SampleDiffInUs-LatencyDiff)/1000.0f;
+    NSLog(@"SignallaufzeitInMs=%.2f",SignalLaufzeitInMs);
+    Float64 Distance=SignalLaufzeitInMs/1000.0f*343;
+    NSLog(@"Distance=%.2f",Distance);
+    
+    //NSLog(@"NetworkLatency saved=%f this Measurement=%f\n difference: %f",NetworkLatency,ThisNetworkLatency,NetworkLatency-ThisNetworkLatency);
+    //NSLog(@"SampleDistance: %li, KKFZeroDistanceSample: %li, Distance in Samples: %li", SampleDistance, KKFZeroDistanceSample, SampleDistance-KKFZeroDistanceSample);
 }
 
 

@@ -15,6 +15,8 @@
 const Float64 SAMPLERATE = 48000.0;
 const SInt16 FRAMESIZE = 1024;
 const SInt16 SAMPLES_PER_PERIOD = 48;
+const SInt16 SendAllnFrames=4;
+
 //double recSample;
 //double plaSample;
 //UInt64 recHost;
@@ -23,6 +25,8 @@ const SInt16 SAMPLES_PER_PERIOD = 48;
 UInt64 uiTimestamp[100];
 UInt16 uiFramePos[100];
 UInt16 uiPosX;
+bool IsCalibrated2=false;
+int cnt=0;
 
 @implementation audioController
 
@@ -120,26 +124,28 @@ UInt16 uiPosX;
 
         //if ([[ac proc]isCalibrated])
         //TODO: calc Distance
-        if (false)
+        if ([[self proc]isCalibrated] && IsCalibrated2)
         {
-            //calc distance
-            //float Distance=[[ac proc]CalculateDistanceServerWithTimestamp:receivedTimestamp];
-            //display distance
-
-            //NSString *Output = [[NSString alloc] initWithFormat:@"Distance: %f meters\nwaiting for new measurement",Distance];
-
-            //NSString *Output=[[NSString alloc]initWithFormat:@"Distance: %f meters\nwaiting for new measurement",Distance];
-
-            //ac->LabelOutput.text=Output;
+            int nTimeStamps=self->sendSig->len/FRAMESIZE/SendAllnFrames;
+            UInt64 *TimestampRecv=self.com.uiTimestampRecv;
+            UInt64 *TimestampOwn=self.com.uiTimestamp;
+            [[self proc]CalculateDistanceRecvTimeStamp:TimestampRecv TimestampOwn:TimestampOwn nTimeStamps:nTimeStamps];
+            NSLog(@"end of distance Measurement");
+            [com setUiPos:nTimeStamps];
         }
         else
         {
-            //TODO: get nTimeStamps from communicator
-            int nTimeStamps=15;
+            //TODO: remove double Calibration
+            if ([[self proc]isCalibrated])
+            {
+                IsCalibrated2=true;
+            }
+            int nTimeStamps=self->sendSig->len/FRAMESIZE/SendAllnFrames;
             UInt64 *TimestampRecv=self.com.uiTimestampRecv;
             UInt64 *TimestampOwn=self.com.uiTimestamp;
             [[self proc]CalculateNetworklatencyRecvTimeStamp:TimestampRecv TimestampOwn:TimestampOwn nTimeStamps:nTimeStamps];
             NSLog(@"end of calibration");
+            [com setUiPos:nTimeStamps];
             
         }
         return 0;
@@ -176,7 +182,7 @@ UInt16 uiPosX;
     */
     [com setFDoProc: [self fDoProc]];
     [com setFStart: [self fStart]];
-    [com setUiPos: sendSig->len/FRAMESIZE];
+    [com setUiPos: sendSig->len/FRAMESIZE/SendAllnFrames];
     NSLog(@"com uiPos %d",com.uiPos);
     NSLog(@"initServer");
     if([com serverStart])
@@ -226,19 +232,17 @@ UInt16 uiPosX;
     }
     memset(sendSig,0,sizeof(struct sig));
 
+    SInt32 len = (30*48*2*4)*2; //~240ms
 
-    SInt32 shift = 0;
-    SInt32 len = 30*48*2*4+shift; //~240ms
-
-    sendSig->buf = (SInt32*)malloc((len+shift)*sizeof(SInt32));
+    sendSig->buf = (SInt32*)malloc((len)*sizeof(SInt32));
     if (sendSig == NULL)
     {
         NSLog(@"error sendSigInit");
         return -1;
     }
-    memset(sendSig->buf,0,(len+shift)*sizeof(SInt32));
+    memset(sendSig->buf,0,(len)*sizeof(SInt32));
 
-    [proc sendSigGen:(sendSig->buf)+shift: len];
+    [proc sendSigGen:sendSig->buf: len];
     
     sendSig->len = len;
     sendSig->pos = 0;
@@ -290,14 +294,14 @@ UInt16 uiPosX;
     recordBuf = (sig*)malloc(sizeof(sig));
     memset(recordBuf,0,sizeof(sig));
 
-    UInt32 uiExtention = 2*1024;
+    UInt32 uiExtention = 4*1024;
     if(sendSig == NULL)
     {
         NSLog(@"error sendSig undefined");
         return -1;
     }
 
-    SInt32 len = 2*sendSig->len + 2*uiExtention;
+    SInt32 len = sendSig->len + uiExtention;
 
     recordBuf->buf = (SInt32*)malloc(len*sizeof(SInt32)); //SInt16 = 2 Bytes
     if (recordBuf->buf == NULL)
@@ -360,12 +364,15 @@ static OSStatus playingCallback(void *inRefCon, AudioUnitRenderActionFlags *ioAc
     else if([[ac com]connectionState] == CS_ClIENT)
     {
         //send the TimeStamp with each frame
+        if (cnt%SendAllnFrames==(SendAllnFrames-1))
+        {
         uiFramePos[uiPosX] = inTimeStamp->mSampleTime;
         char sTimeStamp[50];
         sprintf(sTimeStamp,"%lld %0.f",uiTimestamp[uiPosX++],inTimeStamp->mSampleTime);
         NSLog(@"sTimestamp %s",sTimeStamp);
         [[ac com] sendNew:sTimeStamp];
-        
+        }
+        cnt++;
         ac->play->pos += inNumberFrames;
         //if all frames are send the client work is completed
         if (ac->play->pos + inNumberFrames > ac->play->len)
@@ -988,6 +995,7 @@ static OSStatus recordingCallback(void *inRefCon,
     [com send:@"fileEnd\n"];
     NSLog(@"com fileEnd send");
     [com close];
+    memset(recordBuf->buf,0,recordBuf->len*sizeof(SInt32));
 
 }
 
@@ -997,13 +1005,15 @@ static OSStatus recordingCallback(void *inRefCon,
     play->pos = 0;
     OSStatus status = 0;
     recordBuf->pos = 0;
+    cnt=0;
     status = AudioOutputUnitStart(audioUnit);
-    NSLog(@"audioUnit started status = %ld", status);
+    NSLog(@"audioUnit started status = %ld", status);    
     return status;
 }
 
 -(OSStatus)stop
 {
+    cnt=0;
     OSStatus status;
     status = AudioOutputUnitStop(audioUnit);
     NSLog(@"audioUnit stoped status = %ld", status);
