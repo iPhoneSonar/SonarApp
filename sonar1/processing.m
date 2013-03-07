@@ -12,7 +12,7 @@ const SInt32 GAIN = 30000;
 
 -(void)InitializeArrays
 {
-    KKFLen=999999;
+    KKFLen=50*1024;
     PKKF=(SInt64*)malloc(KKFLen*sizeof(SInt64));
     NetworkLatency=0;
     KKFZeroDistanceSample=0;
@@ -29,32 +29,38 @@ const SInt32 GAIN = 30000;
     PPlay=ASend;
     RecordSigLen=RecordLen;
     PlaySigLen=PlayLen;
+    KKFLen = RecordLen>PlayLen ? RecordLen*2 : PlayLen*2; //KKFLen max is twice the longer Signal
+    NSLog(@"KKFLen %ld",KKFLen);
+    if (PKKF)// avid memory leaks
+    {
+        free(PKKF);
+    }
+    PKKF=(SInt64*)malloc(KKFLen*sizeof(SInt64));
 }
 
 - (void)CalcKKFWithumberOfSamples:(SInt32)Nsamples
 {
+    [self ResetArrays];
     SInt32 KKFSize=2*Nsamples;
     int i=0;
     int j=0;
     int endJ=0;
-    /*int startJ=0;
+    int startJ=0;
      //für erste Hälfte (nicht nötig, da keine kausale aussage möglich ist)
      for (i=0; i<Nsamples; i++)
      {
-     startJ=Nsamples-i;
-     for(j=startJ;j<Nsamples;j++)
-     {
-     PKKF[i]=PKKF[i]+PPlay[j]*PRecord[j+i-Nsamples];
+         startJ=Nsamples-i;
+         for(j=startJ;j<Nsamples;j++)
+         {
+             PKKF[i]=PKKF[i]+PPlay[j]*(SInt16)PRecord[j+i-Nsamples];
+         }
      }
-     }
-     */
-
     //zweite Hälfte, ab hier kausale Aussage möglich.
     //Berechnung um 2048 Werte später als Mitte, da das Empfangssignal um etwas mehr als 2 Frames verzögert ist
     //for (i=Nsamples+2048;i<KKFSize;i++)
     //3500 Werte entsprechen ca. 25 Meter, darum nicht mehr berechnen
     NSLog(@"Start der KKF Berechnung");
-    for (i=Nsamples+2048;i<Nsamples+2048+3500;i++)
+    for (i=Nsamples;i<KKFSize;i++)
     {
         endJ=KKFSize-i;
         for(j=1;j<endJ;j++)
@@ -165,17 +171,34 @@ const SInt32 GAIN = 30000;
     SInt32 KKFSize=2*RecordSigLen;
     [self ResetArrays];
 
-    [self CalcKKFWithumberOfSamples:RecordSigLen];
-    SInt32 Samples=[self MaximumSearchAtStartValue:RecordSigLen WithEndValue:KKFSize];
+    //[self CalcKKFWithumberOfSamples:RecordSigLen];
+    //SInt32 Samples=[self MaximumSearchAtStartValue:RecordSigLen WithEndValue:KKFSize];
     
     float Distance;
     //Distance=((float)(Samples-24813))*343.0f/48000.0f;
-    Distance=((float)(Samples-RecordSigLen-2048-243))*343.0f/48000.0f;
+    //Distance=((float)(Samples-RecordSigLen-2048-243))*343.0f/48000.0f;
     if (Distance < 0)
     {
         NSLog(@"Distanz war %f (kleiner als 0), bereinigt", Distance);
         Distance=0;
     }
+    NSLog(@"Distance: %f",Distance);
+    return Distance;
+}
+
+- (float)CalculateDistanceHeadphone2
+{
+    [self ResetArrays];
+
+    [self CalcKKFWithumberOfSamples:RecordSigLen];
+    SInt32 siNRLPos=[self MaximumSearchAtStartValue:0 WithEndValue:KKFLen];
+
+    SInt32 siStart = siNRLPos + 80; //80spamples = 28cm signle side width of the nrl peak
+    SInt32 siStop = siNRLPos + 1500; //1500samples = 525cm 
+    SInt32 siSamplePos =[self MaximumSearchAtStartValue:siStart WithEndValue:siStop];
+
+    float Distance=((float)siSamplePos-siNRLPos)*343.0f/48000.0f;
+
     NSLog(@"Distance: %f",Distance);
     return Distance;
 }
@@ -242,12 +265,9 @@ const SInt32 GAIN = 30000;
         return  -1;
     }
 
-    SInt32 iChirpLen = 30*48*2;
+    SInt32 iChirpLen = 30*48*2*4;
     SInt32 iRet =
     [self chirpGen:ipBuf :iChirpLen:1000.0 :5000.0];
-    SInt32 iChirpLen2 = 30*48*2*3;
-    iRet =
-    [self chirpGen:ipBuf+iChirpLen :iChirpLen2:1000.0 :5000.0];
 
     return iRet;
 }

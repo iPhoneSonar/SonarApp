@@ -297,7 +297,7 @@ UInt16 uiPosX;
         return -1;
     }
 
-    SInt32 len = 2*sendSig->len + 2*uiExtention;
+    SInt32 len = sendSig->len + uiExtention;
 
     recordBuf->buf = (SInt32*)malloc(len*sizeof(SInt32)); //SInt16 = 2 Bytes
     if (recordBuf->buf == NULL)
@@ -314,7 +314,7 @@ UInt16 uiPosX;
     recordingBufferList->mNumberBuffers = 1;
     recordingBufferList->mBuffers[0].mData = recordBuf->buf;
     recordingBufferList->mBuffers[0].mNumberChannels = 2;
-
+    NSLog(@"recordBuf: %li Samples",recordBuf->len);
     return 0;
 }
 
@@ -859,7 +859,7 @@ static OSStatus recordingCallback(void *inRefCon,
 
             //calc distance
 
-            float Distance=[[ac proc]CalculateDistanceHeadphone];
+            float Distance=[[ac proc]CalculateDistanceHeadphone2];
             //display
             NSString *Output=[[NSString alloc]initWithFormat:@"Distance: %.2f meters\nwaiting for new measurement",Distance];
             NSLog(@"%@",Output);
@@ -879,16 +879,18 @@ static OSStatus recordingCallback(void *inRefCon,
     
     [com open];
     NSLog(@"opened");
-    [com send:@"fileName:record_2k_6k_6k_10k_.txt\n"];
+    [com send:@"fileName:record_.txt\n"];
     char *sOut = (char*)malloc(2000);
     char *sOutPtr = sOut;
     int len = 0;
+    int iSize = 0;
     for (int i=0; i< recordBuf->len; i++)
     {
         SInt16 TMP;
         TMP = ((SInt16*)recordBuf->buf)[2*i+1];
         sprintf(sOutPtr,"%i,",TMP);
         len += strlen(sOutPtr);
+        iSize += len;
         sOutPtr = sOut + len;
         // to package the frame data check the  size of the outStr
         if (len > 1990)
@@ -914,10 +916,11 @@ static OSStatus recordingCallback(void *inRefCon,
         }
     }
     [com send:@"fileEnd\n"];
-    NSLog(@"com fileEnd send");
+    NSLog(@"com fileEnd send, len=%ld, iSize=%d\n",recordBuf->len, iSize);
     
-    [com send:@"fileName:play_2k_6k_6k_10k_.txt\n"];
+    [com send:@"fileName:play_.txt\n"];
     len = 0;
+    iSize = 0;
     memset(sOut,0,2000);
     sOutPtr=sOut;
     for (int i=0; i< play->len; i++)
@@ -926,6 +929,7 @@ static OSStatus recordingCallback(void *inRefCon,
         TMP = ((SInt16*)play->buf)[2*i];
         sprintf(sOutPtr,"%i,",TMP);
         len += strlen(sOutPtr);
+        iSize  += len;
         sOutPtr = sOut + len;
         // to package the frame data check the  size of the outStr
         if (len > 1990)
@@ -951,16 +955,18 @@ static OSStatus recordingCallback(void *inRefCon,
         }
     }
     [com send:@"fileEnd\n"];
-    NSLog(@"com fileEnd send");
-    
-    [com send:@"fileName:KKF_2k_6k_6k_10k_.txt\n"];
+    NSLog(@"com fileEnd send, len=%ld iSize=%d\n",play->len,iSize);
+
+    [com send:@"fileName:KKF_.txt\n"];
     len = 0;
+    iSize = 0;
     memset(sOut,0,2000);
     sOutPtr=sOut;
     for (int i=0; i< proc.KKFLen; i++)
     {
         sprintf(sOutPtr,"%lli,",proc.PKKF[i]);
         len += strlen(sOutPtr);
+        iSize += len;
         sOutPtr = sOut + len;
         // to package the frame data check the  size of the outStr
         if (len > 1990)
@@ -986,9 +992,8 @@ static OSStatus recordingCallback(void *inRefCon,
         }
     }
     [com send:@"fileEnd\n"];
-    NSLog(@"com fileEnd send");
+    NSLog(@"com fileEnd send, len=%ld, iSize=%d\n",proc.KKFLen, iSize);
     [com close];
-
 }
 
 
