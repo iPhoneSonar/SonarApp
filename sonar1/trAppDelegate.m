@@ -9,6 +9,7 @@
 #import "trAppDelegate.h"
 
 #import "trViewController.h"
+#import "MeasurementView.h"
 
 @implementation trAppDelegate
 
@@ -28,9 +29,16 @@
     self.window = [[[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]] autorelease];
     // Override point for customization after application launch.
     self.viewController = [[[trViewController alloc] initWithNibName:@"trViewController" bundle:nil] autorelease];
+    //    self.viewController = [[[trViewController alloc] initWithNibName:@"trViewController" bundle:nil] autorelease];
+    MeasurementView *MView=[[MeasurementView alloc] initWithNibName:nil bundle:nil];
+
+
     paC=[[audioController alloc] init];
     self.viewController.audioController=paC;
-    self.window.rootViewController = self.viewController;
+    MView.audioController=paC;
+    //self.window.rootViewController = self.viewController;
+    self.window.rootViewController = MView;
+
     [self.window makeKeyAndVisible];
     return YES;
 }

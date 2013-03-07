@@ -46,6 +46,7 @@ const SInt32 GAIN = 30000;
     int j=0;
     int endJ=0;
     int startJ=0;
+    /*
      //für erste Hälfte (nicht nötig, da keine kausale aussage möglich ist)
      for (i=0; i<Nsamples; i++)
      {
@@ -55,12 +56,16 @@ const SInt32 GAIN = 30000;
              PKKF[i]=PKKF[i]+PPlay[j]*(SInt16)PRecord[j+i-Nsamples];
          }
      }
+     */
     //zweite Hälfte, ab hier kausale Aussage möglich.
     //Berechnung um 2048 Werte später als Mitte, da das Empfangssignal um etwas mehr als 2 Frames verzögert ist
     //for (i=Nsamples+2048;i<KKFSize;i++)
     //3500 Werte entsprechen ca. 25 Meter, darum nicht mehr berechnen
+    UInt32 uiKKFStart = Nsamples + 2000;
+    UInt32 uiKKFStopPos = Nsamples + 5000;
+    NSLog(@"KKF uiKKFStopPos=%ld.\n",uiKKFStopPos);
     NSLog(@"Start der KKF Berechnung");
-    for (i=Nsamples;i<KKFSize;i++)
+    for (i=uiKKFStart;i<uiKKFStopPos;i++)
     {
         endJ=KKFSize-i;
         for(j=1;j<endJ;j++)
@@ -142,7 +147,8 @@ const SInt32 GAIN = 30000;
             }
         }
     }
-    max_t=pmax_t;
+    //max_t= (pmax) > nmax*(-1) ? pmax_t : nmax_t;
+    max_t = pmax_t;
     NSLog(@"start = %ld, end = %ld, max: %i, maxVal: %lli",StartValue, EndValue, max_t, pmax);
     return max_t;
 }
@@ -194,11 +200,12 @@ const SInt32 GAIN = 30000;
     SInt32 siNRLPos=[self MaximumSearchAtStartValue:0 WithEndValue:KKFLen];
 
     SInt32 siStart = siNRLPos + 80; //80spamples = 28cm signle side width of the nrl peak
-    SInt32 siStop = siNRLPos + 1500; //1500samples = 525cm 
+    SInt32 siStop = siNRLPos + 1000; //1000samples = 350m
     SInt32 siSamplePos =[self MaximumSearchAtStartValue:siStart WithEndValue:siStop];
 
-    float Distance=((float)siSamplePos-siNRLPos)*343.0f/48000.0f;
+    float Distance=((float)siSamplePos-siNRLPos)*343.0f/(48000.0f*2);
 
+    Distance += 0.015; //distance is calculated relative to nrl and that is about 1.5cm
     NSLog(@"Distance: %f",Distance);
     return Distance;
 }
@@ -267,7 +274,7 @@ const SInt32 GAIN = 30000;
 
     SInt32 iChirpLen = 30*48*2*4;
     SInt32 iRet =
-    [self chirpGen:ipBuf :iChirpLen:1000.0 :5000.0];
+    [self chirpGen:ipBuf :iChirpLen:500.0 :5000.0];
 
     return iRet;
 }

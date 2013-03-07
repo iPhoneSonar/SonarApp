@@ -35,6 +35,7 @@
 {
     [super viewDidLoad];
     [audioController setOutputLabel:(&tf1)];
+    tf1.text = @"tap for measurement";
     // Do any additional setup after loading the view from its nib.
 }
 
